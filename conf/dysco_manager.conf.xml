@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+     
+    <Storages>
+    	<!-- Mongodb storage configuaration  -->
+    	<Storage id="Mongodb">
+    		<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.management.SearchManager]]></Parameter>
+    		<Parameter name="mongodb.host"><![CDATA[your.ip]]></Parameter>
+    		<Parameter name="mongodb.client.host"><![CDATA[your.ip]]></Parameter>
+    		<Parameter name="mongodb.database"><![CDATA[Streams]]></Parameter>
+    		<Parameter name="mongodb.dyscos.collection"><![CDATA[Dyscos]]></Parameter>
+    		<Parameter name="mongodb.rss.collection"><![CDATA[Items]]></Parameter>
+    	</Storage>
+    </Storages>
+
+</Configuration>
+
