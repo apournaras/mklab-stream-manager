@@ -18,19 +18,34 @@ public class RSSProcessor {
 	private static final int TOP_KEYWORDS_NUMBER = 3;
 	
 	private Map<String,Topic> rssItems = new HashMap<String,Topic>();
-	private List<String> mostSimilarRSSTopics;
-	private ItemDAO itemDAO;
 	private Map<String,Set<String>> wordsToRSSItems = new HashMap<String,Set<String>>();
-	Map<Double,List<String>> rankedItems = new TreeMap<Double,List<String>>(Collections.reverseOrder());
+	private Map<Double,List<String>> rankedItems = new TreeMap<Double,List<String>>(Collections.reverseOrder());
 	
-	public RSSProcessor(ItemDAO itemDAO){
-		this.itemDAO = itemDAO;
+	private List<String> mostSimilarRSSTopics = new ArrayList<String>();
+	
+	private ItemDAO itemDAO;
+	
+	public RSSProcessor(){
+		super();
 	}
 	
-	public void readTopics(){
-		for(Topic rssTopic : itemDAO.readTopics()){
+	public void setRSSProcessor(ItemDAO itemDAO){
+		this.itemDAO = itemDAO;
+		
+		List<Topic> topics = itemDAO.readTopicsByStatus();
+		
+		for(Topic rssTopic : topics){
 			rssItems.put(rssTopic.getId(), rssTopic);
+			rssTopic.setIsRead(true);
+			itemDAO.updateTopic(rssTopic);
 		}
+	}
+	
+	public void resetRSSProcessor(){
+		rssItems.clear();
+		wordsToRSSItems.clear();
+		rankedItems.clear();
+		mostSimilarRSSTopics.clear();
 	}
 	
 	public Map<String,Set<String>> getWordsToRSSItems(){
@@ -45,17 +60,18 @@ public class RSSProcessor {
 		return mostSimilarRSSTopics;
 	}
 	
-	public Set<String> getTopKeywords(){
-		Set<String> topKeywords = new HashSet<String>();
+	private List<String> getTopKeywords(){
+		List<String> topKeywords = new ArrayList<String>();
 		
-		for(List<String> keys : rankedItems.values()){
+		for(Double score : rankedItems.keySet()){
+			List<String> keys = rankedItems.get(score);
 			for(String key : keys){
 				topKeywords.add(key);
-				if(topKeywords.size() > TOP_KEYWORDS_NUMBER)
+				if(topKeywords.size() >= TOP_KEYWORDS_NUMBER)
 					return topKeywords;
 			}
 		}
-		
+		System.out.println("TOP KEYWORDS : "+topKeywords);
 		return topKeywords;
 	}
 	
@@ -85,8 +101,12 @@ public class RSSProcessor {
 		}
 	}
 	
-	public void computeKeywordsScore(Dysco dysco){
+	public List<String> getTopKeywordsFromSimilarRSS(List <String> mostSimilarRSSTopics,Dysco dysco){
 		Map<String,FeedKeyword> allWordsInRSS = new HashMap<String,FeedKeyword>();
+		
+		rankedItems.clear();
+		this.mostSimilarRSSTopics.clear();
+		this.mostSimilarRSSTopics = mostSimilarRSSTopics;
 		
 		for(String mostSimilarRSS : mostSimilarRSSTopics){
 			Topic rssTopic = rssItems.get(mostSimilarRSS);
@@ -170,5 +190,7 @@ public class RSSProcessor {
 			}
 			System.out.println();
 		}
+		
+		return getTopKeywords();
 	}
 }
