@@ -392,6 +392,7 @@ public class DyscoManager {
 	    	else{
 	    		System.out.println("Trending dysco : "+dysco.getId());
 	    		TrendingFeedsCreator t_creator = new TrendingFeedsCreator(dysco,dyscoManager.getRSSComparator());
+	    	
 				keywords.addAll(t_creator.extractKeywords()); 
 				
 				if(keywords.size()>0){
