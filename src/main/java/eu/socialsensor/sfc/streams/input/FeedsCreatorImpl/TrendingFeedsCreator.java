@@ -47,8 +47,7 @@ public class TrendingFeedsCreator implements FeedsCreator{
 		this.comparator = comparator;
 		
 		dateOfRetrieval = dateUtil.addDays(dysco.getCreationDate(),-1);
-		System.out.println("Hello! Ngrams!");
-		System.out.println(dysco.getNgrams());
+		
 		for(Ngram ngram : dysco.getNgrams()){
 			System.out.println("ngram : "+ngram.getTerm());
 		}
@@ -142,7 +141,10 @@ public class TrendingFeedsCreator implements FeedsCreator{
 	@Override
 	public List<String> extractKeywords(){
 		filterContent(dysco.getEntities(),dysco.getKeywords());
+		long t1 = System.currentTimeMillis();
 		rssItem = comparator.compare(dysco.getEntities(), dysco.getKeywords());
+		long t2 = System.currentTimeMillis();
+		System.out.println("Time to find the most similar RSS Item : "+(t2-t1)+" msecs");
 		if(rssItem == null){
 			System.out.println("No similar RSS Item found");
 			return topKeywords;
