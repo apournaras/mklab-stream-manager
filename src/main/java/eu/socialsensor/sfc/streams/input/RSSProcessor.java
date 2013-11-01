@@ -14,7 +14,14 @@ import eu.socialsensor.framework.common.domain.Topic;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Entity;
 
-
+/**
+ * @brief Class for processing the rss topics that will be used 
+ * for keywords' extraction.
+ * 
+ * @author ailiakop
+ * @email  ailiakop@iti.gr
+ *
+ */
 public class RSSProcessor {
 	private static final int TOP_KEYWORDS_NUMBER = 3;
 	
@@ -42,6 +49,9 @@ public class RSSProcessor {
 		}
 	}
 	
+	/**
+	 * Resets the processor
+	 */
 	public void resetRSSProcessor(){
 		rssItems.clear();
 		wordsToRSSItems.clear();
@@ -49,18 +59,34 @@ public class RSSProcessor {
 		mostSimilarRSSTopics.clear();
 	}
 	
+	/**
+	 * Returns the mapping of a set of words to rss topics
+	 * @return Map of the words to rss topics
+	 */
 	public Map<String,Set<String>> getWordsToRSSItems(){
 		return wordsToRSSItems;
 	}
 	
+	/**
+	 * Sets the most similar rss topics found to the processor
+	 * @param mostSimilarRSSTopics
+	 */
 	public void setMostSimilarRSSTopics(List<String> mostSimilarRSSTopics){
 		this.mostSimilarRSSTopics = mostSimilarRSSTopics;
 	}
 	
+	/**
+	 * Returns the most similar rss topics found
+	 * @return
+	 */
 	public List<String> getMostSimilarRSSTopics(){
 		return mostSimilarRSSTopics;
 	}
 	
+	/**
+	 * Return the most frequest keywords found in the set of rss topics
+	 * @return List of Strings
+	 */
 	private List<String> getTopKeywords(){
 		List<String> topKeywords = new ArrayList<String>();
 		
@@ -72,10 +98,14 @@ public class RSSProcessor {
 					return topKeywords;
 			}
 		}
-		System.out.println("TOP KEYWORDS : "+topKeywords);
+		
 		return topKeywords;
 	}
 	
+	/**
+	 * Creates the mapping of words found in rss items to rss items. 
+	 * A word may be assigned to more than one rss items.
+	 */
 	public void processRSSItems(){
 		for(Topic rssItem : rssItems.values()){
 			for(Entity entity : rssItem.getEntities()){
@@ -102,15 +132,21 @@ public class RSSProcessor {
 		}
 	}
 	
-	public List<String> getTopKeywordsFromSimilarRSS(List <String> mostSimilarRSSTopics,Dysco dysco){
+	/**
+	 * Computes the importance of a rss word for a dysco according to its 
+	 * type (Entity/Keywords),the type of entity(Person/Location/Organization),
+	 * whether it appears in dysco title or not and its frequency in the dysco content.
+	 * Returns the best keywords as they are ranked after the computation. 
+	 * @param similarRSSTopics
+	 * @param dysco
+	 * @return List of Strings
+	 */
+	public List<String> getTopKeywordsFromSimilarRSS(List <String> similarRSSTopics,Dysco dysco){
 		Map<String,FeedKeyword> allWordsInRSS = new HashMap<String,FeedKeyword>();
 		
-		rankedItems.clear();
-		this.mostSimilarRSSTopics.clear();
-		this.mostSimilarRSSTopics = mostSimilarRSSTopics;
-		
-		for(String mostSimilarRSS : mostSimilarRSSTopics){
+		for(String mostSimilarRSS : similarRSSTopics){
 			Topic rssTopic = rssItems.get(mostSimilarRSS);
+			
 			for(String keyword : rssTopic.getKeywords()){
 				
 				if(!allWordsInRSS.containsKey(keyword)){
@@ -161,15 +197,8 @@ public class RSSProcessor {
 				}
 			}
 		}
-		/*for(String keyword : allWordsInRSS.keySet()){
-			System.out.println("Word : "+keyword);
-			System.out.println("NumberOfApperances : "+allWordsInRSS.get(keyword).getNumOfAppearances());
-			System.out.println("NumberOfApperances In dysco : "+allWordsInRSS.get(keyword).getNumOfAppearancesInDysco());
-			System.out.println("IsEntity : "+allWordsInRSS.get(keyword).getIsEntity());
-			System.out.println("IsPerson_Org : "+allWordsInRSS.get(keyword).getIsPerson_Org());
-			System.out.println("ExistsInTitle : "+allWordsInRSS.get(keyword).getIfExistsInTitle());
-		}
-		*/
+	
+		rankedItems.clear();
 		for(FeedKeyword fk : allWordsInRSS.values()){
 			double score = fk.computeScore();
 			if(rankedItems.containsKey(score)){
@@ -182,14 +211,6 @@ public class RSSProcessor {
 				newItems.add(fk.getKeyword());
 				rankedItems.put(score, newItems);
 			}
-		}
-		
-		for(Double score : rankedItems.keySet()){
-			System.out.println("Score : "+ score+ " ----->  ");
-			for(String rssTopic : rankedItems.get(score)){
-				System.out.print(rssTopic+" ");
-			}
-			System.out.println();
 		}
 		
 		return getTopKeywords();

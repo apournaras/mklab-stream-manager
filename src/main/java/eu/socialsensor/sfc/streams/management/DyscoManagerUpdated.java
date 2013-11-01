@@ -4,7 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -33,8 +37,18 @@ import eu.socialsensor.sfc.streams.StorageConfiguration;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.input.RSSProcessor;
 import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.CustomFeedsCreator;
-import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.RSSTopicFeedsCreator;
+import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.DynamicFeedsCreator;
 
+
+/**
+ * @brief  Class for receiving dysco requests and extracting 
+ * the representative keywords that will be used for further 
+ * search with the wrappers of social networks
+ * 
+ * @author ailiakop
+ * @email  ailiakop@iti.gr
+ *
+ */
 public class DyscoManagerUpdated {
 	private static String GLOBAL_HOST = "mongodb.host";
 	private static String CLIENT_HOST = "mongodb.client.host";
@@ -53,7 +67,6 @@ public class DyscoManagerUpdated {
 	private DyscoRequestHandler dyscoRequestHandler;
 	private Jedis subscriberJedis;
 	
-	//Store that way temporarily
 	private String host;
 	private String privateHost;
 	private String dbName;
@@ -65,6 +78,9 @@ public class DyscoManagerUpdated {
 	
 	private RSSProcessor rssProcessor;
 	private RSSUpdator rssUpdator;
+	private DyscoRequestFeedsCreator drf_creator;
+	
+	private Queue<String> requests = new LinkedList<String>();
 	
 	public DyscoManagerUpdated(StreamsManagerConfiguration config) throws StreamException{
 		if (config == null) {
@@ -104,6 +120,9 @@ public class DyscoManagerUpdated {
 		rssUpdator = new RSSUpdator(this);
 		rssUpdator.start();
 		
+		drf_creator = new DyscoRequestFeedsCreator();
+		drf_creator.start();
+		
 		this.dyscoRequestHandler = new DyscoRequestHandler(this);
 		JedisPoolConfig poolConfig = new JedisPoolConfig();
         JedisPool jedisPool = new JedisPool(poolConfig, privateHost, 6379, 0);
@@ -126,12 +145,20 @@ public class DyscoManagerUpdated {
 		state = DyscoManagerState.OPEN;
 	}
 	
-	
+	/**
+	 * Sets the RSSProcessor that is used for handling
+	 * the rss topics for keywords' extraction
+	 * @param itemDAO
+	 */
 	public void setRSSProcessor(ItemDAO itemDAO){
 		rssProcessor.setRSSProcessor(itemDAO);
 		rssProcessor.processRSSItems();
 	}
 	
+	/**
+	 * Resets the RSSProcessor because a new collection of
+	 * rss topics will be used
+	 */
 	public void resetRSSProcessor(){
 		rssProcessor.resetRSSProcessor();
 	}
@@ -148,12 +175,15 @@ public class DyscoManagerUpdated {
 		if(rssUpdator != null)
 			rssUpdator.die();
 		
+		if(drf_creator!=null)
+			drf_creator.die();
+		
 		state = DyscoManagerState.CLOSE;
 	}
 	
 	/**
-	 * Class for the constant update of rss feeds in the system. 
-	 * Updates the collection of the rss feeds every one hour.
+	 * Class for the constant update of rss topics in the system. 
+	 * Updates the collection of the rss topics every one hour.
 	 * @author ailiakop
 	 *
 	 */
@@ -186,7 +216,7 @@ public class DyscoManagerUpdated {
 		}
 		
 		/**
-		 * Updates the DB that holds daily rss feeds
+		 * Updates the DB that holds daily rss topics
 		 * For every day of the week a new DB is created 
 		 * new rss feeds to be stored.
 		 */
@@ -218,7 +248,7 @@ public class DyscoManagerUpdated {
 	}
 	
 	/**
-	 * Class in case system is shutdown 
+	 * Class in case of system's shutdown. 
 	 * Responsible to close all services 
 	 * that are running at the time being
 	 * @author ailiakop
@@ -251,11 +281,8 @@ public class DyscoManagerUpdated {
 	 */
 	private class DyscoRequestHandler extends JedisPubSub {
 	
-		private SolrDyscoHandler dyscoHandler = SolrDyscoHandler.getInstance();
 		private DyscoManagerUpdated dyscoManager;
 		private DyscoRequest request;
-		
-		private int keywordsLimit = 3;
 		
 		public DyscoRequestHandler(DyscoManagerUpdated dyscoManager){
 			this.dyscoManager = dyscoManager;
@@ -263,9 +290,10 @@ public class DyscoManagerUpdated {
 		
 		/**
 		 * Alerts the system that a new dysco request is received
-		 * Creates the input feeds for the dysco if possible and
-		 * seperates dyscos according to their type (custom/trending).
-		 * Afterwards it stores the update to the selected DB. 
+		 * New dysco requests are added to a queue to be further
+		 * processed by the DyscoRequestFeedsCreator thread.
+		 * In case the dysco request already exists in mongo db,
+		 * it is deleted from the system and not processed further.
 		 */
 	    @Override
 	    public void onMessage(String channel, String message) {
@@ -273,53 +301,7 @@ public class DyscoManagerUpdated {
 	    	logger.info("Received dysco request : "+message);
 	    	
 	    	if(!dyscoRequestDAO.exists(message)){
-	    		List<String> keywordsOfRequest = new ArrayList<String>();
-	    		List<KeywordsFeed> feedsOfRequest = new ArrayList<KeywordsFeed>();
-	    		
-	    		request = new DyscoRequest(message,new Date(System.currentTimeMillis()));
-	    		
-	    		Dysco dysco = dyscoHandler.findDyscoLight(message);
-	    		
-	    		findKeywordsAndFeeds(dysco,keywordsOfRequest,feedsOfRequest);
-	    		
-	    		if(feedsOfRequest != null && !feedsOfRequest.isEmpty()){
-					request.setKeywordsFeeds(feedsOfRequest);
-					request.setKeywords(keywordsOfRequest);
-					
-				}
-				else{
-					logger.info("No Feeds could be created!");
-					keywordsOfRequest.clear();
-					for(Entity ent : dysco.getEntities()){
-						if(ent.getType().equals(Entity.Type.PERSON)){
-							keywordsOfRequest.add(ent.getName());
-							if(keywordsOfRequest.size() >= keywordsLimit)
-								break;
-						}	
-					}
-					if(keywordsOfRequest.size() < keywordsLimit)	
-						for(Entity ent : dysco.getEntities())
-							if(ent.getType().equals(Entity.Type.LOCATION) || ent.getType().equals(Entity.Type.ORGANIZATION)){
-								keywordsOfRequest.add(ent.getName());
-								if(keywordsOfRequest.size() >= keywordsLimit)
-									break;
-							}
-					
-					request.setKeywords(keywordsOfRequest);
-					request.setIsSearched(true);
-				}
-				
-	    		if(dysco.getEvolution().equals("dynamic")){
-					request.setDyscoType("custom");
-					
-				}
-				else{
-					request.setDyscoType("trending");
-					
-				}
-					
-	    		
-		    	dyscoRequestDAO.insertDyscoRequest(request);
+	    		requests.add(message);
 		    	
 		    	logger.info("Dysco "+message+" stored!");
 		    	
@@ -360,8 +342,100 @@ public class DyscoManagerUpdated {
 	    public void onPSubscribe(String pattern, int subscribedChannels) {
 	    	// Do Nothing
 	    }
-	    
-	    /**
+			
+	}
+	/**
+	 * Creates the input feeds for the dysco if possible and
+	 * seperates dyscos according to their type (custom/trending).
+	 * For the creation of the input feeds, RSSProcessor and DynamicFeedsCreator
+	 * classes are incorporated.
+	 * Afterwards it stores the update to the selected DB. 
+	 * @author ailiakop
+	 *
+	 */
+	private class DyscoRequestFeedsCreator extends Thread{
+		private boolean isAlive = true;
+		private static final int KEYWORDS_LIMIT = 3;
+		private SolrDyscoHandler dyscoHandler = SolrDyscoHandler.getInstance();
+		
+		public DyscoRequestFeedsCreator(){
+			
+		}
+		
+		public void run(){
+			String requestMessage = null;
+			while(isAlive){
+				
+				requestMessage = poll();
+				if(requestMessage == null){
+					continue;
+				}
+				else{
+					processDyscoRequest(requestMessage);
+				}
+					
+			}
+		}
+		
+		/**
+		 * Polls a trending dysco request from the queue
+		 * @return
+		 */
+		private String poll(){
+			synchronized (requests) {					
+				if (!requests.isEmpty()) {
+					String request = requests.remove();
+					return request;
+				}
+				try {
+					requests.wait(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
+				return null;
+			}
+		}
+		
+		/**
+		 * Processes a dysco request according to its type. 
+		 * @param dyscoRequestMessage
+		 */
+		private void processDyscoRequest(String dyscoRequestMessage){
+			List<String> keywordsOfRequest = new ArrayList<String>();
+    		List<KeywordsFeed> feedsOfRequest = new ArrayList<KeywordsFeed>();
+    		
+    		DyscoRequest request = new DyscoRequest(dyscoRequestMessage,new Date(System.currentTimeMillis()));
+    		
+			Dysco dysco = dyscoHandler.findDyscoLight(dyscoRequestMessage);
+			
+			findKeywordsAndFeeds(dysco,keywordsOfRequest,feedsOfRequest);
+			
+    		if(feedsOfRequest != null && !feedsOfRequest.isEmpty()){
+				request.setKeywordsFeeds(feedsOfRequest);
+				request.setKeywords(keywordsOfRequest);
+				
+			}
+			else{
+				logger.info("No Feeds could be created!");
+		
+				request.setIsSearched(true);
+			}
+			
+    		if(dysco.getEvolution().equals("dynamic")){
+				request.setDyscoType("custom");
+				
+			}
+			else{
+				request.setDyscoType("trending");
+				
+			}
+				
+    		
+	    	dyscoRequestDAO.insertDyscoRequest(request);
+		}
+		
+		 /**
 	     * Detects keywords of dysco according to its type and creates input feeds
 	     * with the above keywords.
 	     * 
@@ -369,7 +443,7 @@ public class DyscoManagerUpdated {
 	     * @param keywords
 	     * @param feeds
 	     */
-	    public void findKeywordsAndFeeds(Dysco dysco,List<String> keywords, List<KeywordsFeed> feeds){
+	    private void findKeywordsAndFeeds(Dysco dysco,List<String> keywords, List<KeywordsFeed> feeds){
 	    	if(dysco.getEvolution().equals("dynamic")){
 	    		System.out.println("Custom dysco : "+dysco.getId());
 	    		CustomFeedsCreator c_creator = new CustomFeedsCreator(dysco);
@@ -387,25 +461,78 @@ public class DyscoManagerUpdated {
 	    	}
 	    	else{
 	    		System.out.println("Trending dysco : "+dysco.getId());
-	    		RSSTopicFeedsCreator rt_creator = new RSSTopicFeedsCreator(rssProcessor.getWordsToRSSItems());
 	    		
-	    		List<String> mostSimilarRSSTopics = rt_creator.extractSimilarRSSForDysco(dysco);
+	    		DynamicFeedsCreator dynamicCreator = new DynamicFeedsCreator(rssProcessor.getWordsToRSSItems());
 	    		
-				keywords.addAll(rssProcessor.getTopKeywordsFromSimilarRSS(mostSimilarRSSTopics, dysco)); 
-				
-				if(keywords.size()>0){
-					List<Feed> inputFeeds = rt_creator.createFeeds();
-					for(Feed feed : inputFeeds){
-						if(feed.getFeedtype().equals(FeedType.KEYWORDS)){
-							KeywordsFeed keyFeed = (KeywordsFeed) feed;
-							feeds.add(keyFeed);
+	    		List<String> mostSimilarRSSTopics = dynamicCreator.extractSimilarRSSForDysco(dysco);
+	    		
+	    		//add most important entities first
+	    		if(dynamicCreator.getMostImportantEntities() != null){
+	    			for(Entity ent : dynamicCreator.getMostImportantEntities())
+	    				keywords.add(ent.getName());
+	    		}
+	    		//if there is need for more keywords add those that were found to be relevant from similar rss topics
+	    		if(keywords.size()<KEYWORDS_LIMIT){
+	    			
+		    		List<String> processorKeywords = rssProcessor.getTopKeywordsFromSimilarRSS(mostSimilarRSSTopics, dysco);
+		    		
+		    		Set<String> keywordsToAdd = new HashSet<String>();
+		    		
+		    		//remove possible duplicates
+					for(String p_key : processorKeywords){
+						boolean exists = false;
+						for(String key : keywords){
+						
+							if(key.toLowerCase().equals(p_key.toLowerCase()) || key.toLowerCase().contains(p_key.toLowerCase())){
+									exists = true;
+									break;
+							}
+						}
+						if(!exists){
+						
+							keywordsToAdd.add(p_key);
 						}
 					}
+		
+					for(String keyToAdd : keywordsToAdd){
+						boolean exists = false;
+						for(String keyToAdd_ : keywordsToAdd){
+							
+							if(!keyToAdd.equals(keyToAdd_)){
+								if(keyToAdd_.contains(keyToAdd)){
+									exists = true;
+								}
+							}
+						}
+						
+						if(!exists)
+							keywords.add(keyToAdd);
+					}
+					
+	    		}
+	    		
+					
+				dynamicCreator.setTopKeywords(keywords);
+				
+				//create feeds with the extracted keywords
+				List<Feed> inputFeeds = dynamicCreator.createFeeds();
+				for(Feed feed : inputFeeds){
+					if(feed.getFeedtype().equals(FeedType.KEYWORDS)){
+						KeywordsFeed keyFeed = (KeywordsFeed) feed;
+						feeds.add(keyFeed);
+					}
 				}
+				
 			
 	    	}
 	    }
-			
+	    
+	    /**
+		 * Stops TrendingSearchHandler
+		 */
+		public synchronized void die(){
+			isAlive = false;
+		}
 	}
 	/**
 	 * @param args
