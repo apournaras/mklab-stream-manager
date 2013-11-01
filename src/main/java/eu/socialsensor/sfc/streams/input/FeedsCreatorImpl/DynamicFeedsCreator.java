@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,7 +19,7 @@ import eu.socialsensor.framework.common.domain.dysco.Entity;
 import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
 import eu.socialsensor.sfc.streams.input.FeedsCreator;
 
-public class RSSTopicFeedsCreator implements FeedsCreator{
+public class DynamicFeedsCreator implements FeedsCreator{
 	private static final int MIN_RSS_THRESHOLD = 5;
 	
 	private Map<String,Set<String>> wordsToRSSItems;
@@ -36,11 +37,11 @@ public class RSSTopicFeedsCreator implements FeedsCreator{
 	private Date dateOfRetrieval;
 	private DateUtil dateUtil = new DateUtil();	
 	
-	private Entity mostImportantEntity = null;
+	private Set<Entity> mostImportantEntities = new HashSet<Entity>();
 	
 	Stopwords stopwords = new Stopwords();
 	
-	public RSSTopicFeedsCreator(Map<String,Set<String>> wordsToRSSItems){
+	public DynamicFeedsCreator(Map<String,Set<String>> wordsToRSSItems){
 		this.wordsToRSSItems = wordsToRSSItems;
 	}
 	
@@ -50,6 +51,11 @@ public class RSSTopicFeedsCreator implements FeedsCreator{
 	
 	public List<String> getTopKeywords(){
 		return topKeywords;
+	}
+	
+	public Set<Entity> getMostImportantEntities(){
+		
+		return mostImportantEntities;
 	}
 	
 	public List<String> extractSimilarRSSForDysco(Dysco dysco){
@@ -62,12 +68,15 @@ public class RSSTopicFeedsCreator implements FeedsCreator{
 		computeTopSimilarRSS();
 		findMostSimilarRSS();
 		
-		for(String rss : rssTopicsScore.keySet()){
+		if(mostSimilarRSSTopics.isEmpty())
+			System.out.println("Dysco has no similar RSS Topic - Can't extract usefull keywords");
+		
+	/*	for(String rss : rssTopicsScore.keySet()){
 			System.out.println("RSS : "+rss + " --- Score : "+rssTopicsScore.get(rss));
 		}
 		for(String rss : mostSimilarRSSTopics){
 			System.out.println("Most Similar RSS : "+rss);
-		}
+		}*/
 		
 		return mostSimilarRSSTopics;
 	}
@@ -95,22 +104,31 @@ public class RSSTopicFeedsCreator implements FeedsCreator{
 	}
 	
 	private void computeTopSimilarRSS(){
-		Set<String> similarRSS = null;
-		//find most important entity
+		Set<String> similarRSS = new HashSet<String>();
 		
+		//find most important entity
 		int maxEntityScore = 0;
 		for(Entity entity : entities){
+			//find max score in entities
  			if(entity.getCont() > maxEntityScore){
 				maxEntityScore = entity.getCont();
-				mostImportantEntity = entity;
 			}
 		}
+		for(Entity entity : entities){
+			if(entity.getCont() == maxEntityScore)
+				mostImportantEntities.add(entity);
+		}
 		
-		if(mostImportantEntity != null){
-			System.out.println("Most important entity : "+mostImportantEntity.getName());
-			similarRSS = wordsToRSSItems.get(mostImportantEntity.getName().toLowerCase());
-			if(similarRSS == null || similarRSS.isEmpty())
-				System.out.println("No similar RSS Items for this entity");
+		if(!mostImportantEntities.isEmpty()){
+			
+			for(Entity imp_entity : mostImportantEntities){
+				System.out.println("Most important entity : "+imp_entity.getName());
+				if(wordsToRSSItems.get(imp_entity.getName().toLowerCase())!=null)
+					similarRSS.addAll(wordsToRSSItems.get(imp_entity.getName().toLowerCase()));
+			}
+				
+			if(similarRSS.isEmpty())
+				System.out.println("No similar RSS Items for important entities");
 			else{
 				for(Entity entity : entities){
 					if(wordsToRSSItems.containsKey(entity.getName().toLowerCase())){
@@ -148,22 +166,7 @@ public class RSSTopicFeedsCreator implements FeedsCreator{
 			}
 		}
 		
-		if(similarRSS == null || similarRSS.isEmpty()){
-			for(Entity entity : entities){
-				
-				if(wordsToRSSItems.containsKey(entity.getName().toLowerCase())){
-					Integer score = dyscoAttributesWithScore.get(entity.getName().toLowerCase());
-					similarRSS = wordsToRSSItems.get(entity.getName().toLowerCase());
-					for(String rss : similarRSS){
-						if(rssTopicsScore.containsKey(rss)){
-							rssTopicsScore.put(rss, (rssTopicsScore.get(rss)+1)*score);
-						}
-						else{
-							rssTopicsScore.put(rss, score);
-						}
-					}
-				}
-			}
+		if(similarRSS.isEmpty()){
 			
 			for(String keyword : keywords){
 				
@@ -199,7 +202,7 @@ public class RSSTopicFeedsCreator implements FeedsCreator{
 			if(rssTopicsScore.get(rss) > maxScore)
 				maxScore = rssTopicsScore.get(rss);
 		}
-		
+		mostSimilarRSSTopics.clear();
 		for(Map.Entry<String, Integer> entry : rssTopicsScore.entrySet()){
 			if(entry.getValue() == maxScore){
 				mostSimilarRSSTopics.add(entry.getKey());
@@ -314,79 +317,71 @@ public class RSSTopicFeedsCreator implements FeedsCreator{
 		List<Feed> inputFeeds = new ArrayList<Feed>();
 		List<String> tempKeywords = new ArrayList<String>();
 		
-		//topKeywords = rssProcessor.getTopKeywords();
-		
 		String keyToRemove = null;
 		for(String key : topKeywords)
-			if(key.equals(""))
+			if(key.trim().equals(""))
 				keyToRemove = key;
 		
 		if(keyToRemove != null)
 			topKeywords.remove(keyToRemove);
 		
-		if(topKeywords.isEmpty() && mostImportantEntity!=null){
+		if(topKeywords.size() == 1){
 			String feedID = UUID.randomUUID().toString();
-			KeywordsFeed keywordsFeed = new KeywordsFeed(new Keyword(mostImportantEntity.getName().toLowerCase(),0.0f),dateOfRetrieval,feedID,dysco.getId());
-			keywordsFeed.addQueryKeyword(mostImportantEntity.getName().toLowerCase());
+			KeywordsFeed keywordsFeed = new KeywordsFeed(new Keyword(topKeywords.get(0).toLowerCase(),0.0f),dateOfRetrieval,feedID,dysco.getId());
+			keywordsFeed.addQueryKeyword(topKeywords.get(0).toLowerCase());
 			inputFeeds.add(keywordsFeed);
 		}
-			
-		
-		for(String key : topKeywords){
-			
-			int numOfWords = key.split(" ").length;
-			if(numOfWords > 1 && numOfWords < 4){
-				String feedID = UUID.randomUUID().toString();
-				KeywordsFeed keywordsFeed = new KeywordsFeed(new Keyword(key,0.0f),dateOfRetrieval,feedID,dysco.getId());
-				keywordsFeed.addQueryKeyword(key);
-				inputFeeds.add(keywordsFeed);
+		else{
+			for(String key : topKeywords){
 				
-			}
-			else if(numOfWords >= 4){
-				List<String> newKeys = new ArrayList<String>();
-				for(int i=0;i<numOfWords;i++)
-					newKeys.add(key.split(" ")[i]);
-				
-				topKeywords.addAll(newKeys);
-			}
-		}
-		
-		//doublets
-		for(int i = 0; i<topKeywords.size(); i++){
-			for(int j = i+1;j<topKeywords.size();j++){
-				if(!topKeywords.get(i).equals(topKeywords.get(j))){
+				int numOfWords = key.split(" ").length;
+				if(numOfWords > 1 && numOfWords < 4){
 					String feedID = UUID.randomUUID().toString();
-					tempKeywords.add(topKeywords.get(i));
-					tempKeywords.add(topKeywords.get(j));
-					KeywordsFeed keywordsFeed = new KeywordsFeed(tempKeywords,dateOfRetrieval,feedID,dysco.getId());
-					keywordsFeed.addQueryKeywords(tempKeywords);
-					
+					KeywordsFeed keywordsFeed = new KeywordsFeed(new Keyword(key,0.0f),dateOfRetrieval,feedID,dysco.getId());
+					keywordsFeed.addQueryKeyword(key);
 					inputFeeds.add(keywordsFeed);
 					
-					tempKeywords.clear();
 				}
-			}
-		}
 		
-		//triplets
-		for(int i=0;i<topKeywords.size();i++){
-			for(int j=i+1;j<topKeywords.size();j++){
-				for(int k=j+1;k<topKeywords.size();k++){
-					if(!topKeywords.get(i).equals(topKeywords.get(j)) 
-							&& !topKeywords.get(i).equals(topKeywords.get(k))
-							&& !topKeywords.get(j).equals(topKeywords.get(k))){
+			}
+			
+			//doublets
+			for(int i = 0; i<topKeywords.size(); i++){
+				for(int j = i+1;j<topKeywords.size();j++){
+					if(!topKeywords.get(i).equals(topKeywords.get(j))){
 						String feedID = UUID.randomUUID().toString();
 						tempKeywords.add(topKeywords.get(i));
 						tempKeywords.add(topKeywords.get(j));
-						tempKeywords.add(topKeywords.get(k));
 						KeywordsFeed keywordsFeed = new KeywordsFeed(tempKeywords,dateOfRetrieval,feedID,dysco.getId());
 						keywordsFeed.addQueryKeywords(tempKeywords);
 						
 						inputFeeds.add(keywordsFeed);
-					
+						
 						tempKeywords.clear();
 					}
+				}
+			}
+			
+			//triplets
+			for(int i=0;i<topKeywords.size();i++){
+				for(int j=i+1;j<topKeywords.size();j++){
+					for(int k=j+1;k<topKeywords.size();k++){
+						if(!topKeywords.get(i).equals(topKeywords.get(j)) 
+								&& !topKeywords.get(i).equals(topKeywords.get(k))
+								&& !topKeywords.get(j).equals(topKeywords.get(k))){
+							String feedID = UUID.randomUUID().toString();
+							tempKeywords.add(topKeywords.get(i));
+							tempKeywords.add(topKeywords.get(j));
+							tempKeywords.add(topKeywords.get(k));
+							KeywordsFeed keywordsFeed = new KeywordsFeed(tempKeywords,dateOfRetrieval,feedID,dysco.getId());
+							keywordsFeed.addQueryKeywords(tempKeywords);
+							
+							inputFeeds.add(keywordsFeed);
 						
+							tempKeywords.clear();
+						}
+							
+					}
 				}
 			}
 		}
