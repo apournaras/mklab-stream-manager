@@ -19,6 +19,15 @@ import eu.socialsensor.framework.common.domain.dysco.Entity;
 import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
 import eu.socialsensor.sfc.streams.input.FeedsCreator;
 
+/**
+ * @brief Class for the creation of input feeds for a dysco using rss topics. 
+ * The most representative keywords that will be used for the feed creation
+ * are extracted from the most similar rss topics to the dysco after filtering,
+ * comparing and ranking their content. The feeds are created by all the different 
+ * combinations of the most representantive keywords of the dysco.
+ * @author ailiakop
+ * @email  ailiakop@iti.gr
+ */
 public class DynamicFeedsCreator implements FeedsCreator{
 	private static final int MIN_RSS_THRESHOLD = 5;
 	
@@ -45,19 +54,36 @@ public class DynamicFeedsCreator implements FeedsCreator{
 		this.wordsToRSSItems = wordsToRSSItems;
 	}
 	
+	/**
+	 * Sets the best (most representative) keywords 
+	 * @param topKeywords
+	 */
 	public void setTopKeywords(List<String> topKeywords){
 		this.topKeywords = topKeywords;
 	}
-	
+	/**
+	 * Returns the best (most representative) keywords 
+	 * @param topKeywords
+	 * @return List of strings
+	 */
 	public List<String> getTopKeywords(){
 		return topKeywords;
 	}
-	
+	/**
+	 * Returns the most important entities for the dysco
+	 * 
+	 * @return List of Entity
+	 */
 	public Set<Entity> getMostImportantEntities(){
 		
 		return mostImportantEntities;
 	}
 	
+	/**
+	 * Finds the most similar rss topics to the dysco
+	 * @param dysco
+	 * @return
+	 */
 	public List<String> extractSimilarRSSForDysco(Dysco dysco){
 		this.dysco = dysco;
 		
@@ -71,16 +97,13 @@ public class DynamicFeedsCreator implements FeedsCreator{
 		if(mostSimilarRSSTopics.isEmpty())
 			System.out.println("Dysco has no similar RSS Topic - Can't extract usefull keywords");
 		
-	/*	for(String rss : rssTopicsScore.keySet()){
-			System.out.println("RSS : "+rss + " --- Score : "+rssTopicsScore.get(rss));
-		}
-		for(String rss : mostSimilarRSSTopics){
-			System.out.println("Most Similar RSS : "+rss);
-		}*/
-		
 		return mostSimilarRSSTopics;
 	}
 	
+	/**
+	 * Sets the importance of its dysco word according to 
+	 * its type and frequency in the dysco
+	 */
 	private void extractDyscosAttributes(){
 		for(Entity entity : entities){
 			Integer score = entity.getCont();
@@ -103,6 +126,10 @@ public class DynamicFeedsCreator implements FeedsCreator{
 		
 	}
 	
+	/**
+	 * Computes the similarities scores of the rss topics
+	 * to the dysco based on their common entities and keywords
+	 */
 	private void computeTopSimilarRSS(){
 		Set<String> similarRSS = new HashSet<String>();
 		
@@ -195,6 +222,10 @@ public class DynamicFeedsCreator implements FeedsCreator{
 		}
 	}
 	
+	/**
+	 * Finds the rss topics that have the maximum 
+	 * similarity score to the dysco
+	 */
 	private void findMostSimilarRSS(){
 		Integer maxScore = 0;
 	
@@ -303,7 +334,6 @@ public class DynamicFeedsCreator implements FeedsCreator{
 		}
 			
 	}
-	
 	
 	
 	@Override
