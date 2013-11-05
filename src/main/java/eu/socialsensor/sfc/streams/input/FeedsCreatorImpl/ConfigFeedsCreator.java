@@ -66,7 +66,7 @@ public class ConfigFeedsCreator implements FeedsCreator{
 		if (value != null && !value.equals("")) {
 			String[] tokens = value.split(",");
 			for(String token : tokens) {
-				Keyword keyword = new Keyword(token, 0.0f);
+				Keyword keyword = new Keyword(token.toLowerCase(), 0.0f);
 				extractedKeywords.add(keyword);
 			}
 		}
@@ -75,7 +75,7 @@ public class ConfigFeedsCreator implements FeedsCreator{
 		if (value != null && !value.equals("")) {
 			String[] users = value.split(",");
 			for(String user : users) {
-				Source source = new Source(user, 0.0f);
+				Source source = new Source(user.toLowerCase(), 0.0f);
 				extractedSources.add(source);
 			}
 		}
