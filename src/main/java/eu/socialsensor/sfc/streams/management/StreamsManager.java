@@ -33,6 +33,7 @@ import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.ConfigFeedsCreator;
  * @email  ailiakop@iti.gr
  */
 public class StreamsManager{
+	protected static final String REQUEST_PERIOD = "period";
 	
 	public final Logger logger = Logger.getLogger(StreamsManager.class);
 	
@@ -45,9 +46,11 @@ public class StreamsManager{
 	private StoreManager storeManager;
 	private ConfigFeedsCreator configFeedsCreator;
 	private ManagerState state = ManagerState.CLOSE;
-	private int numberOfConsumers = 1; //for multi-threaded items' storage
-
+	private int numberOfConsumers = 5; //for multi-threaded items' storage
+	private long requestPeriod;
 	private Set<String> streamConfigs;
+	private List<Feed> feeds = new ArrayList<Feed>();
+	private boolean isAlive = true;
 	
 	public StreamsManager(StreamsManagerConfiguration config) throws StreamException {
 
@@ -58,6 +61,8 @@ public class StreamsManager{
 		this.config = config;
 		
 		streamConfigs = config.getStreamIds();
+		
+		requestPeriod = Long.parseLong(config.getParameter(StreamsManager.REQUEST_PERIOD)) * 1000;  //convert in milliseconds
 
 		initStreams();
 		
@@ -69,7 +74,6 @@ public class StreamsManager{
 	 * @throws StreamException
 	 */
 	public synchronized void open() throws StreamException {
-		List<Feed> feeds = new ArrayList<Feed>();
 		
 		if (state == ManagerState.OPEN) {
 			return;
@@ -94,16 +98,41 @@ public class StreamsManager{
 				
 				feeds = configFeedsCreator.createFeeds();
 				
-				if(feeds != null){
-					stream.search(feeds);
-					
-				}
 			}
 	
 		}catch(Exception e) {
 			e.printStackTrace();
 			throw new StreamException("Error during streams open", e);
 		}
+	}
+	
+	public synchronized void search(){
+		long currentTime = System.currentTimeMillis();
+		long timeOfSearch = currentTime + requestPeriod; 
+		
+		if(feeds == null){
+			System.out.println("No feeds to search");
+			return;
+		}
+		//System.out.println("Current time : "+currentTime);
+		//System.out.println("Time of Search : "+timeOfSearch);
+		while(isAlive){
+			if(Math.abs(currentTime - timeOfSearch)>= requestPeriod){
+				for(Stream stream : streams.values()){
+					
+					try {
+						stream.search(feeds);
+					} catch (StreamException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+						
+				}
+				timeOfSearch = currentTime;
+			}
+			currentTime = System.currentTimeMillis();
+		}
+		
 	}
 	
 	/**
@@ -115,7 +144,7 @@ public class StreamsManager{
 		if (state == ManagerState.CLOSE) {
 			return;
 		}
-		
+		isAlive = false;
 		try{
 			for (Stream stream : streams.values()) {
 				stream.close();
@@ -196,6 +225,7 @@ public class StreamsManager{
 	        
 			StreamsManager streamsManager = new StreamsManager(config);
 			streamsManager.open();
+			streamsManager.search();
 		
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
