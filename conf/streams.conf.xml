@@ -1,164 +1,190 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
-     
+    <RequestPeriod>
+    	<Parameter name="period">
+    		<![CDATA[3600]]>
+    	</Parameter>
+    </RequestPeriod>
     <Storages>
     	<!-- Mongodb storage configuaration  -->
     	<Storage id="Mongodb">
     		<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.MongoDbStorage]]></Parameter>
     		<Parameter name="mongodb.host"><![CDATA[your.ip]]></Parameter>
     		<Parameter name="mongodb.private.host"><![CDATA[your.ip]]></Parameter>
-    		<Parameter name="mongodb.database"><![CDATA[Streams]]></Parameter>
-    		<Parameter name="mongodb.dyscos.collection"><![CDATA[Dyscos]]></Parameter>
-    		<Parameter name="mongodb.rss.collection"><![CDATA[Items]]></Parameter>
-    		<Parameter name="mongodb.items.collection"><![CDATA[Items]]></Parameter>
-    		<Parameter name="mongodb.mediaitems.collection"><![CDATA[MediaItems]]></Parameter>
-    		<Parameter name="mongodb.streamusers.collection"><![CDATA[StreamUsers]]></Parameter>
-    		<Parameter name="mongodb.webpages.collection"><![CDATA[WebPages]]></Parameter>
+    		<Parameter name="mongodb.database"><![CDATA[name.of.your.database]]></Parameter>
+    		<Parameter name="mongodb.dyscos.collection"><![CDATA[collection.one]]></Parameter>
+    		<Parameter name="mongodb.rss.collection"><![CDATA[collection.two]]></Parameter>
+    		<Parameter name="mongodb.items.collection"><![CDATA[collection.three]]></Parameter>
+    		<Parameter name="mongodb.mediaitems.collection"><![CDATA[collection.four]]></Parameter>
+    		<Parameter name="mongodb.streamusers.collection"><![CDATA[collection.five]]></Parameter>
+    		<Parameter name="mongodb.webpages.collection"><![CDATA[collection.six]]></Parameter>
     		
     	</Storage>
     	
     	
-    	<!--Solr storage configuaration -->
+    	<!--  Stdout storage configuaration  
+  	   <Storage id="Stdout">
+    		<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.StdoutStorage]]></Parameter>
+    	</Storage> 
+    	-->
+    	
+    	<!--Solr storage configuaration  -->
     	<Storage id="Solr">
     		<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.SolrStorage]]></Parameter>
     		<Parameter name="solr.hostname"><![CDATA[your.ip]]></Parameter>
     		<Parameter name="solr.service"><![CDATA[solr]]></Parameter>
-    		<Parameter name="solr.mediaitems.collection"><![CDATA[DyscoMediaItems]]></Parameter>
+    		<Parameter name="solr.items.collection"><![CDATA[collection.two]]></Parameter>
+    		<Parameter name="solr.mediaitems.collection"><![CDATA[collection.two]]></Parameter>
     	</Storage>
-    
-    	
+   
+    	<!--  Lucene storage configuaration 
+    	<Storage id="Lucene">
+    		<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.LuceneStorage]]></Parameter>
+    		
+    	</Storage>
+    	-->
     	
     </Storages>
 	
 	<Streams>
 	
-		<!--  Facebook Stream Handler-->  
+		<!--  Facebook Stream Handler  
         <Stream id="Facebook">
 			<Parameter name="Classpath">
 				<![CDATA[eu.socialsensor.framework.streams.facebook.FacebookStream]]>
 			</Parameter>
 			<Parameter name="AccessToken">
-				<![your.AccessToken]]>
+				<![CDATA[your.accesstoken]]>
 			</Parameter>
-	        <Parameter name="FeedsSeedlist">
-	        	<![CDATA[./conf/facebook_feeds.txt]]>
-	        </Parameter>
 	        <Parameter name="since">
-	        	<![CDATA[2012-12-01T00:00:00+0000]]>
+	        	<![CDATA[2013-10-31 00:00:00.000]]>
 	      	</Parameter>
 	      	<Parameter name="maxResults">
-				<![CDATA[50]]>
+				<![CDATA[10]]>
 			</Parameter>
 			<Parameter name="maxRequests">
-				<![CDATA[1]]>
+				<![CDATA[5]]>
 			</Parameter>
 	        <Parameter name="keywords">
-	        	<![CDATA[]]>
+	        	<![CDATA[keyword.of.search]]>
+	      	</Parameter>
+	      	<Parameter name="follows">
+	        	<![CDATA[user.to.follow]]>
+	      	</Parameter>
+	      	<Parameter name="locations">
+	        	<![CDATA[location.of.relevance]]>
 	      	</Parameter>
 		</Stream>
+		-->
 		
-		
-		<!-- Twitter Stream Handler 
+		<!-- Twitter Stream Handler -->
 		<Stream id="Twitter">
 			<Parameter name="Classpath">
 				<![CDATA[eu.socialsensor.framework.streams.twitter.TwitterStream]]>
 			</Parameter>
             <Parameter name="Key">
-				<![CDATA[your.Key]]>
+				<![CDATA[your.key]]>
 			</Parameter>
 	        <Parameter name="Secret">
-	        	<![CDATA[your.SecretKey]]>
+	        	<![CDATA[your.secret.key]]>
 	       	</Parameter>
         	<Parameter name="AccessToken">
-	        	<![CDATA[your.AccessToken]]>
+	        	<![CDATA[your.accesstoken]]>
 	       	</Parameter>
         	<Parameter name="AccessTokenSecret">
-	        	<![CDATA[your.AccessTokenSecret]]>
+	        	<![CDATA[your.secret.accesstoken]]>
 	       	</Parameter>
-	   
 	       	<Parameter name="keywords">
-	        	<![CDATA[]]>
-	        </Parameter>
-            <Parameter name="follows">
-	        	<![CDATA[]]>
-	        </Parameter>
-	        <Parameter name="locations">
-	        	<![CDATA[]]>
-	        </Parameter>
+	        	<![CDATA[keyword.of.search]]>
+	      	</Parameter>
+	      	<Parameter name="follows">
+	        	<![CDATA[user.to.follow]]>
+	      	</Parameter>
+	      	<Parameter name="locations">
+	        	<![CDATA[location.of.relevance]]>
+	      	</Parameter>
 		</Stream>
-		-->
-
-		<!-- WebFeeds Handler 
-		<Stream id="WebFeeds">
-			<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.source.feeds.WebFeedsStream]]></Parameter>
-			<Parameter name="FeedsSeedlist"><![CDATA[./conf/feeds.txt]]></Parameter>
-			<Parameter name="MinSchedulePeriod">30000</Parameter>
-			<Parameter name="HandlerHost">localhost</Parameter>
-			<Parameter name="HandlerPort">3281</Parameter>
-		</Stream>
-		-->
-		
-		<!-- YouTube Handler -->
+	
+		<!-- YouTube Handler 
 		<Stream id="YouTube">
 			<Parameter name="Classpath">
 				<![CDATA[eu.socialsensor.framework.streams.youtube.YoutubeStream]]>
 			</Parameter>
 			<Parameter name="ClientId">
-				<![CDATA[your.ClientId]]>
+				<![CDATA[your.clientId]]>
 			</Parameter>
 			<Parameter name="Key">
-				<![CDATA[your.Key]]>
+				<![CDATA[your.key]]>
 			</Parameter>
 			<Parameter name="since">
-	        	<![CDATA[2012-10-01 00:00:00.000]]>
+	        	<![CDATA[2013-10-31 00:00:00.000]]>
 	      	</Parameter>
 	      		<Parameter name="maxResults">
 				<![CDATA[50]]>
 			</Parameter>
 			<Parameter name="maxRequests">
-				<![CDATA[1]]>
+				<![CDATA[2]]>
 			</Parameter>
+				<Parameter name="keywords">
+	        	<![CDATA[keyword.of.search]]>
+	      	</Parameter>
+	      	<Parameter name="follows">
+	        	<![CDATA[user.to.follow]]>
+	      	</Parameter>
+	      	<Parameter name="locations">
+	        	<![CDATA[location.of.relevance]]>
+	      	</Parameter>
 		</Stream> 
+		-->
 		
-		
-		<!-- Flickr Stream Handler  -->
+		<!-- Flickr Stream Handler  
 		<Stream id="Flickr">
 			<Parameter name="Classpath">
 				<![CDATA[eu.socialsensor.framework.streams.flickr.FlickrStream]]>
 			</Parameter>
 			<Parameter name="Key">
-				<![CDATA[your.Key]]>
+				<![CDATA[your.key]]>
 			</Parameter>
 			<Parameter name="Secret">
-				<![CDATA[your.SecretKey]]>
+				<![CDATA[your.secret.key]]>
 			</Parameter>
 			<Parameter name="since">
-	        	<![CDATA[2012-10-01T00:00:00.000Z]]>
+	        	<![CDATA[2013-10-31 00:00:00.000]]>
 	      	</Parameter>
 	      		<Parameter name="maxResults">
-				<![CDATA[50]]>
+				<![CDATA[10000000]]>
 			</Parameter>
 			<Parameter name="maxRequests">
-				<![CDATA[1]]>
+				<![CDATA[50]]>
 			</Parameter>
+			</Parameter>
+				<Parameter name="keywords">
+	        	<![CDATA[keyword.of.search]]>
+	      	</Parameter>
+	      	<Parameter name="follows">
+	        	<![CDATA[user.to.follow]]>
+	      	</Parameter>
+	      	<Parameter name="locations">
+	        	<![CDATA[location.of.relevance]]>
+	      	</Parameter>
 		</Stream>
-		
-		<!-- Google+ Stream Handler --> 
+		-->
+		<!-- Google+ Stream Handler 
 		<Stream id="GooglePlus">
 			<Parameter name="Classpath">
 				<![CDATA[eu.socialsensor.framework.streams.gplus.GooglePlusStream]]>
 			</Parameter>
 			<Parameter name="Key">
-				<![CDATA[your.Key]]>
+				<![CDATA[your.key]]>
 			</Parameter>
 			<Parameter name="Secret">
-				<![CDATA[your.Secret]]>
+				<![CDATA[your.secret.key]]>
 			</Parameter>
 			<Parameter name="ClientId">
-				<![CDATA[your.ClientId]]>
+				<![CDATA[your.clientId]]>
 			</Parameter>
 			<Parameter name="since">
-	        	<![CDATA[2012-10-01 00:00:00.000]]>
+	        	<![CDATA[2013-10-01 00:00:00.000]]>
 	      	</Parameter>
 	      	<Parameter name="maxResults">
 				<![CDATA[50]]>
@@ -166,21 +192,31 @@
 			<Parameter name="maxRequests">
 				<![CDATA[1]]>
 			</Parameter>
+			</Parameter>
+				<Parameter name="keywords">
+	        	<![CDATA[keyword.of.search]]>
+	      	</Parameter>
+	      	<Parameter name="follows">
+	        	<![CDATA[user.to.follow]]>
+	      	</Parameter>
+	      	<Parameter name="locations">
+	        	<![CDATA[location.of.relevance]]>
+	      	</Parameter>
 		</Stream>
-		 
-		<!-- Tumblr Stream Handler  -->
+		 --> 
+		<!-- Tumblr Stream Handler  
 		<Stream id="Tumblr">
 			<Parameter name="Classpath">
 				<![CDATA[eu.socialsensor.framework.streams.tumblr.TumblrStream]]>
 			</Parameter>
 			<Parameter name="Key">
-				<![CDATA[your.Key]]>
+				<![CDATA[your.key]]>
 			</Parameter>
 			<Parameter name="Secret">
-				<![CDATA[your.SecretKey]]>
+				<![CDATA[your.secret.key]]>
 			</Parameter>
 			<Parameter name="since">
-	        	<![CDATA[2013-01-01 00:00:00.000]]>
+	        	<![CDATA[2013-10-01 00:00:00.000]]>
 	      	</Parameter>
 	      	<Parameter name="maxResults">
 				<![CDATA[50]]>
@@ -188,25 +224,35 @@
 			<Parameter name="maxRequests">
 				<![CDATA[1]]>
 			</Parameter>
+			</Parameter>
+				<Parameter name="keywords">
+	        	<![CDATA[keyword.of.search]]>
+	      	</Parameter>
+	      	<Parameter name="follows">
+	        	<![CDATA[user.to.follow]]>
+	      	</Parameter>
+	      	<Parameter name="locations">
+	        	<![CDATA[location.of.relevance]]>
+	      	</Parameter>
 		</Stream>
 		
-		
-		<!--  Instagram Stream Handler -->
+		-->
+		<!--  Instagram Stream Handler 
 		<Stream id="Instagram">
 			<Parameter name="Classpath">
 				<![CDATA[eu.socialsensor.framework.streams.instagram.InstagramStream]]>
 			</Parameter>
 			<Parameter name="Key">
-				<![CDATA[your.Key]]>
+				<![CDATA[your.key]]>
 			</Parameter>
 			<Parameter name="Secret">
-				<![CDATA[your.SecretKey]]>
+				<![CDATA[your.secret.key]]>
 			</Parameter>
 			<Parameter name="AccessToken">
-				<![CDATA[your.AccessToken]]>
+				<![CDATA[your.accesstoken]]>
 			</Parameter>
 			<Parameter name="since">
-	        	<![CDATA[2012-10-01 00:00:00.000]]>
+	        	<![CDATA[2013-10-01 00:00:00.000]]>
 	      	</Parameter>
 	      	<Parameter name="maxResults">
 				<![CDATA[50]]>
@@ -214,8 +260,18 @@
 			<Parameter name="maxRequests">
 				<![CDATA[1]]>
 			</Parameter>
+			</Parameter>
+			<Parameter name="keywords">
+	        	<![CDATA[keyword.of.search]]>
+	      	</Parameter>
+	      	<Parameter name="follows">
+	        	<![CDATA[user.to.follow]]>
+	      	</Parameter>
+	      	<Parameter name="locations">
+	        	<![CDATA[location.of.relevance]]>
+	      	</Parameter>
 		</Stream> 
-	
+	-->
 	</Streams>
 </Configuration>
 
