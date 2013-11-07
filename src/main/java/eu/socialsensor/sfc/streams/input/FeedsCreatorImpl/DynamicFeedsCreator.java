@@ -149,7 +149,7 @@ public class DynamicFeedsCreator implements FeedsCreator{
 		if(!mostImportantEntities.isEmpty()){
 			
 			for(Entity imp_entity : mostImportantEntities){
-				System.out.println("Most important entity : "+imp_entity.getName());
+				
 				if(wordsToRSSItems.get(imp_entity.getName().toLowerCase())!=null)
 					similarRSS.addAll(wordsToRSSItems.get(imp_entity.getName().toLowerCase()));
 			}
@@ -415,9 +415,7 @@ public class DynamicFeedsCreator implements FeedsCreator{
 				}
 			}
 		}
-		System.out.println("Created feeds : ");
-		for(Feed feed : inputFeeds)
-			System.out.println(((KeywordsFeed) feed).toJSONString());
+		
 		return inputFeeds;
 	}
 	

@@ -38,6 +38,10 @@ public class StreamsManagerConfiguration extends Configuration {
 	@SerializedName(value = "storages")
 	private Map<String, StorageConfiguration> storageConfigMap = null;
 	
+	@Expose
+	@SerializedName(value = "request_period")
+	private String requestPeriod = null;
+	
 	public StreamsManagerConfiguration() {
 		streamConfigMap = new HashMap<String, StreamConfiguration>();
 		storageConfigMap = new HashMap<String, StorageConfiguration>();
@@ -76,6 +80,10 @@ public class StreamsManagerConfiguration extends Configuration {
 	
 	public Set<String> getStorageIds() {
 		return storageConfigMap.keySet();
+	}
+	
+	public String getRequestPeriod(){
+		return requestPeriod;
 	}
 	
 	public static StreamsManagerConfiguration readFromMongo(String host, String dbName, String collectionName) 
@@ -135,6 +143,8 @@ public class StreamsManagerConfiguration extends Configuration {
 			IN_CONFIG_STREAM_PARAM,
 			IN_CONFIG_STORAGE,
 			IN_CONFIG_STORAGE_PARAM,
+			IN_CONFIG_REQUEST,
+			IN_CONFIG_REQUEST_PARAM,
 		}
 		
 		private StreamsManagerConfiguration config = new StreamsManagerConfiguration();
@@ -144,6 +154,7 @@ public class StreamsManagerConfiguration extends Configuration {
 	    private StreamConfiguration sconfig = null;
 	    private StorageConfiguration storage_config = null; 
 	    private String streamId = null, storageId = null;
+	    private String requestPeriod = null;
 		
 		public StreamsManagerConfiguration getConfig() {
 			return config;
@@ -167,6 +178,9 @@ public class StreamsManagerConfiguration extends Configuration {
 				else if(state == ParseState.IN_CONFIG_STORAGE) {
 					state = ParseState.IN_CONFIG_STORAGE_PARAM;
 				}
+				else if(state == ParseState.IN_CONFIG_REQUEST){
+					state = ParseState.IN_CONFIG_REQUEST_PARAM;
+				}
 			}
 			
 			else if (name.equalsIgnoreCase("Stream")){
@@ -184,7 +198,10 @@ public class StreamsManagerConfiguration extends Configuration {
 				storage_config = new StorageConfiguration();
 				state = ParseState.IN_CONFIG_STORAGE;
 			}
-			
+			else if (name.equalsIgnoreCase("RequestPeriod")){
+				value = new StringBuilder();
+				state = ParseState.IN_CONFIG_REQUEST;
+			}
 		}
 		
 		@Override
@@ -218,6 +235,10 @@ public class StreamsManagerConfiguration extends Configuration {
 			else if (name.equalsIgnoreCase("Storage")){
 				config.setStorageConfig(storageId, storage_config);
 				state = ParseState.IDLE;
+			}
+			else if(name.equalsIgnoreCase("Parameter") && state == ParseState.IN_CONFIG_REQUEST_PARAM){
+				config.setParameter(this.name, value.toString().trim());
+				state = ParseState.IN_CONFIG_REQUEST;
 			}
 				
 		}

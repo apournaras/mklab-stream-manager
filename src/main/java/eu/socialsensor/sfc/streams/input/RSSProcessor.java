@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import eu.socialsensor.framework.client.dao.ItemDAO;
+import eu.socialsensor.framework.client.dao.TopicDAO;
 import eu.socialsensor.framework.common.domain.Topic;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Entity;
@@ -31,21 +32,21 @@ public class RSSProcessor {
 	
 	private List<String> mostSimilarRSSTopics = new ArrayList<String>();
 	
-	private ItemDAO itemDAO;
+	private TopicDAO topicDAO;
 	
 	public RSSProcessor(){
 		super();
 	}
 	
-	public void setRSSProcessor(ItemDAO itemDAO){
-		this.itemDAO = itemDAO;
+	public void setRSSProcessor(TopicDAO topicDAO){
+		this.topicDAO = topicDAO;
 		
-		List<Topic> topics = itemDAO.readTopicsByStatus();
+		List<Topic> topics = topicDAO.readTopicsByStatus();
 		
 		for(Topic rssTopic : topics){
 			rssItems.put(rssTopic.getId(), rssTopic);
 			rssTopic.setIsRead(true);
-			itemDAO.updateTopic(rssTopic);
+			topicDAO.updateTopic(rssTopic);
 		}
 	}
 	

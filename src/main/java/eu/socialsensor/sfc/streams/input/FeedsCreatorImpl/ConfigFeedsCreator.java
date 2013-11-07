@@ -51,15 +51,16 @@ public class ConfigFeedsCreator implements FeedsCreator{
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 		String since = configFile.getParameter(SINCE);
 		
-		
-		try {
-			sinceDate = (Date) formatter.parse(since);
-			
-		} catch (ParseException e) {
-			logger.error("ParseException : "+e);
+		if(since != null){
+			try {
+				sinceDate = (Date) formatter.parse(since);
+				
+			} catch (ParseException e) {
+				logger.error("ParseException : "+e);
+			}
 		}
 		
-		
+	
 		String value;
 		
 		value = configFile.getParameter(KEYWORDS);

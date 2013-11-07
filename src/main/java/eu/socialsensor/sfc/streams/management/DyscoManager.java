@@ -22,8 +22,10 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisPubSub;
 import eu.socialsensor.framework.client.dao.DyscoRequestDAO;
 import eu.socialsensor.framework.client.dao.ItemDAO;
+import eu.socialsensor.framework.client.dao.TopicDAO;
 import eu.socialsensor.framework.client.dao.impl.DyscoRequestDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.ItemDAOImpl;
+import eu.socialsensor.framework.client.dao.impl.TopicDAOImpl;
 import eu.socialsensor.framework.client.search.MediaSearcher;
 import eu.socialsensor.framework.client.search.solr.SolrDyscoHandler;
 import eu.socialsensor.framework.common.domain.DyscoRequest;
@@ -75,6 +77,7 @@ public class DyscoManager {
 	
 	private DyscoRequestDAO dyscoRequestDAO;
 	private ItemDAO itemDAO;
+	private TopicDAO topicDAO;
 	
 	private RSSProcessor rssProcessor;
 	private RSSUpdator rssUpdator;
@@ -150,8 +153,8 @@ public class DyscoManager {
 	 * the rss topics for keywords' extraction
 	 * @param itemDAO
 	 */
-	public void setRSSProcessor(ItemDAO itemDAO){
-		rssProcessor.setRSSProcessor(itemDAO);
+	public void setRSSProcessor(TopicDAO topicDAO){
+		rssProcessor.setRSSProcessor(topicDAO);
 		rssProcessor.processRSSItems();
 	}
 	
@@ -233,12 +236,12 @@ public class DyscoManager {
 			System.out.println("Reading "+currentDbName+" DB");
 			
 			prev_day = currentDateTime.getDayOfMonth();
-			itemDAO = new ItemDAOImpl(privateHost, currentDbName,rssCollectionName);
+			topicDAO = new TopicDAOImpl(privateHost, currentDbName,rssCollectionName);
 			
 			logger.info("Open MongoDB storage for rssTopics <host: " + privateHost + ", database: " + currentDbName + 
 					", rssTopics' collection: " + rssCollectionName +">");
 		
-			dyscoManager.setRSSProcessor(itemDAO);
+			dyscoManager.setRSSProcessor(topicDAO);
 			
 		}
 		

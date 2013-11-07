@@ -207,11 +207,10 @@ public class RSSHandler{
 	 */
 	private class RSSUpdator extends Thread {
 		private long oneHour = 3600000;
-		
+		private int previousDay = 0;
 		private boolean isAlive = true;
 		
 		public RSSUpdator(){
-			
 			updateRSSItems();
 		}
 		
@@ -241,8 +240,14 @@ public class RSSHandler{
 			DateTime currentDateTime = new DateTime();
 			String currentDbName = "RSS_"+currentDateTime.getDayOfMonth()+"_"+currentDateTime.getMonthOfYear()+"_"+currentDateTime.getYear();
 			System.out.println("Reading "+currentDbName+" DB");
-			itemDAO = new ItemDAOImpl(private_host, currentDbName,rssCollectionName);
 			
+			if(previousDay == 0)
+				previousDay = currentDateTime.getDayOfMonth();
+			else if(previousDay != currentDateTime.getDayOfMonth())
+				itemDAO.deleteDB();
+			
+			itemDAO = new ItemDAOImpl(private_host, currentDbName,rssCollectionName);
+			previousDay = currentDateTime.getDayOfMonth();
 		}
 		
 		public void die(){

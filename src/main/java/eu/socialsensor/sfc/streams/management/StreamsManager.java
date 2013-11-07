@@ -42,6 +42,7 @@ public class StreamsManager{
 	}
 
 	private Map<String, Stream> streams = null;
+	private Map<String, List<Feed>> feedsOfStream = new HashMap<String,List<Feed>>();
 	private StreamsManagerConfiguration config = null;
 	private StoreManager storeManager;
 	private ConfigFeedsCreator configFeedsCreator;
@@ -62,7 +63,7 @@ public class StreamsManager{
 		
 		streamConfigs = config.getStreamIds();
 		
-		requestPeriod = Long.parseLong(config.getParameter(StreamsManager.REQUEST_PERIOD)) * 1000;  //convert in milliseconds
+		requestPeriod = Long.parseLong(config.getParameter(StreamsManager.REQUEST_PERIOD,"3600")) * 1000;  //convert in milliseconds
 
 		initStreams();
 		
@@ -97,7 +98,7 @@ public class StreamsManager{
 				configFeedsCreator.extractKeywords();
 				
 				feeds = configFeedsCreator.createFeeds();
-				
+				feedsOfStream.put(streamId, feeds);
 			}
 	
 		}catch(Exception e) {
@@ -114,24 +115,36 @@ public class StreamsManager{
 			System.out.println("No feeds to search");
 			return;
 		}
-		//System.out.println("Current time : "+currentTime);
-		//System.out.println("Time of Search : "+timeOfSearch);
-		while(isAlive){
-			if(Math.abs(currentTime - timeOfSearch)>= requestPeriod){
-				for(Stream stream : streams.values()){
-					
-					try {
-						stream.search(feeds);
-					} catch (StreamException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+	
+		if(!streams.containsKey("Twitter")){
+			while(isAlive){
+				//Periodically perform polling
+				if(Math.abs(currentTime - timeOfSearch)>= requestPeriod){
+					for(String streamId : streamConfigs){
+						Stream stream = streams.get(streamId);
+						try {
+							stream.search(feedsOfStream.get(streamId));
+						} catch (StreamException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+							
 					}
-						
+					timeOfSearch = currentTime;
 				}
-				timeOfSearch = currentTime;
+				currentTime = System.currentTimeMillis();
 			}
-			currentTime = System.currentTimeMillis();
 		}
+		else{
+			//Twitter works as subscriber to channel
+			try {
+				streams.get("Twitter").search(feedsOfStream.get("Twitter"));
+			} catch (StreamException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 		
 	}
 	

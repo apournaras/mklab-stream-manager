@@ -48,6 +48,16 @@ public class StoreManager implements StreamHandler{
 	
 		this.config = config;
 		
+		Timer timer = new Timer(); 
+		TimeslotHandler timeslotHandler = null;
+		try {
+			timeslotHandler = new TimeslotHandler();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} 
+		timer.schedule(timeslotHandler, (long)5*60000, (long)2*60000);
+		
 		try {
 			store = initStorage(config);
 		} catch (StreamException e) {
@@ -102,6 +112,7 @@ public class StoreManager implements StreamHandler{
 	@Override
 	public void update(Item item) {
 		synchronized(queue) {
+			item.setTimeslotId(timeslotId);
 			queue.add(item);
 		}	
 	
@@ -193,9 +204,10 @@ public class StoreManager implements StreamHandler{
 		@Override
 		public void run() {
 			String previousTimeslotId = timeslotId;
+			
 			synchronized (queue) {
 				// Get new Timeslot id and update storages
-				timeslotId = getNextTimeslotId();
+				timeslotId = getNextTimeslotId();	
 				store.updateTimeslot();
 			}
 			// Store previous timeslot
