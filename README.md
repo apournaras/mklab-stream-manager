@@ -1,8 +1,6 @@
 socialsensor-stream-manager
 ===========================
 
-<h1>Stream Manager</h1>
-
 <h3>Stream Manager monitors a set of seven social streams : Twitter, Facebook, Instagram, Google+, Flickr, Tumblr and Youtube to collect incoming content relevant to a keyword, a user or a location, using the corresponding API that is supported from each service. The framework also provides working APIs to store the retrieved items in different storages.</h3>
 
 <h2><u>Getting started</u></h2>
