@@ -12,8 +12,7 @@
     <description>
     	Monitors a set of social streams (e.g. Twitter status updates) and collects the incoming content.
     </description>
-    
-        <parent>
+  	<parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
         <version>7</version>
