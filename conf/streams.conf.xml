@@ -65,6 +65,9 @@
 			<Parameter name="maxRequests">
 				<![CDATA[5]]>
 			</Parameter>
+			<Parameter name="feedsSeedlist">
+	        	<![CDATA[./conf/facebook_feeds.txt]]>
+	        </Parameter>
 	        <Parameter name="keywords">
 	        	<![CDATA[keyword.of.search]]>
 	      	</Parameter>
