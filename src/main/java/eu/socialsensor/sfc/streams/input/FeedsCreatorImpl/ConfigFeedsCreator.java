@@ -46,7 +46,7 @@ public class ConfigFeedsCreator implements FeedsCreator{
 	}
 	
 	@Override
-	public List<String> extractKeywords(){
+	public List<String> extractFeedInfo(){
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 		String since = configFile.getParameter(SINCE);

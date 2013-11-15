@@ -337,7 +337,7 @@ public class DynamicFeedsCreator implements FeedsCreator{
 	
 	
 	@Override
-	public List<String> extractKeywords(){
+	public List<String> extractFeedInfo(){
 		
 		return topKeywords;
 	}

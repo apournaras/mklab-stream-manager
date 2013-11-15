@@ -450,7 +450,7 @@ public class DyscoManager {
 	    	if(dysco.getEvolution().equals("dynamic")){
 	    		System.out.println("Custom dysco : "+dysco.getId());
 	    		CustomFeedsCreator c_creator = new CustomFeedsCreator(dysco);
-	    		keywords.addAll(c_creator.extractKeywords()); 
+	    		keywords.addAll(c_creator.extractFeedInfo()); 
 				
 				if(keywords.size()>0){
 					for(Feed feed : c_creator.createFeeds()){

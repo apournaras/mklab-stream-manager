@@ -14,9 +14,10 @@ public interface FeedsCreator {
 	
 	/**
 	 * Extracts the keywords that will be used for feeds' creation
+	 * @param <T>
 	 * @return List of Keywords
 	 */
-	public List<String> extractKeywords();
+	public <T> List<Class<T>> extractFeedInfo();
 	
 	/**
 	 * Creates the feeds that will be used as input for the wrappers

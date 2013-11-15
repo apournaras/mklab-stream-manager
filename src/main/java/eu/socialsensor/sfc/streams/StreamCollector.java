@@ -30,7 +30,7 @@ public class StreamCollector {
 		
 		File configFile;
 		if(args.length != 1 ) {
-			configFile = new File("./conf/streams.conf.xml");
+			configFile = new File("./conf/newshounds.streams.conf.xml");
 		}
 		else {
 			configFile = new File(args[0]);
@@ -43,6 +43,8 @@ public class StreamCollector {
 			StreamsManager manager = new StreamsManager(config);
 			
 			manager.open();		
+			
+			manager.search();
 			
 			waiting();
 			

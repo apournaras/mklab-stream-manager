@@ -15,11 +15,13 @@ import org.xml.sax.SAXException;
 
 
 import eu.socialsensor.framework.common.domain.Feed;
+import eu.socialsensor.framework.common.domain.Source;
 import eu.socialsensor.framework.streams.Stream;
 import eu.socialsensor.framework.streams.StreamConfiguration;
 import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.ConfigFeedsCreator;
+import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.NewsHoundsFeedCreator;
 
 
 /**
@@ -46,6 +48,7 @@ public class StreamsManager{
 	private StreamsManagerConfiguration config = null;
 	private StoreManager storeManager;
 	private ConfigFeedsCreator configFeedsCreator;
+	private NewsHoundsFeedCreator newsHoundsFeedsCreator;
 	private ManagerState state = ManagerState.CLOSE;
 	private int numberOfConsumers = 5; //for multi-threaded items' storage
 	private long requestPeriod;
@@ -62,6 +65,8 @@ public class StreamsManager{
 		this.config = config;
 		
 		streamConfigs = config.getStreamIds();
+		
+		newsHoundsFeedsCreator = new NewsHoundsFeedCreator(config);
 		
 		requestPeriod = Long.parseLong(config.getParameter(StreamsManager.REQUEST_PERIOD,"3600")) * 1000;  //convert in milliseconds
 
@@ -93,11 +98,18 @@ public class StreamsManager{
 				stream.setHandler(storeManager);
 				stream.open(sconfig);
 				
-				//start tracking
-				configFeedsCreator = new ConfigFeedsCreator(sconfig);
-				configFeedsCreator.extractKeywords();
+				//track with data from config file
+				//configFeedsCreator = new ConfigFeedsCreator(sconfig);
+				//configFeedsCreator.extractFeedInfo();
 				
-				feeds = configFeedsCreator.createFeeds();
+				//feeds = configFeedsCreator.createFeeds();
+				
+				
+				//track with news hounds from mongo
+				List<Source> sources = newsHoundsFeedsCreator.extractFeedInfo();
+				logger.info("Number of sources to track : "+sources.size());
+				feeds = newsHoundsFeedsCreator.createFeeds();
+				
 				feedsOfStream.put(streamId, feeds);
 			}
 	

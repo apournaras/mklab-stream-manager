@@ -284,7 +284,7 @@ public class RSSHandler{
 					s_feedsCreator= new SimpleFeedsCreator(rss.getPublicationDate());
 					s_feedsCreator.filterContent(rss.getKeywords(), rss.getEntities());
 					
-					s_feedsCreator.extractKeywords();
+					s_feedsCreator.extractFeedInfo();
 					
 					List<Feed> feeds = s_feedsCreator.createFeeds();
 					RSSEntry<Item,List<Feed>> entry = new RSSEntry<Item,List<Feed>>(rss,feeds);
