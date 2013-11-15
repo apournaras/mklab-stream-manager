@@ -1,5 +1,9 @@
 package eu.socialsensor.sfc.streams.input.FeedsCreatorImpl;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -32,6 +36,7 @@ public class ConfigFeedsCreator implements FeedsCreator{
 	protected static final String KEYWORDS = "keywords";
 	protected static final String FOLLOWS = "follows";
 	protected static final String LOCATION = "locations";
+	protected static final String FEED_LIST = "feedsSeedlist";
 	
 	private StreamConfiguration configFile;
 	
@@ -70,6 +75,48 @@ public class ConfigFeedsCreator implements FeedsCreator{
 				Keyword keyword = new Keyword(token.toLowerCase(), 0.0f);
 				extractedKeywords.add(keyword);
 			}
+		}
+		
+		value = configFile.getParameter(FEED_LIST);
+		if (value != null && !value.equals("")) {
+			List<String> users = new ArrayList<String>();
+			BufferedReader br = null;
+			try {
+				br = new BufferedReader(new FileReader(value));
+				
+				StringBuilder sb = new StringBuilder();
+		        String line = br.readLine();
+		        users.add(line);
+		        System.out.println("user : "+line);
+		        while (line != null) {
+		         
+		            line = br.readLine();
+		            if(line != null){
+		            	users.add(line);
+		            	System.out.println("user : "+line);
+		            }
+		        }
+		        String everything = sb.toString();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}finally {
+		        try {
+					br.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		    }
+			
+			for(String user : users) {
+				Source source = new Source(user.toLowerCase(), 0.0f);
+				extractedSources.add(source);
+			}
+		    
 		}
 		
 		value = configFile.getParameter(FOLLOWS);
