@@ -30,6 +30,7 @@ public class NewsHoundsFeedCreator implements FeedsCreator{
 	private String host = null;
 	private String db = null;
 	private String newsHoundsCollection = null;
+	private Source.Type streamType = null;
 	
 	private Date sinceDate = null;
 	
@@ -43,6 +44,26 @@ public class NewsHoundsFeedCreator implements FeedsCreator{
 		storageConfig = configFile.getStorageConfig("Mongodb");
 	}
 	
+	public void setTypeOfStream(String streamType){
+		
+		if(streamType.equals("Twitter"))
+			this.streamType = Source.Type.Twitter;
+		else if(streamType.equals("Facebook"))
+			this.streamType = Source.Type.Facebook;
+		else if(streamType.equals("Flickr"))
+			this.streamType = Source.Type.Flickr;
+		else if(streamType.equals("GooglePlus"))
+			this.streamType = Source.Type.GooglePlus;
+		else if(streamType.equals("Instagram"))
+			this.streamType = Source.Type.Instagram;
+		else if(streamType.equals("Tumblr"))
+			this.streamType = Source.Type.Tumblr;
+		else if(streamType.equals("Youtube"))
+			this.streamType = Source.Type.Youtube;
+			
+	}
+	
+	@Override
 	public List<Source> extractFeedInfo(){
 		this.host = storageConfig.getParameter(NewsHoundsFeedCreator.HOST);
 		this.db = storageConfig.getParameter(NewsHoundsFeedCreator.DB);
@@ -54,12 +75,12 @@ public class NewsHoundsFeedCreator implements FeedsCreator{
 		}
 		SourceDAO sourceDao = new SourceDAOImpl("social1.atc.gr", db, newsHoundsCollection);	
 		
-		List<Source> sources = sourceDao.findTopSources(5000);
+		List<Source> sources = sourceDao.findTopSources(5000,streamType);
 		extractedSources.addAll(sources);
 		
 		return sources;
 	}
-	
+	@Override
 	public List<Feed> createFeeds(){
 		List<Feed> feeds = new ArrayList<Feed>();
 		
