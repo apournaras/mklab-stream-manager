@@ -39,7 +39,6 @@ public class StreamCollector {
 		try {
 			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(configFile);
 		
-			
 			StreamsManager manager = new StreamsManager(config);
 			
 			manager.open();		
