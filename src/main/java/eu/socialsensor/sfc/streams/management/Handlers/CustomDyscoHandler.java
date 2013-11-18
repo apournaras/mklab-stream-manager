@@ -209,7 +209,8 @@ private CustomDyscoHandlerState state = CustomDyscoHandlerState.CLOSE;
 		private long freq = Long.parseLong(frequency);//2 * 300000; //ten minutes
 		
 		public CustomSearchHandler(){
-			monitor.addStreams(streams.values());
+			
+			monitor.addStreams(streams);
 			
 			logger.info("Streams added to monitor");
 			
@@ -357,7 +358,7 @@ private CustomDyscoHandlerState state = CustomDyscoHandlerState.CLOSE;
 			if(feeds != null && !feeds.isEmpty()){
 				monitor.start(feeds);
 				
-				while(!monitor.isMonitorFinished()){
+				while(!monitor.areAllStreamFinished()){
 					
 				}
 				totalItems = monitor.getTotalRetrievedItems();

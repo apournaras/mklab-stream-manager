@@ -269,7 +269,7 @@ public class RSSHandler{
 		boolean isAlive = true;
 		
 		public RSSSearchHandler(){
-			monitor.addStreams(streams.values());
+			monitor.addStreams(streams);
 			
 			logger.info("Streams added to monitor");
 		}
@@ -349,7 +349,7 @@ public class RSSHandler{
 			if(feeds != null && !feeds.isEmpty()){
 				monitor.start(feeds);
 				
-				while(!monitor.isMonitorFinished()){
+				while(!monitor.areAllStreamFinished()){
 					
 				}
 				totalItems = monitor.getTotalRetrievedItems();

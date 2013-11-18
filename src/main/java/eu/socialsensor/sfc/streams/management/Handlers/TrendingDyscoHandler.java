@@ -202,7 +202,7 @@ public class TrendingDyscoHandler{
 		
 		
 		public TrendingSearchHandler(){
-			monitor.addStreams(streams.values());
+			monitor.addStreams(streams);
 			
 			logger.info("Streams added to monitor");
 		}
@@ -299,7 +299,7 @@ public class TrendingDyscoHandler{
 			if(feeds != null && !feeds.isEmpty()){
 				monitor.start(feeds);
 				
-				while(!monitor.isMonitorFinished()){
+				while(!monitor.areAllStreamFinished()){
 					
 				}
 				totalItems = monitor.getTotalRetrievedItems();
