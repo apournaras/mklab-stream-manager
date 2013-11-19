@@ -16,13 +16,12 @@ import org.xml.sax.SAXException;
 
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.Source;
-import eu.socialsensor.framework.common.domain.feeds.SourceFeed;
 import eu.socialsensor.framework.streams.Stream;
 import eu.socialsensor.framework.streams.StreamConfiguration;
 import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.ConfigFeedsCreator;
-import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.NewsHoundsFeedCreator;
+import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.MongoFeedCreator;
 import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 
 
@@ -49,7 +48,7 @@ public class StreamsManager{
 	private StreamsManagerConfiguration config = null;
 	private StoreManager storeManager;
 	private ConfigFeedsCreator configFeedsCreator;
-	private NewsHoundsFeedCreator newsHoundsFeedsCreator;
+	private MongoFeedCreator mongoFeedsCreator;
 	private StreamsMonitor monitor;
 	private ManagerState state = ManagerState.CLOSE;
 	private int numberOfConsumers = 5; //for multi-threaded items' storage
@@ -68,7 +67,7 @@ public class StreamsManager{
 		
 		streamConfigs = config.getStreamIds();
 		
-		newsHoundsFeedsCreator = new NewsHoundsFeedCreator(config);
+		mongoFeedsCreator = new MongoFeedCreator(config);
 		
 		monitor = new StreamsMonitor(streamConfigs.size());
 		
@@ -109,10 +108,10 @@ public class StreamsManager{
 				//feeds = configFeedsCreator.createFeeds();
 				
 				//track with news hounds from mongo
-				newsHoundsFeedsCreator.setTypeOfStream(streamId);
-				List<Source> sources = newsHoundsFeedsCreator.extractFeedInfo();
+				mongoFeedsCreator.setTypeOfStream(streamId);
+				List<Source> sources = mongoFeedsCreator.extractFeedInfo();
 				
-				feeds = newsHoundsFeedsCreator.createFeeds();
+				feeds = mongoFeedsCreator.createFeeds();
 				
 				monitor.addStream(streamId,stream,feeds);
 			}

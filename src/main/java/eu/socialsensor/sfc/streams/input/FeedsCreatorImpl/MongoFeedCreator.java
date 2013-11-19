@@ -65,9 +65,9 @@ public class MongoFeedCreator implements FeedsCreator{
 	
 	@Override
 	public List<Source> extractFeedInfo(){
-		this.host = storageConfig.getParameter(NewsHoundsFeedCreator.HOST);
-		this.db = storageConfig.getParameter(NewsHoundsFeedCreator.DB);
-		this.newsHoundsCollection = storageConfig.getParameter(NewsHoundsFeedCreator.SOURCES_COLLECTION, "Sources");
+		this.host = storageConfig.getParameter(MongoFeedCreator.HOST);
+		this.db = storageConfig.getParameter(MongoFeedCreator.DB);
+		this.newsHoundsCollection = storageConfig.getParameter(MongoFeedCreator.SOURCES_COLLECTION, "Sources");
 	
 		if(host == null || db == null || newsHoundsCollection == null){
 			System.out.println("News hounds collection needs to be configured correctly");
