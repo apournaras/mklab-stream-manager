@@ -34,3 +34,9 @@ Stream Manager project is dependent to other three SocialSensor projects :
 1. <a href="https://github.com/socialsensor/socialmedia-abstractions">Socialmedia-abstractions</a> : The abstraction layer for mapping a set of different social networks' wrappers to a single representation. 
 2. <a href="https://github.com/socialsensor/socialsensor-framework-common"> Socialsensor-framework-common</a> : The project contain main classes and interfaces to be used by other SocialSensor projects
 3. <a href="https://github.com/socialsensor/socialsensor-framework-client"> Socialsensor-framework-client</a> : The wrappers for handling information in/from the supported databases (MongoDB,Solr,Lucene).
+
+
+<h3>Contact for further details about the project</h3>
+ailiakop@iti.gr
+manosetro@iti.gr
+apapadop@iti.gr
