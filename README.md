@@ -36,7 +36,11 @@ Stream Manager project is dependent to other three SocialSensor projects :
 3. <a href="https://github.com/socialsensor/socialsensor-framework-client"> Socialsensor-framework-client</a> : The wrappers for handling information in/from the supported databases (MongoDB,Solr,Lucene).
 
 
-<h3>Contact for further details about the project</h3>
+<h3><u>Contact for further details about the project</u></h3>
+
+
 ailiakop@iti.gr
+
 manosetro@iti.gr
+
 apapadop@iti.gr
