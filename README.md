@@ -10,17 +10,17 @@ To start collecting content from all or a subset of the above social networks, r
 
 1. An instance of the  `eu.socialsensor.sfc.streams.management.StreamManager` class is created. This class is responsible for managing all the streams (open,search and close a stream) : 
 
-          `StreamsManager manager = new StreamsManager(config);`
+          StreamsManager manager = new StreamsManager(config);
           
 
 2. Manager opens all the streams, reads the input feeds with FeedCreator and establishes the connection with the given creadentials
 
 
-           `manager.open();`  
+           manager.open();  
            
 3. Manager starts the retrieval process for all the streams. For the non-real time APIs, polling requests are performed periodically. 
     
-           `manager.search();`
+           manager.search();
     
 
 Inside Stream Manager, each stream is handled as a different thread. Thus, each social network wrapper can be given different input feeds to track. Additionally, each feed is being tracked by a different thread in order to minimize time cost, except Twitter which is a subscriber.
