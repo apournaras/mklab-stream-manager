@@ -65,7 +65,7 @@ public class Consumer extends Thread{
 	private void dump(Item item) throws IOException {
 		//dump update to store
 		if (store != null) {
-			if (item.getOperation() == Operation.NEW_UPDATE) {
+			if (item.getOperation() == Operation.NEW) {
 				store.store(item);
 				
 			} else {
