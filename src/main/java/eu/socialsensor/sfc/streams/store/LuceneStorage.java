@@ -230,6 +230,11 @@ public class LuceneStorage implements StreamUpdateStorage {
 			logger.error(e);
 		}
 	}
+
+	@Override
+	public void update(Item update) throws IOException {
+		
+	}
 	
 	
 	

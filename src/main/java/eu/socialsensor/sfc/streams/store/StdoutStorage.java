@@ -41,4 +41,10 @@ public class StdoutStorage implements StreamUpdateStorage {
 	public void updateTimeslot() {
 	}
 
+
+	@Override
+	public void update(Item update) throws IOException {
+		System.out.println(update.toJSONString());
+	}
+
 }
