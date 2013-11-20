@@ -118,7 +118,7 @@ public class SimpleFeedsCreator implements FeedsCreator{
 	
 	
 	@Override
-	public List<String> extractKeywords(){
+	public List<String> extractFeedInfo(){
 		
 		for(Entity ent : entities){
 			if(!isKeywordAlreadyIn(ent.getName()))

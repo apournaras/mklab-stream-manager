@@ -15,11 +15,14 @@ import org.xml.sax.SAXException;
 
 
 import eu.socialsensor.framework.common.domain.Feed;
+import eu.socialsensor.framework.common.domain.Source;
 import eu.socialsensor.framework.streams.Stream;
 import eu.socialsensor.framework.streams.StreamConfiguration;
 import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.ConfigFeedsCreator;
+import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.MongoFeedCreator;
+import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 
 
 /**
@@ -42,10 +45,11 @@ public class StreamsManager{
 	}
 
 	private Map<String, Stream> streams = null;
-	private Map<String, List<Feed>> feedsOfStream = new HashMap<String,List<Feed>>();
 	private StreamsManagerConfiguration config = null;
 	private StoreManager storeManager;
 	private ConfigFeedsCreator configFeedsCreator;
+	private MongoFeedCreator mongoFeedsCreator;
+	private StreamsMonitor monitor;
 	private ManagerState state = ManagerState.CLOSE;
 	private int numberOfConsumers = 5; //for multi-threaded items' storage
 	private long requestPeriod;
@@ -63,7 +67,11 @@ public class StreamsManager{
 		
 		streamConfigs = config.getStreamIds();
 		
-		requestPeriod = Long.parseLong(config.getParameter(StreamsManager.REQUEST_PERIOD,"3600")) * 1000;  //convert in milliseconds
+		mongoFeedsCreator = new MongoFeedCreator(config);
+		
+		monitor = new StreamsMonitor(streamConfigs.size());
+		
+		requestPeriod = Long.parseLong(config.getParameter(StreamsManager.REQUEST_PERIOD,"120")) * 1000;  //convert in milliseconds
 
 		initStreams();
 		
@@ -92,13 +100,20 @@ public class StreamsManager{
 				Stream stream = streams.get(streamId);
 				stream.setHandler(storeManager);
 				stream.open(sconfig);
+			
+				//track with data from config file
+				//configFeedsCreator = new ConfigFeedsCreator(sconfig);
+				//configFeedsCreator.extractFeedInfo();
 				
-				//start tracking
-				configFeedsCreator = new ConfigFeedsCreator(sconfig);
-				configFeedsCreator.extractKeywords();
+				//feeds = configFeedsCreator.createFeeds();
 				
-				feeds = configFeedsCreator.createFeeds();
-				feedsOfStream.put(streamId, feeds);
+				//track with news hounds from mongo
+				mongoFeedsCreator.setTypeOfStream(streamId);
+				List<Source> sources = mongoFeedsCreator.extractFeedInfo();
+				
+				feeds = mongoFeedsCreator.createFeeds();
+				
+				monitor.addStream(streamId,stream,feeds);
 			}
 	
 		}catch(Exception e) {
@@ -109,40 +124,18 @@ public class StreamsManager{
 	
 	public synchronized void search(){
 		long currentTime = System.currentTimeMillis();
-		long timeOfSearch = currentTime + requestPeriod; 
+		long timeOfSearch = currentTime; 
 		
-		if(feeds == null){
-			System.out.println("No feeds to search");
-			return;
-		}
-	
-		if(!streams.containsKey("Twitter")){
-			while(isAlive){
-				//Periodically perform polling
-				if(Math.abs(currentTime - timeOfSearch)>= requestPeriod){
-					for(String streamId : streamConfigs){
-						Stream stream = streams.get(streamId);
-						try {
-							stream.search(feedsOfStream.get(streamId));
-						} catch (StreamException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-							
-					}
-					timeOfSearch = currentTime;
-				}
-				currentTime = System.currentTimeMillis();
+		//start monitor for the first time
+		monitor.start();
+		
+		while(isAlive){
+			
+			if(Math.abs(currentTime - timeOfSearch)>= requestPeriod){
+				monitor.reinitializePolling();
+				timeOfSearch = currentTime;
 			}
-		}
-		else{
-			//Twitter works as subscriber to channel
-			try {
-				streams.get("Twitter").search(feedsOfStream.get("Twitter"));
-			} catch (StreamException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			currentTime = System.currentTimeMillis();
 		}
 		
 		
@@ -225,7 +218,7 @@ public class StreamsManager{
 			File configFile;
 			
 			if(args.length != 1 ) {
-				configFile = new File("./conf/streams.conf.xml");
+				configFile = new File("./conf/newshounds.streams.conf.xml");
 				
 			}
 			else {

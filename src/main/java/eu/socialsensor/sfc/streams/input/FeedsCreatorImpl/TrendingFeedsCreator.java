@@ -139,7 +139,7 @@ public class TrendingFeedsCreator implements FeedsCreator{
 		*/
 	}
 	@Override
-	public List<String> extractKeywords(){
+	public List<String> extractFeedInfo(){
 		filterContent(dysco.getEntities(),dysco.getKeywords());
 		long t1 = System.currentTimeMillis();
 		rssItem = comparator.compare(dysco.getEntities(), dysco.getKeywords());

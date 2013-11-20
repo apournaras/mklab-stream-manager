@@ -1,33 +1,42 @@
 socialsensor-stream-manager
 ===========================
 
-<h3>Stream Manager monitors a set of seven social streams : Twitter, Facebook, Instagram, Google+, Flickr, Tumblr and Youtube to collect incoming content relevant to a keyword, a user or a location, using the corresponding API that is supported from each service. The framework also provides working APIs to store the retrieved items in different storages.</h3>
+<p>Stream Manager monitors a set of seven social streams : Twitter, Facebook, Instagram, Google+, Flickr, Tumblr and Youtube to collect incoming content relevant to a keyword, a user or a location, using the corresponding API that is supported from each service. Twitter API works as a real-time service, whereas the other six act as polling consumers perfoming requests to the network periodically. The framework also provides wrappers to a set of different storages.</p>
 
 <h2><u>Getting started</u></h2>
-<p>In order to run StreamManager,one only has to set the configuration file <i>'conf/streams.conf.xml'</i>. In the configuration file are defined all the required parameters for the storage and stream set up. The project supports five different types of storages that the user can employ to store collected content by defining the ip address, the name of the database, the collection where the retrieved items are going to be stored or the path that the file will be located. The supported storages are: <strong>MongoDB</strong>, <strong>Solr</strong>, <strong>Lucene</strong>, <strong>Redis</strong> and <strong>Flatfile</strong>. For the streams' configuration the user has to add the necessary keys and tokens that each social network api provides to the developer. Also, other fields that need to be determined are the request rate by which the monitor is going to perform the api calls (<i>requestPeriod</i>) and the oldest publication date of the items to be retrieved (<i>since</i>). For the retrieval process, one of the following fields is obligatory to be defined for the <strong>Facebook</strong>, <strong>Instagram</strong>, <strong>Google+</strong>, <strong>Flickr</strong>, <strong>Tumblr</strong> and <strong>Youtube</strong> streams: the keywords that are going to be used for the search (<i>keywords</i>), the social network user whose public uploaded content will be followed (<i>follows</i>), the location that the collected content is related to (<i>locations</i>). In contrast to the other six streams, <strong>Twitter</strong> can also function without defining the latter and collect incoming content of no specific origin.</p>
+The input data to the Stream Manager that will determine the nature of the retrieved content are viewed as input feeds that can represent either a keyword, a user or a location. There are several sources where the input feeds can be read from (i.e. a configuration file or a database). In general the feeds that will be used as the input to the system are created by the `eu.socialsensor.sfc.streams.input.FeedCreator` interface, which is implemented accordingly to the source that the input data are read from. In the case of a configuration file used as input, input feeds are created with `eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.ConfigFeedsCreator` class, whereas when the data are read from <a href="http://www.mongodb.org/">MongoDB</a>, input feeds are created with `eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.MongoFeedsCreator` class. It is important to note that, in contrast to the other six APIs, Twitter is able to collect content of no specific origin when no input is given.
 
-<p>When the configuration file is set up, the user can run the StreamManager class located in the following path : <i>'src/main/java/eu/socialsensor/sfc/ streams/management'</i> and collect relevant content from the selected social networks. One important thing to note is that even though the retrieval processes from <strong>Facebook</strong>, <strong>Instagram</strong>, <strong>Google+</strong>, <strong>Flickr</strong>, <strong>Tumblr</strong> and <strong>Youtube</strong> streams can run simultaneously at the same execution, this cannot apply to the <strong>Twitter</strong> stream as well. This is due to the fact that the <strong>Twitter API</strong> acts as a subscriber to a channel, whereas the other six behave as polling consumers. </p>
+To start collecting content from all or a subset of the above social networks, run the `eu.socialsensor.sfc.streams.StreamCollector` class. Firstly, this class reads a configuration file, that contains the information regarding the creadentials needed to establish a connection with each social network, as well as the mandatory fields for storing/reading data to/from the selected databases. After the configuration file is read, the retrieving process occurs as shown below : 
+
+1. An instance of the  `eu.socialsensor.sfc.streams.management.StreamManager` class is created. This class is responsible for managing all the streams (open,search and close a stream) : 
+
+          StreamsManager manager = new StreamsManager(config);
+          
+
+2. Manager opens all the streams, reads the input feeds with FeedCreator and establishes the connection with the given creadentials
+
+
+           manager.open();  
+           
+3. Manager starts the retrieval process for all the streams. For the non-real time APIs, polling requests are performed periodically. 
+    
+           manager.search();
+    
+
+Inside Stream Manager, each stream is handled as a different thread. Thus, each social network wrapper can be given different input feeds to track. Additionally, each feed is being tracked by a different thread in order to minimize time cost, except Twitter which is a subscriber.
+
+The collected data from the retrieval process are stored as JSON items (representing status update, post etc.), media items (images, videos, albums), users and webpages (embedded in posts/statuses). The above can be stored in a <a href="http://www.mongodb.org/">MongoDB</a>, <a href="http://lucene.apache.org/">Lucene</a> or <a href="http://lucene.apache.org/solr/">Solr</a> database, which are currently supported. The storage process is handled by the `eu.socialsensor.sfc.streams.management.StoreManager` class.
 
 <h2><u>Learning more</u></h2>
-<p><h4>Storage Documentation</h4></p>
 
-<ul>
-<li>More information regading MongoDB : <a href="http://www.mongodb.org/">MongoDB</a></li>
-<li>More information regading Solr : <a href="http://lucene.apache.org/solr/">Solr</a></li>
-<li>More information regading Lucene : <a href="http://lucene.apache.org/">Lucene</a></li>
-<li>More information regading Redis : <a href="http://redis.io/">Redis</a></li>
-<li>More information regading FlatFile : <a href="http://en.wikipedia.org/wiki/Flat_file_database">FlatFile</a></li>
-</ul>
+Stream Manager project is dependent to other three SocialSensor projects : 
 
-<p><h4>Stream API Documentation</h4></p>
+1. <a href="https://github.com/socialsensor/socialmedia-abstractions">Socialmedia-abstractions</a> : The abstraction layer for mapping a set of different social networks' wrappers to a single representation. 
+2. <a href="https://github.com/socialsensor/socialsensor-framework-common"> Socialsensor-framework-common</a> : The project contain main classes and interfaces to be used by other SocialSensor projects
+3. <a href="https://github.com/socialsensor/socialsensor-framework-client"> Socialsensor-framework-client</a> : The wrappers for handling information in/from the supported databases (MongoDB,Solr,Lucene).
 
-<ul>
-<li>More information regading Twitter API : <a href="http://twitter4j.org/en/">Twitter API</a></li>
-<li>More information regading Facebook API : <a href="http://restfb.com/">Facebook API</a></li>
-<li>More information regading Instagram API : <a href="https://github.com/sachin-handiekar/jInstagram">Instagram API</a></li>
-<li>More information regading Google+ API: <a href="https://developers.google.com/+/quickstart/java">Google+ API</a></li>
-<li>More information regading Flickr API: <a href="http://www.flickr.com/services/api/">Flickr API</a></li>
-<li>More information regading Tumblr API: <a href="https://github.com/tumblr/jumblr">Tumblr API</a></li>
-<li>More information regading Youtube API: <a href="https://developers.google.com/youtube/v3/">Youtube API</a></li>
-</ul>
 
+<h3><u>Contact for further details about the project</u></h3>
+
+
+Katerina Iliakopoulou (ailiakop@iti.gr), Manos Schinas (manosetro@iti.gr), Symeon Papadopoulos (papadop@iti.gr)

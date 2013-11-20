@@ -269,7 +269,7 @@ public class RSSHandler{
 		boolean isAlive = true;
 		
 		public RSSSearchHandler(){
-			monitor.addStreams(streams.values());
+			monitor.addStreams(streams);
 			
 			logger.info("Streams added to monitor");
 		}
@@ -284,7 +284,7 @@ public class RSSHandler{
 					s_feedsCreator= new SimpleFeedsCreator(rss.getPublicationDate());
 					s_feedsCreator.filterContent(rss.getKeywords(), rss.getEntities());
 					
-					s_feedsCreator.extractKeywords();
+					s_feedsCreator.extractFeedInfo();
 					
 					List<Feed> feeds = s_feedsCreator.createFeeds();
 					RSSEntry<Item,List<Feed>> entry = new RSSEntry<Item,List<Feed>>(rss,feeds);
@@ -349,7 +349,7 @@ public class RSSHandler{
 			if(feeds != null && !feeds.isEmpty()){
 				monitor.start(feeds);
 				
-				while(!monitor.isMonitorFinished()){
+				while(!monitor.areAllStreamFinished()){
 					
 				}
 				totalItems = monitor.getTotalRetrievedItems();

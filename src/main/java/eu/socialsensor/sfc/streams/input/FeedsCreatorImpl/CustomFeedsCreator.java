@@ -42,7 +42,7 @@ public class CustomFeedsCreator implements FeedsCreator{
 	}
 	
 	@Override
-	public List<String> extractKeywords(){
+	public List<String> extractFeedInfo(){
 		filterContent();
 		
 		List<String> keysToRemove = new ArrayList<String>();
