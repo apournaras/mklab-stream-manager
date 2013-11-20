@@ -62,4 +62,16 @@ public class FlatFileStorage implements StreamUpdateStorage {
 
 	}
 
+	@Override
+	public void update(Item update) throws IOException {
+		items++;
+		if (out != null) {
+			out.println(update.toJSONString());
+			out.flush();
+		}
+		if(items%1000==0) {
+			open();	
+		}
+	}
+
 }

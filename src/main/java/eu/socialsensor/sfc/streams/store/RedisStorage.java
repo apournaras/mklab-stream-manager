@@ -64,6 +64,12 @@ public class RedisStorage implements StreamUpdateStorage {
 		}
 	}
 
+	
+	@Override
+	public void update(Item update) throws IOException {
+		
+	}
+	
 	@Override
 	public boolean delete(String id) throws IOException {
 		return false;

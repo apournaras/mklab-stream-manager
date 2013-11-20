@@ -171,4 +171,9 @@ public class MediaUrlStorage implements StreamUpdateStorage {
 		out.close();
 	}
 
+	@Override
+	public void update(Item update) throws IOException {
+		
+	}
+
 }

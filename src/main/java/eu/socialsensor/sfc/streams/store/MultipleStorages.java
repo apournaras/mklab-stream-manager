@@ -59,6 +59,15 @@ public class MultipleStorages implements StreamUpdateStorage {
 	}
 
 	@Override
+	public void update(Item update) throws IOException {
+		synchronized(storages) {
+			for(StreamUpdateStorage storage : storages) {
+				storage.update(update);
+			}
+		}
+	}
+	
+	@Override
 	public boolean delete(String id) throws IOException {
 		synchronized(storages) {
 			boolean deleted = true;
@@ -89,5 +98,7 @@ public class MultipleStorages implements StreamUpdateStorage {
 			}
 		}
 	}
+
+	
 	
 }
