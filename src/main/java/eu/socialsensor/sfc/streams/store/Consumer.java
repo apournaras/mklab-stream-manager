@@ -68,7 +68,11 @@ public class Consumer extends Thread{
 			if (item.getOperation() == Operation.NEW) {
 				store.store(item);
 				
-			} else {
+			} 
+			else if (item.getOperation() == Operation.UPDATE) {
+				store.update(item);
+			}
+			else {
 				store.delete(item.getId());
 			}
 		}
