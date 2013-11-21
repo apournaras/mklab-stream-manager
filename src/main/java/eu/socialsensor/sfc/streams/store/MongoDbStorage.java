@@ -178,8 +178,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		
 		long t3 = System.currentTimeMillis();
 		// Handle Media Items
-		for(URL url : item.getMediaItems().keySet()) {
-			MediaItem mediaItem = new MediaItem(url, item);
+		for(MediaItem mediaItem : item.getMediaItems()) {
 			if(!mediaItemDAO.exists(mediaItem.getId())) {
 				// save media item
 				mediaItemDAO.addMediaItem(mediaItem);

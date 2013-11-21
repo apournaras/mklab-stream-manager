@@ -281,7 +281,7 @@ public class RSSHandler{
 				
 				if(!alreadyInItems.contains(rss.getId()) && !rss.getIsSearched()){
 					alreadyInItems.add(rss.getId());
-					s_feedsCreator= new SimpleFeedsCreator(rss.getPublicationDate());
+					s_feedsCreator= new SimpleFeedsCreator(new Date(rss.getPublicationTime()));
 					s_feedsCreator.filterContent(rss.getKeywords(), rss.getEntities());
 					
 					s_feedsCreator.extractFeedInfo();

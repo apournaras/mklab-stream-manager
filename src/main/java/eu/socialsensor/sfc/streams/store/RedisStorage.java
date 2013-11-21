@@ -52,7 +52,7 @@ public class RedisStorage implements StreamUpdateStorage {
 			publisherJedis.publish(itemsChannel, item.toJSONString());
 		
 		if(mediaItemsChannel != null) {
-			for(MediaItem mediaItem : item.getMediaItems().values()) {
+			for(MediaItem mediaItem : item.getMediaItems()) {
 				publisherJedis.publish(mediaItemsChannel, mediaItem.toJSONString());
 			}
 		}

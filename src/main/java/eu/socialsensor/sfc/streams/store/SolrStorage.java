@@ -64,16 +64,14 @@ public class SolrStorage implements StreamUpdateStorage {
 	@Override
 	public void store(Item item) throws IOException {
 		if(solrItemHandler != null) {
-			solrItemHandler.insertItem(item, null);
+			solrItemHandler.insertItem(item);
 		}
 		if(solrMediaHandler != null) {
 			
-			for(Entry<URL, MediaItem> entry : item.getMediaItems().entrySet()) {
-				
-				MediaItem mediaItem = new MediaItem(entry.getKey(), item);	
+			for(MediaItem mediaItem : item.getMediaItems()) {
 				MediaItem mi = solrMediaHandler.getSolrMediaItem(mediaItem.getId());
 				if(mi==null) {
-					solrMediaHandler.insertMediaItem(mediaItem, null);
+					solrMediaHandler.insertMediaItem(mediaItem);
 				}
 				else {
 					for(String key : mediaItem.getFeedKeywords()){
@@ -86,7 +84,7 @@ public class SolrStorage implements StreamUpdateStorage {
 						if(!mi.getFeedKeywordsString().contains(key))
 							mi.getFeedKeywordsString().add(key);
 					}
-					solrMediaHandler.insertMediaItem(mi, null);
+					solrMediaHandler.insertMediaItem(mi);
 				}
 			}
 		}
