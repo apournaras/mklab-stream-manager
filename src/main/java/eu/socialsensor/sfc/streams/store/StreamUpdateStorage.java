@@ -6,7 +6,7 @@ import java.io.IOException;
 
 
 /**
- * Represents a storage for stream updates
+ * Represents a storage for stream items
  *
  */
 public interface StreamUpdateStorage {

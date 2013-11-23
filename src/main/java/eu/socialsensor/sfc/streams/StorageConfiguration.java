@@ -11,6 +11,11 @@ import eu.socialsensor.sfc.streams.Configuration;
 
 public class StorageConfiguration extends Configuration {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7389004477874995675L;
+	
 	public static final String CLASS_PATH = "Classpath";
 
 }

@@ -1,17 +1,11 @@
 package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
-import eu.socialsensor.framework.client.dao.ItemDAO;
-import eu.socialsensor.framework.client.dao.MediaItemDAO;
-import eu.socialsensor.framework.client.dao.impl.ItemDAOImpl;
-import eu.socialsensor.framework.client.dao.impl.MediaItemDAOImpl;
 import eu.socialsensor.framework.client.search.solr.SolrItemHandler;
 import eu.socialsensor.framework.client.search.solr.SolrMediaItemHandler;
 import eu.socialsensor.framework.common.domain.Item;
@@ -127,14 +121,7 @@ public class SolrStorage implements StreamUpdateStorage {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		
-		ItemDAO itemDAO = new ItemDAOImpl();
-		MediaItemDAO mediaItemDAO = new MediaItemDAOImpl();
-		
 		System.out.println("DEBUG SOLR STORAGE");
-		
-		List<Item> items = itemDAO.getLatestItems(1);
-		List<MediaItem> mitems = mediaItemDAO.getLastMediaItems(1);
 		
 		StorageConfiguration conf = new StorageConfiguration();
 		conf.setParameter(HOSTNAME, "http://160.40.50.230:8080");

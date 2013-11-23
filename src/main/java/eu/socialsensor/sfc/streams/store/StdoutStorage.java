@@ -21,6 +21,7 @@ public class StdoutStorage implements StreamUpdateStorage {
 
 	@Override
 	public boolean delete(String id) throws IOException {
+		System.out.println("{ delete : " + id + "}");	
 		return false;
 	}
 

@@ -1,15 +1,10 @@
 package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 
 import eu.socialsensor.framework.client.dao.ItemDAO;
 import eu.socialsensor.framework.client.dao.MediaItemDAO;
@@ -139,8 +134,8 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	@Override
 	public void store(Item item) throws IOException {
 
-		long t = System.currentTimeMillis();
-		long t1 = System.currentTimeMillis();
+		//long t = System.currentTimeMillis();
+		//long t1 = System.currentTimeMillis();
 		
 		// Handle Items
 	
@@ -162,7 +157,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			
 		}
 		
-		long t2 = System.currentTimeMillis();
+		//long t2 = System.currentTimeMillis();
 		// Handle Stream Users
 		StreamUser user = item.getStreamUser();
 		if(user != null) {
@@ -176,7 +171,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			}
 		}
 		
-		long t3 = System.currentTimeMillis();
+		//long t3 = System.currentTimeMillis();
 		// Handle Media Items
 		for(MediaItem mediaItem : item.getMediaItems()) {
 			if(!mediaItemDAO.exists(mediaItem.getId())) {
@@ -189,7 +184,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			}
 		}
 		
-		long t4 = System.currentTimeMillis();
+		//long t4 = System.currentTimeMillis();
 		// Handle Web Pages
 		List<WebPage> webPages = item.getWebPages();
 		if(webPages != null) {
@@ -204,7 +199,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			}
 		}
 
-		long t5 = System.currentTimeMillis();
+		//long t5 = System.currentTimeMillis();
 		/*logger.info("Store item " + item.getId() + " in MongoDb took " + (t5 - t) +" msecs ("
 				+ "  item: " + (t2 - t1)
 				+ "  streamusers: " + (t3 - t2)
@@ -234,10 +229,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		MongoHandler mongo = new MongoHandler(host, dbName, collection, null);
 		List<String> jsonItems = mongo.findMany(-1);
 	
-		Gson gson = new GsonBuilder()
-    	.excludeFieldsWithoutExposeAnnotation()
-    	.create();
-		
 		for(String json : jsonItems){
 			
 			Item item = ItemFactory.create(json);

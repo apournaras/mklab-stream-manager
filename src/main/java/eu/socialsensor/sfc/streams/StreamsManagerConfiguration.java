@@ -30,6 +30,11 @@ import eu.socialsensor.sfc.streams.Configuration;
 public class StreamsManagerConfiguration extends Configuration {
 	
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5269944272731808440L;
+
 	@Expose
 	@SerializedName(value = "streams")
 	private Map<String, StreamConfiguration> streamConfigMap = null;
@@ -102,10 +107,6 @@ public class StreamsManagerConfiguration extends Configuration {
 		MongoHandler mongo = new MongoHandler(host, dbName, collection, null);
 		List<String> jsonItems = mongo.findMany(-1);
 	
-		Gson gson = new GsonBuilder()
-    	.excludeFieldsWithoutExposeAnnotation()
-    	.create();
-		
 		for(String json : jsonItems){
 			
 			Item item = ItemFactory.create(json);
