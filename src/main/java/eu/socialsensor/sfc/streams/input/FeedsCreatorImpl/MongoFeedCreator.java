@@ -11,6 +11,7 @@ import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.Keyword;
 import eu.socialsensor.framework.common.domain.Location;
 import eu.socialsensor.framework.common.domain.Source;
+import eu.socialsensor.framework.common.domain.SocialNetworkSource;
 import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
 import eu.socialsensor.framework.common.domain.feeds.LocationFeed;
 import eu.socialsensor.framework.common.domain.feeds.SourceFeed;
@@ -30,7 +31,7 @@ public class MongoFeedCreator implements FeedsCreator{
 	private String host = null;
 	private String db = null;
 	private String newsHoundsCollection = null;
-	private Source.Type streamType = null;
+	private SocialNetworkSource streamType = null;
 	
 	private Date sinceDate = null;
 	
@@ -44,22 +45,22 @@ public class MongoFeedCreator implements FeedsCreator{
 		storageConfig = configFile.getStorageConfig("Mongodb");
 	}
 	
-	public void setTypeOfStream(String streamType){
+	public void setTypeOfStream(String streamType) {
 		
 		if(streamType.equals("Twitter"))
-			this.streamType = Source.Type.Twitter;
+			this.streamType = SocialNetworkSource.Twitter;
 		else if(streamType.equals("Facebook"))
-			this.streamType = Source.Type.Facebook;
+			this.streamType = SocialNetworkSource.Facebook;
 		else if(streamType.equals("Flickr"))
-			this.streamType = Source.Type.Flickr;
+			this.streamType = SocialNetworkSource.Flickr;
 		else if(streamType.equals("GooglePlus"))
-			this.streamType = Source.Type.GooglePlus;
+			this.streamType = SocialNetworkSource.GooglePlus;
 		else if(streamType.equals("Instagram"))
-			this.streamType = Source.Type.Instagram;
+			this.streamType = SocialNetworkSource.Instagram;
 		else if(streamType.equals("Tumblr"))
-			this.streamType = Source.Type.Tumblr;
+			this.streamType = SocialNetworkSource.Tumblr;
 		else if(streamType.equals("Youtube"))
-			this.streamType = Source.Type.Youtube;
+			this.streamType = SocialNetworkSource.Youtube;
 			
 	}
 	
