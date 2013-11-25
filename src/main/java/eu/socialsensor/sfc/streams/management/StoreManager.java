@@ -195,7 +195,9 @@ public class StoreManager implements StreamHandler{
 	public class TimeslotHandler extends TimerTask {
 		
 		private Random random = new SecureRandom();
-		TimeslotDAO timeslotDAO = new TimeslotDAOImpl();
+		
+		StorageConfiguration storageConfig = config.getStorageConfig("Mongodb");
+		TimeslotDAO timeslotDAO = new TimeslotDAOImpl(storageConfig.getParameter("mongodb.host"),storageConfig.getParameter("mongodb.database"));
 		
 		public TimeslotHandler() throws IOException {
 			timeslotId = getNextTimeslotId();
