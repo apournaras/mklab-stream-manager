@@ -68,11 +68,14 @@ public class MongoFeedCreator implements FeedsCreator{
 		this.host = storageConfig.getParameter(MongoFeedCreator.HOST);
 		this.db = storageConfig.getParameter(MongoFeedCreator.DB);
 		this.newsHoundsCollection = storageConfig.getParameter(MongoFeedCreator.SOURCES_COLLECTION, "Sources");
-	
+		
+		extractedSources.clear();
+		
 		if(host == null || db == null || newsHoundsCollection == null){
 			System.out.println("News hounds collection needs to be configured correctly");
 			return null;
 		}
+		
 		SourceDAO sourceDao = new SourceDAOImpl("social1.atc.gr", db, newsHoundsCollection);	
 		
 		List<Source> sources = sourceDao.findTopSources(5000,streamType);
