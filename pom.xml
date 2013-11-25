@@ -26,7 +26,7 @@
         </developer>
         <developer>
             <id>matzika</id>
-            <name>Katerina Ailiakopoulou</name>
+            <name>Katerina Iliakopoulou</name>
             <email>ailiakop@iti.gr</email>
         </developer>
     </developers>
@@ -269,15 +269,15 @@
         	<classifier>site</classifier>
         </dependency>
         <dependency>
-        	<groupId>org.twitter4j</groupId>
-        	<artifactId>twitter4j-core</artifactId>
-        	<version>3.0.3</version>
-        </dependency>
-        <dependency>
-        	<groupId>org.twitter4j</groupId>
-        	<artifactId>twitter4j-stream</artifactId>
-        	<version>3.0.3</version>
-        </dependency>
+    		<groupId>org.twitter4j</groupId>
+    		<artifactId>twitter4j-stream</artifactId>
+    		<version>3.0.5</version>
+    	</dependency>
+    	<dependency>
+    		<groupId>org.twitter4j</groupId>
+    		<artifactId>twitter4j-core</artifactId>
+    		<version>3.0.5</version>
+    	</dependency>
     </dependencies>
     
     <repositories />
