@@ -211,7 +211,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 
 	@Override
 	public void update(Item update) throws IOException {
-		
+		store(update);
 	}
 	
 	@Override
