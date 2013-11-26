@@ -147,15 +147,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			//logger.info("Save " + item.getId() + " in " + tt + " msecs");
 			
 		}
-		else {
-			// update item
-			
-			long tt = System.currentTimeMillis();
-			itemDAO.updateItemCommentsAndPopularity(item);
-			tt = System.currentTimeMillis() - tt;
-			//logger.info("Update " + item.getId() + " in " + tt + " msecs");
-			
-		}
 		
 		//long t2 = System.currentTimeMillis();
 		// Handle Stream Users
@@ -165,10 +156,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				// save stream user
 				streamUserDAO.insertStreamUser(user);
 			}
-			else {
-				// update stream user
-				streamUserDAO.updateStreamUserPopularity(user);
-			}
 		}
 		
 		//long t3 = System.currentTimeMillis();
@@ -177,10 +164,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			if(!mediaItemDAO.exists(mediaItem.getId())) {
 				// save media item
 				mediaItemDAO.addMediaItem(mediaItem);
-			}
-			else {
-				// update media item
-				mediaItemDAO.updateMediaItemPopularity(mediaItem);
 			}
 		}
 		
@@ -192,9 +175,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				String webPageURL = webPage.getUrl();
 				if(webPageDAO.getWebPage(webPageURL) == null) {
 					webPageDAO.addWebPage(webPage);
-				}
-				else {
-					webPageDAO.updateWebPageShares(webPageURL);
 				}
 			}
 		}
@@ -211,7 +191,35 @@ public class MongoDbStorage implements StreamUpdateStorage {
 
 	@Override
 	public void update(Item update) throws IOException {
+		// update item
+		itemDAO.updateItemCommentsAndPopularity(update);
 		store(update);
+		//update stream user
+		StreamUser user = update.getStreamUser();
+		if(user != null) {
+			streamUserDAO.updateStreamUserPopularity(user);
+		}
+		// update media items
+		for(MediaItem mediaItem : update.getMediaItems()) {
+			if(!mediaItemDAO.exists(mediaItem.getId())) {
+				// save media item
+				mediaItemDAO.addMediaItem(mediaItem);
+			}
+			else
+				mediaItemDAO.updateMediaItemPopularity(mediaItem);
+		}
+		//update web pages
+		List<WebPage> webPages = update.getWebPages();
+		if(webPages != null) {
+			for(WebPage webPage : webPages) {
+				String webPageURL = webPage.getUrl();
+				if(webPageDAO.getWebPage(webPageURL) == null) {
+					webPageDAO.addWebPage(webPage);
+				}
+				else
+					webPageDAO.updateWebPageShares(webPageURL);
+			}
+		}
 	}
 	
 	@Override
