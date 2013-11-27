@@ -117,7 +117,7 @@ public class LuceneStorage implements StreamUpdateStorage {
 		doc.add(new Field(FIELD_TEXT, item.getTitle(), fieldTypeText));
 		long date = item.getPublicationTime();
 		doc.add(new LongField(FIELD_TIME, date, Field.Store.NO));
-		doc.add(new Field(FIELD_TIMESLOT_ID, item.getTimeslotId(), fieldTypeTimeslotId));
+		//doc.add(new Field(FIELD_TIMESLOT_ID, item.getTimeslotId(), fieldTypeTimeslotId));
 		
 		try {
 			if (writer == null || exists(item.getId()) || tweetIds.contains(item.getId()))

@@ -87,13 +87,12 @@ public class SolrStorage implements StreamUpdateStorage {
 
 	@Override
 	public void update(Item update) throws IOException {
-		// TODO Auto-generated method stub
 		
 	}
 	
 	@Override
 	public boolean delete(String itemId) throws IOException {
-		logger.info("Delete item with id " + itemId + " from Solr.");
+		//logger.info("Delete item with id " + itemId + " from Solr.");
 		solrItemHandler.deleteItem(itemId);
 		return true;
 	}

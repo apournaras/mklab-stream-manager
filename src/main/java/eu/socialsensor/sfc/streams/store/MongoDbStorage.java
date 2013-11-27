@@ -104,8 +104,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 
 	@Override
 	public boolean delete(String id) throws IOException {
-		itemDAO.deleteItem(id);
-		return true;
+		return itemDAO.deleteItem(id);
 	}
 
 	@Override
@@ -133,93 +132,61 @@ public class MongoDbStorage implements StreamUpdateStorage {
 
 	@Override
 	public void store(Item item) throws IOException {
-
-		//long t = System.currentTimeMillis();
-		//long t1 = System.currentTimeMillis();
 		
 		// Handle Items
-	
 		if(!itemDAO.exists(item.getId())) {
 			// save item
-			long tt = System.currentTimeMillis();
 			itemDAO.insertItem(item);
-			tt = System.currentTimeMillis() - tt;
-			//logger.info("Save " + item.getId() + " in " + tt + " msecs");
 			
-		}
-		
-		//long t2 = System.currentTimeMillis();
-		// Handle Stream Users
-		StreamUser user = item.getStreamUser();
-		if(user != null) {
-			if(!streamUserDAO.exists(user.getId())) {
-				// save stream user
-				streamUserDAO.insertStreamUser(user);
+			// Handle Stream Users
+			StreamUser user = item.getStreamUser();
+			if(user != null) {
+				if(!streamUserDAO.exists(user.getId())) {
+					// save stream user
+					streamUserDAO.insertStreamUser(user);
+				}
 			}
-		}
-		
-		//long t3 = System.currentTimeMillis();
-		// Handle Media Items
-		for(MediaItem mediaItem : item.getMediaItems()) {
-			if(!mediaItemDAO.exists(mediaItem.getId())) {
-				// save media item
-				mediaItemDAO.addMediaItem(mediaItem);
+			
+			String[] mentions = item.getMentions();
+			for(String mention : mentions) {
+				// TODO: update mentioned users
 			}
-		}
-		
-		//long t4 = System.currentTimeMillis();
-		// Handle Web Pages
-		List<WebPage> webPages = item.getWebPages();
-		if(webPages != null) {
-			for(WebPage webPage : webPages) {
-				String webPageURL = webPage.getUrl();
-				if(webPageDAO.getWebPage(webPageURL) == null) {
-					webPageDAO.addWebPage(webPage);
+			
+			// Handle Media Items
+			for(MediaItem mediaItem : item.getMediaItems()) {
+				if(!mediaItemDAO.exists(mediaItem.getId())) {
+					// save media item
+					mediaItemDAO.addMediaItem(mediaItem);
+				}
+				else {
+					//mediaItemDAO.updateMediaItemPopularity(mediaItem);
+				}
+			}
+			
+			// Handle Web Pages
+			List<WebPage> webPages = item.getWebPages();
+			if(webPages != null) {
+				for(WebPage webPage : webPages) {
+					String webPageURL = webPage.getUrl();
+					if(!webPageDAO.exists(webPageURL)) {
+						webPageDAO.addWebPage(webPage);
+					}
+					else {
+						webPageDAO.updateWebPageShares(webPageURL);
+					}
 				}
 			}
 		}
-
-		//long t5 = System.currentTimeMillis();
-		/*logger.info("Store item " + item.getId() + " in MongoDb took " + (t5 - t) +" msecs ("
-				+ "  item: " + (t2 - t1)
-				+ "  streamusers: " + (t3 - t2)
-				+ "  mediaitems: " + (t4 - t3)
-				+ "  webpages: " + (t5 - t4)
-				+ "  )" );*/
-
+		else {
+			//itemDAO.updateItemCommentsAndPopularity(item);
+		}
+		
 	}
 
 	@Override
 	public void update(Item update) throws IOException {
 		// update item
-		itemDAO.updateItemCommentsAndPopularity(update);
 		store(update);
-		//update stream user
-		StreamUser user = update.getStreamUser();
-		if(user != null) {
-			streamUserDAO.updateStreamUserPopularity(user);
-		}
-		// update media items
-		for(MediaItem mediaItem : update.getMediaItems()) {
-			if(!mediaItemDAO.exists(mediaItem.getId())) {
-				// save media item
-				mediaItemDAO.addMediaItem(mediaItem);
-			}
-			else
-				mediaItemDAO.updateMediaItemPopularity(mediaItem);
-		}
-		//update web pages
-		List<WebPage> webPages = update.getWebPages();
-		if(webPages != null) {
-			for(WebPage webPage : webPages) {
-				String webPageURL = webPage.getUrl();
-				if(webPageDAO.getWebPage(webPageURL) == null) {
-					webPageDAO.addWebPage(webPage);
-				}
-				else
-					webPageDAO.updateWebPageShares(webPageURL);
-			}
-		}
 	}
 	
 	@Override
