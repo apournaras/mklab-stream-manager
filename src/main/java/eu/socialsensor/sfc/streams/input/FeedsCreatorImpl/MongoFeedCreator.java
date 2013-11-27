@@ -77,10 +77,10 @@ public class MongoFeedCreator implements FeedsCreator{
 			return null;
 		}
 		
-		SourceDAO sourceDao = new SourceDAOImpl("social1.atc.gr", db, newsHoundsCollection);	
+		SourceDAO sourceDao = new SourceDAOImpl(host, db, newsHoundsCollection);	
 		
-		List<Source> sources = sourceDao.findTopSources(5000,streamType);
-		extractedSources.addAll(sources);
+		List<Source> sources = sourceDao.findTopSources(5000, streamType);
+		//extractedSources.addAll(sources);
 		
 		return sources;
 	}
