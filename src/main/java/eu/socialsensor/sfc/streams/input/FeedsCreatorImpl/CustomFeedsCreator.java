@@ -35,7 +35,7 @@ public class CustomFeedsCreator implements FeedsCreator{
 	public CustomFeedsCreator(Dysco dysco){
 		this.dysco = dysco;
 		this.dyscoKeywords = dysco.getKeywords();
-		this.dyscoTags = dysco.getTags();
+		this.dyscoTags = dysco.getHashtags();
 		
 		this.dateOfRetrieval = dateUtil.addDays(dysco.getCreationDate(),-1);
 		
