@@ -2,7 +2,11 @@ package eu.socialsensor.sfc.streams.input.FeedsCreatorImpl;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import eu.socialsensor.framework.client.dao.SourceDAO;
@@ -38,6 +42,8 @@ public class MongoFeedCreator implements FeedsCreator{
 	private List<Keyword> extractedKeywords = new ArrayList<Keyword>();
 	private List<Source> extractedSources = new ArrayList<Source>();
 	private List<Location> extractedLocations = new ArrayList<Location>();
+	
+	public Map<String, Set<String>> usersToLists = new HashMap<String, Set<String>>();
 	
 	public MongoFeedCreator(StreamsManagerConfiguration configFile){
 		this.configFile = configFile;
@@ -82,6 +88,19 @@ public class MongoFeedCreator implements FeedsCreator{
 		List<Source> sources = sourceDao.findTopSources(5000, streamType);
 		extractedSources.addAll(sources);
 		
+		for(Source source : extractedSources) {
+			String user = streamType+"#"+source.getId();
+			String list = source.getList();
+			if(list != null) {
+				Set<String> lists = usersToLists.get(user);
+				if(lists == null) {
+					lists = new HashSet<String>();
+				}
+				lists.add(list);
+				usersToLists.put(user, lists);
+			}
+		}
+
 		return sources;
 	}
 	@Override

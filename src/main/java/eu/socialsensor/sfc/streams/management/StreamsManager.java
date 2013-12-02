@@ -13,7 +13,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
-
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.Source;
 import eu.socialsensor.framework.streams.Stream;
@@ -56,6 +55,8 @@ public class StreamsManager {
 	private Set<String> streamConfigs;
 	private List<Feed> feeds = new ArrayList<Feed>();
 	private boolean isAlive = true;
+
+	
 	
 	public StreamsManager(StreamsManagerConfiguration config) throws StreamException {
 
@@ -112,9 +113,11 @@ public class StreamsManager {
 				mongoFeedsCreator.extractFeedInfo();
 				
 				feeds = mongoFeedsCreator.createFeeds();
-				monitor.addStream(streamId,stream, feeds);
+				
+				stream.setUserLists(mongoFeedsCreator.usersToLists);
+				monitor.addStream(streamId, stream, feeds);
 			}
-	
+
 		}catch(Exception e) {
 			e.printStackTrace();
 			throw new StreamException("Error during streams open", e);
