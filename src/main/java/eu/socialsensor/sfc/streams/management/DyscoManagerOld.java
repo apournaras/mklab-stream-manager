@@ -255,7 +255,7 @@ public class DyscoManagerOld {
 	 */
 	private class DyscoRequestHandler extends JedisPubSub {
 	
-		private SolrDyscoHandler dyscoHandler = SolrDyscoHandler.getInstance();
+		private SolrDyscoHandler dyscoHandler = SolrDyscoHandler.getInstance("");
 		private DyscoManagerOld dyscoManager;
 		private DyscoRequest request;
 		

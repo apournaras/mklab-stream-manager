@@ -35,7 +35,7 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
  * @author ailiakop
  * @email  ailiakop@iti.gr
  */
-public class StreamsManager{
+public class StreamsManager {
 	protected static final String REQUEST_PERIOD = "period";
 	
 	public final Logger logger = Logger.getLogger(StreamsManager.class);
@@ -51,7 +51,7 @@ public class StreamsManager{
 	private MongoFeedCreator mongoFeedsCreator;
 	private StreamsMonitor monitor;
 	private ManagerState state = ManagerState.CLOSE;
-	private int numberOfConsumers = 5; //for multi-threaded items' storage
+	private int numberOfConsumers = 1; //for multi-threaded items' storage
 	private long requestPeriod;
 	private Set<String> streamConfigs;
 	private List<Feed> feeds = new ArrayList<Feed>();
@@ -92,7 +92,7 @@ public class StreamsManager{
 		
 		try {
 
-			storeManager = new StoreManager(config,numberOfConsumers);
+			storeManager = new StoreManager(config, numberOfConsumers);
 			storeManager.start();	
 			
 			for (String streamId : streamConfigs) {
@@ -109,11 +109,10 @@ public class StreamsManager{
 				
 				//track with news hounds from mongo
 				mongoFeedsCreator.setTypeOfStream(streamId);
-				List<Source> sources = mongoFeedsCreator.extractFeedInfo();
+				mongoFeedsCreator.extractFeedInfo();
 				
 				feeds = mongoFeedsCreator.createFeeds();
-				
-				monitor.addStream(streamId,stream,feeds);
+				monitor.addStream(streamId,stream, feeds);
 			}
 	
 		}catch(Exception e) {

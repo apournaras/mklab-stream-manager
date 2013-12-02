@@ -84,6 +84,7 @@ public class DyscoManager {
 	private DyscoRequestFeedsCreator drf_creator;
 	
 	private Queue<String> requests = new LinkedList<String>();
+	private String dyscoSolrCollection;
 	
 	public DyscoManager(StreamsManagerConfiguration config) throws StreamException{
 		if (config == null) {
@@ -99,7 +100,13 @@ public class DyscoManager {
 		this.dyscoRequestsCollection = storage_config.getParameter(DyscoManager.DYSCO_REQUESTS, "Dyscos");
 		this.rssCollectionName = storage_config.getParameter(DyscoManager.RSS_TOPICS, "Topics");
 		
-        
+		StorageConfiguration index_config = config.getStorageConfig("Solr");
+		String index_host = index_config.getParameter("solr.hostname");
+		String index_service = index_config.getParameter("solr.service");
+		String index_collection = index_config.getParameter("solr.dysco.collection");
+		
+		this.dyscoSolrCollection = index_host + "/" + index_service + "/" + index_collection;
+		
         Runtime.getRuntime().addShutdownHook(new Shutdown(this));
 	}
 	
@@ -123,7 +130,7 @@ public class DyscoManager {
 		rssUpdator = new RSSUpdator(this);
 		rssUpdator.start();
 		
-		drf_creator = new DyscoRequestFeedsCreator();
+		drf_creator = new DyscoRequestFeedsCreator(dyscoSolrCollection);
 		drf_creator.start();
 		
 		this.dyscoRequestHandler = new DyscoRequestHandler(this);
@@ -356,13 +363,14 @@ public class DyscoManager {
 	 * @author ailiakop
 	 *
 	 */
-	private class DyscoRequestFeedsCreator extends Thread{
+	private class DyscoRequestFeedsCreator extends Thread {
+		
 		private boolean isAlive = true;
 		private static final int KEYWORDS_LIMIT = 3;
-		private SolrDyscoHandler dyscoHandler = SolrDyscoHandler.getInstance();
+		private SolrDyscoHandler dyscoHandler;
 		
-		public DyscoRequestFeedsCreator(){
-			
+		public DyscoRequestFeedsCreator(String dyscoHandlerCollection) {
+			dyscoHandler = SolrDyscoHandler.getInstance(dyscoHandlerCollection);
 		}
 		
 		public void run(){
