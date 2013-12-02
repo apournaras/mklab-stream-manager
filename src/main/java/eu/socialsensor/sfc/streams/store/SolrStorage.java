@@ -57,13 +57,20 @@ public class SolrStorage implements StreamUpdateStorage {
 
 	@Override
 	public void store(Item item) throws IOException {
+		
+		// Index only original Items and MediaItems come from original Items
+		if(!item.isOriginal())
+			return;
+		
 		if(solrItemHandler != null) {
 			solrItemHandler.insertItem(item);
 		}
+		
 		if(solrMediaHandler != null) {
 			
 			for(MediaItem mediaItem : item.getMediaItems()) {
 				MediaItem mi = solrMediaHandler.getSolrMediaItem(mediaItem.getId());
+				
 				if(mi==null) {
 					solrMediaHandler.insertMediaItem(mediaItem);
 				}
@@ -87,7 +94,7 @@ public class SolrStorage implements StreamUpdateStorage {
 
 	@Override
 	public void update(Item update) throws IOException {
-		
+		store(update);
 	}
 	
 	@Override
