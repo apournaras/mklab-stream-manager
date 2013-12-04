@@ -2,6 +2,7 @@ package eu.socialsensor.sfc.streams.input;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 
 import eu.socialsensor.framework.client.dao.ItemDAO;
@@ -18,8 +19,8 @@ import eu.socialsensor.framework.common.domain.dysco.Entity;
 public class RSSComparator {
 
 	List<Item> rssItems;
-	List<Entity> dyscoEntities;
-	List<String> dyscoKeywords;
+	List<Entity> dyscoEntities = new ArrayList<Entity>();
+	List<String> dyscoKeywords = new ArrayList<String>();
 
 	
 	int minimumScore = 9;
@@ -42,11 +43,11 @@ public class RSSComparator {
 	 * @param dyscoKeywords
 	 * @return RSS Item
 	 */
-	public Item compare(List<Entity> dyscoEntities,List<String> dyscoKeywords){
+	public Item compare(List<Entity> dyscoEntities,Set<String> dyscoKeywords){
 		if(dyscoEntities != null)
 			this.dyscoEntities = dyscoEntities;
 		if(dyscoKeywords != null)
-			this.dyscoKeywords = dyscoKeywords;
+			this.dyscoKeywords.addAll(dyscoKeywords);
 		
 		int maxScore = minimumScore;
 		Item selectedRSSItem = null;

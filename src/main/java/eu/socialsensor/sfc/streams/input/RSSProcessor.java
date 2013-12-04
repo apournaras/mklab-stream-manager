@@ -155,7 +155,7 @@ public class RSSProcessor {
 					int num = 0;
 					if(dysco.getTitle().contains(keyword))
 						f_keyword.setIfExistsInTitle(true);
-					if(dysco.getKeywords().contains(keyword))
+					if(dysco.getKeywords().keySet().contains(keyword))
 						num++;
 					for(Entity ent : dysco.getEntities()){
 						if(ent.getName().toLowerCase().equals(keyword))
@@ -176,7 +176,7 @@ public class RSSProcessor {
 					int num = 0;
 					if(dysco.getTitle().contains(entity.getName().toLowerCase()))
 						f_keyword.setIfExistsInTitle(true);
-					if(dysco.getKeywords().contains(entity.getName().toLowerCase()))
+					if(dysco.getKeywords().keySet().contains(entity.getName().toLowerCase()))
 						num++;
 					for(Entity ent : dysco.getEntities()){
 						if(ent.getName().toLowerCase().equals(entity.getName().toLowerCase()))

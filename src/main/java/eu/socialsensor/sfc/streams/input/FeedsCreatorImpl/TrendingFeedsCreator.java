@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.Map.Entry;
 
@@ -47,10 +48,6 @@ public class TrendingFeedsCreator implements FeedsCreator{
 		this.comparator = comparator;
 		
 		dateOfRetrieval = dateUtil.addDays(dysco.getCreationDate(),-1);
-		
-		for(Ngram ngram : dysco.getNgrams()){
-			System.out.println("ngram : "+ngram.getTerm());
-		}
 		
 	}
 	
@@ -140,9 +137,11 @@ public class TrendingFeedsCreator implements FeedsCreator{
 	}
 	@Override
 	public List<String> extractFeedInfo(){
-		filterContent(dysco.getEntities(),dysco.getKeywords());
+		List<String> dyscoKeywords = new ArrayList<String>();
+		dyscoKeywords.addAll(dysco.getKeywords().keySet());
+		filterContent(dysco.getEntities(),dyscoKeywords);
 		long t1 = System.currentTimeMillis();
-		rssItem = comparator.compare(dysco.getEntities(), dysco.getKeywords());
+		rssItem = comparator.compare(dysco.getEntities(), dysco.getKeywords().keySet());
 		long t2 = System.currentTimeMillis();
 		System.out.println("Time to find the most similar RSS Item : "+(t2-t1)+" msecs");
 		if(rssItem == null){
@@ -315,7 +314,7 @@ public class TrendingFeedsCreator implements FeedsCreator{
 		//Dysco Keywords - RSS Keywords
 		if(dysco.getKeywords() != null && rssItem.getKeywords()!=null)
 			for(String r_key : rssItem.getKeywords())
-				for(String key : dysco.getKeywords()){
+				for(String key : dysco.getKeywords().keySet()){
 					//System.out.println("Comparing dysco key : "+key+" with rss key : "+r_key);
 					if(r_key.toLowerCase().equals(key) || r_key.toLowerCase().contains(key)){
 						if(!selectedKeywords.containsKey(r_key)){
@@ -335,7 +334,7 @@ public class TrendingFeedsCreator implements FeedsCreator{
 		//Dysco keywords - RSS Entities
 		if(dysco.getKeywords() != null && rssItem.getEntities()!=null)
 			for(Entity r_ent : rssItem.getEntities())
-				for(String key : dysco.getKeywords()){
+				for(String key : dysco.getKeywords().keySet()){
 					//System.out.println("Comparing dysco key : "+key+" with rss entity : "+r_ent);
 					if(r_ent.getName().toLowerCase().equals(key) || r_ent.getName().toLowerCase().contains(key)){	
 						if(!selectedKeywords.containsKey(r_ent.getName())){

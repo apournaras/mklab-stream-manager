@@ -26,7 +26,7 @@ public class CustomFeedsCreator implements FeedsCreator{
 	
 	List<String> topKeywords = new ArrayList<String>();
 	List<String> dyscoKeywords = new ArrayList<String>();
-	List<String> dyscoTags = new ArrayList<String>();
+	List<String> dyscoHashtags = new ArrayList<String>();
 	List<String> extractedKeywords = new ArrayList<String>();
 	
 	Date dateOfRetrieval;
@@ -34,8 +34,8 @@ public class CustomFeedsCreator implements FeedsCreator{
 	
 	public CustomFeedsCreator(Dysco dysco){
 		this.dysco = dysco;
-		this.dyscoKeywords = dysco.getKeywords();
-		this.dyscoTags = dysco.getHashtags();
+		this.dyscoKeywords.addAll(dysco.getKeywords().keySet());
+		this.dyscoHashtags.addAll(dysco.getHashtags().keySet());
 		
 		this.dateOfRetrieval = dateUtil.addDays(dysco.getCreationDate(),-1);
 		
@@ -181,11 +181,11 @@ public class CustomFeedsCreator implements FeedsCreator{
 			
 		}
 		
-		for(String d_tag : dyscoTags){
+		for(String d_tag : dyscoHashtags){
 			d_tag = d_tag.toLowerCase();
 			d_tag = d_tag.replaceAll("'s", "");
 			d_tag = d_tag.replaceAll("'", "");
-			d_tag = d_tag.replaceAll("[:.,?!;&'#]+","");
+			d_tag = d_tag.replaceAll("[:.,?!;&']+","");
 			d_tag = d_tag.replaceAll("\\s+", " ").trim();
 			
 			if(!extractedKeywords.contains(d_tag))

@@ -305,8 +305,8 @@ public class DynamicFeedsCreator implements FeedsCreator{
 			
 		//Filter keywords
 		if(dysco.getKeywords() != null){
-			filteredKeywords.addAll(dysco.getKeywords());
-			for(String key : dysco.getKeywords()){
+			filteredKeywords.addAll(dysco.getKeywords().keySet());
+			for(String key : dysco.getKeywords().keySet()){
 				int index = filteredKeywords.indexOf(key);
 			
 				if(key.contains("@")||key.contains("#") 
