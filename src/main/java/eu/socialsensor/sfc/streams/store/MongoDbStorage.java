@@ -36,6 +36,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 
 	private static String HOST = "mongodb.host";
 	private static String DATABASE = "mongodb.database";
+	
 	private static String ITEMS_COLLECTION = "mongodb.items.collection";
 	private static String MEDIA_ITEMS_COLLECTION = "mongodb.mediaitems.collection";
 	private static String USERS_COLLECTION = "mongodb.streamusers.collection";
@@ -144,12 +145,13 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				if(!streamUserDAO.exists(user.getId())) {
 					// save stream user
 					streamUserDAO.insertStreamUser(user);
+					streamUserDAO.updateStreamUserMentions(user.getId());
 				}
 			}
 			
 			String[] mentions = item.getMentions();
 			for(String mention : mentions) {
-				// TODO: update mentioned users
+				streamUserDAO.updateStreamUserMentions(mention);
 			}
 			
 			// Handle Media Items
