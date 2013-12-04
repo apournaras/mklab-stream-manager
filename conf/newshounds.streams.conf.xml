@@ -32,10 +32,39 @@
     
     </Storages>
 	
-	<Streams>
+	<Subscribers>
+		<Subscriber id ="Twitter">
+			<Parameter name="Classpath">
+				<![CDATA[eu.socialsensor.framework.streams.twitter.TwitterStream]]>
+			</Parameter>
+            <Parameter name="Key">
+				<![CDATA[your.key]]>
+			</Parameter>
+	        <Parameter name="Secret">
+	        	<![CDATA[your.secret.key]]>
+	       	</Parameter>
+        	<Parameter name="AccessToken">
+	        	<![CDATA[your.accesstoken]]>
+	       	</Parameter>
+        	<Parameter name="AccessTokenSecret">
+	        	<![CDATA[your.secret.accesstoken]]>
+	       	</Parameter>
+	       	<Parameter name="keywords">
+	        	<![CDATA[keyword.of.search]]>
+	      	</Parameter>
+	      	<Parameter name="follows">
+	        	<![CDATA[user.to.follow]]>
+	      	</Parameter>
+	      	<Parameter name="locations">
+	        	<![CDATA[location.of.relevance]]>
+	      	</Parameter>
+		</Subscriber>
+	</Subscribers>
+	
+	<!-- <Streams>
 	
 	
-		<!-- Twitter Stream Handler -->
+		Twitter Stream Handler
 		<Stream id="Twitter">
 			<Parameter name="Classpath">
 				<![CDATA[eu.socialsensor.framework.streams.twitter.TwitterStream]]>
@@ -61,9 +90,9 @@
 	      	<Parameter name="locations">
 	        	<![CDATA[location.of.relevance]]>
 	      	</Parameter>
-		</Stream>
+		</Stream> 
 		
  
 	</Streams>
-
+-->
 </Configuration>
