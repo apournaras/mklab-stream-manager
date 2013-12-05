@@ -25,8 +25,8 @@
     		<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.SolrStorage]]></Parameter>
     		<Parameter name="solr.hostname"><![CDATA[http://your.ip:8080]]></Parameter>
     		<Parameter name="solr.service"><![CDATA[solr]]></Parameter>
-    		<Parameter name="solr.topicDetectionItems.collection"><![CDATA[Items]]></Parameter>
-    		<!--  <Parameter name="solr.mediaitems.collection"><![CDATA[MediaItems]]></Parameter>-->
+    		<Parameter name="solr.items.collection"><![CDATA[Items]]></Parameter>
+    		<Parameter name="solr.mediaitems.collection"><![CDATA[MediaItems]]></Parameter>
     	</Storage>
     	
     
