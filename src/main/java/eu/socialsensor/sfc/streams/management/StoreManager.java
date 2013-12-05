@@ -41,22 +41,10 @@ public class StoreManager implements StreamHandler{
 	private Integer numberOfConsumers = 1;
 	private List<Consumer> consumers;
 	
-	//private String timeslotId = null;
-	
 	public StoreManager(StreamsManagerConfiguration config) {
 		super();
 	
 		this.config = config;
-		
-		//Timer timer = new Timer(); 
-		//TimeslotHandler timeslotHandler = null;
-		//try {
-		//	timeslotHandler = new TimeslotHandler();
-		//} catch (IOException e1) {
-			// TODO Auto-generated catch block
-		//	e1.printStackTrace();
-		//} 
-		//timer.schedule(timeslotHandler, (long)5*60000, (long)2*60000);
 		
 		try {
 			store = initStorage(config);
@@ -112,7 +100,7 @@ public class StoreManager implements StreamHandler{
 	@Override
 	public void update(Item item) {
 		synchronized(queue) {
-			//item.setTimeslotId(timeslotId);
+		
 			queue.add(item);
 		}	
 	
@@ -191,34 +179,4 @@ public class StoreManager implements StreamHandler{
 		System.out.println("Dumper has started - I can store items again!");
 	}
 	
-	
-//	public class TimeslotHandler extends TimerTask {
-//		
-//		private Random random = new SecureRandom();
-//		
-//		StorageConfiguration storageConfig = config.getStorageConfig("Mongodb");
-//		TimeslotDAO timeslotDAO = new TimeslotDAOImpl(storageConfig.getParameter("mongodb.host"),storageConfig.getParameter("mongodb.database"));
-//		
-//		public TimeslotHandler() throws IOException {
-//			timeslotId = getNextTimeslotId();
-//		}
-//		
-//		@Override
-//		public void run() {
-//			String previousTimeslotId = timeslotId;
-//			
-//			synchronized (queue) {
-//				// Get new Timeslot id and update storages
-//				timeslotId = getNextTimeslotId();	
-//				store.updateTimeslot();
-//			}
-//			// Store previous timeslot
-//			timeslotDAO.insertTimeslot(new Timeslot(previousTimeslotId));
-//		}
-//		
-//		private String getNextTimeslotId() {
-//			return new BigInteger(64, random).toString(32);
-//		}
-//	}
-
 }

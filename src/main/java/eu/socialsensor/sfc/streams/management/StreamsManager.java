@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -34,7 +33,6 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
  * @email  ailiakop@iti.gr
  */
 public class StreamsManager {
-	protected static final String REQUEST_PERIOD = "period";
 	
 	public final Logger logger = Logger.getLogger(StreamsManager.class);
 	
@@ -73,7 +71,6 @@ public class StreamsManager {
 		//If there are Streams to monitor start the StreamsMonitor
 		if(streams != null && !streams.isEmpty()){
 			monitor = new StreamsMonitor(streams.size());
-			requestPeriod = Long.parseLong(config.getParameter(StreamsManager.REQUEST_PERIOD,"120")) * 1000;  //convert in milliseconds
 		}
 
 		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
@@ -155,8 +152,6 @@ public class StreamsManager {
 					continue;
 				}
 				
-				//stream.setUserLists(mongoFeedsCreator.usersToLists);
-				
 				monitor.addStream(streamId, stream, feeds);
 				monitor.startStream(streamId);
 			}
@@ -225,6 +220,10 @@ public class StreamsManager {
 			e.printStackTrace();
 			throw new StreamException("Error during streams initialization",e);
 		}
+	}
+	
+	private void fetchDesiredSources(){
+		
 	}
 	
 	/**
