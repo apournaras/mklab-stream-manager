@@ -32,8 +32,8 @@ public class DynamicFeedsCreator implements FeedsCreator{
 	private static final int MIN_RSS_THRESHOLD = 5;
 	
 	private Map<String,Set<String>> wordsToRSSItems;
-	private Map<String,Integer> dyscoAttributesWithScore = new HashMap<String,Integer>();
-	private Map<String,Integer> rssTopicsScore = new HashMap<String,Integer>();
+	private Map<String,Double> dyscoAttributesWithScore = new HashMap<String,Double>();
+	private Map<String,Double> rssTopicsScore = new HashMap<String,Double>();
 	
 	private List<Entity> entities = new ArrayList<Entity>();
 	private List<String> keywords = new ArrayList<String>();
@@ -106,7 +106,7 @@ public class DynamicFeedsCreator implements FeedsCreator{
 	 */
 	private void extractDyscosAttributes(){
 		for(Entity entity : entities){
-			Integer score = entity.getCont();
+			Double score = entity.getCont();
 			if(dysco.getTitle().contains(entity.getName().toLowerCase()))
 				score *= 2;
 			if(entity.getType().equals(Entity.Type.ORGANIZATION))
@@ -117,7 +117,7 @@ public class DynamicFeedsCreator implements FeedsCreator{
 		}
 		
 		for(String keyword : keywords){
-			Integer score = 1;
+			Double score = 1.0;
 			if(dysco.getTitle().contains(keyword.toLowerCase())){
 				score *= 2;
 			}
@@ -134,7 +134,7 @@ public class DynamicFeedsCreator implements FeedsCreator{
 		Set<String> similarRSS = new HashSet<String>();
 		
 		//find most important entity
-		int maxEntityScore = 0;
+		Double maxEntityScore = 0.0;
 		for(Entity entity : entities){
 			//find max score in entities
  			if(entity.getCont() > maxEntityScore){
@@ -159,7 +159,7 @@ public class DynamicFeedsCreator implements FeedsCreator{
 			else{
 				for(Entity entity : entities){
 					if(wordsToRSSItems.containsKey(entity.getName().toLowerCase())){
-						Integer score = dyscoAttributesWithScore.get(entity.getName().toLowerCase());
+						Double score = dyscoAttributesWithScore.get(entity.getName().toLowerCase());
 						for(String rss : similarRSS){
 							if(wordsToRSSItems.get(entity.getName().toLowerCase()).contains(rss)){
 								if(rssTopicsScore.containsKey(rss)){
@@ -176,7 +176,7 @@ public class DynamicFeedsCreator implements FeedsCreator{
 				
 				for(String keyword : keywords){
 					if(wordsToRSSItems.containsKey(keyword.toLowerCase())){
-						Integer score = dyscoAttributesWithScore.get(keyword.toLowerCase());
+						Double score = dyscoAttributesWithScore.get(keyword.toLowerCase());
 						for(String rss : similarRSS){
 							if(wordsToRSSItems.get(keyword.toLowerCase()).contains(rss)){
 								if(rssTopicsScore.containsKey(rss)){
@@ -198,7 +198,7 @@ public class DynamicFeedsCreator implements FeedsCreator{
 			for(String keyword : keywords){
 				
 				if(wordsToRSSItems.containsKey(keyword.toLowerCase())){
-					Integer score = dyscoAttributesWithScore.get(keyword.toLowerCase());
+					Double score = dyscoAttributesWithScore.get(keyword.toLowerCase());
 					similarRSS = wordsToRSSItems.get(keyword.toLowerCase());
 					for(String rss : similarRSS){
 						if(rssTopicsScore.containsKey(rss)){
@@ -212,7 +212,7 @@ public class DynamicFeedsCreator implements FeedsCreator{
 			}
 			
 			boolean isSimilar = false;
-			for(Integer score : rssTopicsScore.values()){
+			for(Double score : rssTopicsScore.values()){
 				if(score >= MIN_RSS_THRESHOLD)
 					isSimilar = true;
 			}
@@ -227,14 +227,14 @@ public class DynamicFeedsCreator implements FeedsCreator{
 	 * similarity score to the dysco
 	 */
 	private void findMostSimilarRSS(){
-		Integer maxScore = 0;
+		Double maxScore = 0.0;
 	
 		for(String rss : rssTopicsScore.keySet()){
 			if(rssTopicsScore.get(rss) > maxScore)
 				maxScore = rssTopicsScore.get(rss);
 		}
 		mostSimilarRSSTopics.clear();
-		for(Map.Entry<String, Integer> entry : rssTopicsScore.entrySet()){
+		for(Map.Entry<String, Double> entry : rssTopicsScore.entrySet()){
 			if(entry.getValue() == maxScore){
 				mostSimilarRSSTopics.add(entry.getKey());
 			}
