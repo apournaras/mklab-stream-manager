@@ -356,7 +356,7 @@ private CustomDyscoHandlerState state = CustomDyscoHandlerState.CLOSE;
 			long t1 = System.currentTimeMillis();
 			
 			if(feeds != null && !feeds.isEmpty()){
-				monitor.start(feeds);
+				monitor.startAllStreamsAtOnceWithStandarFeeds(feeds);
 				
 				while(!monitor.areAllStreamFinished()){
 					

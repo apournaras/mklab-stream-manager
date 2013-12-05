@@ -347,7 +347,7 @@ public class RSSHandler{
 			Item rssItem = input.getKey();
 			System.out.println("Searching for "+rssItem.getId()+" with "+feeds.size()+" feeds");
 			if(feeds != null && !feeds.isEmpty()){
-				monitor.start(feeds);
+				monitor.startAllStreamsAtOnceWithStandarFeeds(feeds);
 				
 				while(!monitor.areAllStreamFinished()){
 					

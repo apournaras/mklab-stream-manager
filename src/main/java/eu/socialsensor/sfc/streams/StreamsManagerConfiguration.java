@@ -44,12 +44,17 @@ public class StreamsManagerConfiguration extends Configuration {
 	private Map<String, StorageConfiguration> storageConfigMap = null;
 	
 	@Expose
+	@SerializedName(value = "subscribers")
+	private Map<String, StreamConfiguration> subscriberConfigMap = null;
+	
+	@Expose
 	@SerializedName(value = "request_period")
 	private String requestPeriod = null;
 	
 	public StreamsManagerConfiguration() {
 		streamConfigMap = new HashMap<String, StreamConfiguration>();
 		storageConfigMap = new HashMap<String, StorageConfiguration>();
+		subscriberConfigMap = new HashMap<String, StreamConfiguration>();
 	}
 	
 	public void setStreamConfig(String streamId, StreamConfiguration config){
@@ -70,10 +75,17 @@ public class StreamsManagerConfiguration extends Configuration {
 		return storageConfigMap.get(storageId);
 	}
 	
+	public void setSubscriberConfig(String subscriberId,StreamConfiguration config){
+		this.subscriberConfigMap.put(subscriberId, config);
+	}
+	
+	public StreamConfiguration getSubscriberConfig(String subscriberId){
+		return subscriberConfigMap.get(subscriberId);
+	}
+	
 	public void setParameter(String name, String value){
 		super.setParameter(name,value);
 	}
-	
 	
 	public String getParameter(String name) {
 		return super.getParameter(name);
@@ -85,6 +97,10 @@ public class StreamsManagerConfiguration extends Configuration {
 	
 	public Set<String> getStorageIds() {
 		return storageConfigMap.keySet();
+	}
+	
+	public Set<String> getSubscriberIds(){
+		return subscriberConfigMap.keySet();
 	}
 	
 	public String getRequestPeriod(){
@@ -142,6 +158,8 @@ public class StreamsManagerConfiguration extends Configuration {
 			IN_CONFIG_PARAM,
 			IN_CONFIG_STREAM,
 			IN_CONFIG_STREAM_PARAM,
+			IN_CONFIG_SUBSCRIBER,
+			IN_CONFIG_SUBSCRIBER_PARAM,
 			IN_CONFIG_STORAGE,
 			IN_CONFIG_STORAGE_PARAM,
 			IN_CONFIG_REQUEST,
@@ -153,8 +171,9 @@ public class StreamsManagerConfiguration extends Configuration {
 	    private StringBuilder value = null;
 	    private String name = null;
 	    private StreamConfiguration sconfig = null;
+	    private StreamConfiguration srconfig = null;
 	    private StorageConfiguration storage_config = null; 
-	    private String streamId = null, storageId = null;
+	    private String streamId = null, storageId = null, subscriberId = null;
 	    private String requestPeriod = null;
 		
 		public StreamsManagerConfiguration getConfig() {
@@ -179,6 +198,9 @@ public class StreamsManagerConfiguration extends Configuration {
 				else if(state == ParseState.IN_CONFIG_STORAGE) {
 					state = ParseState.IN_CONFIG_STORAGE_PARAM;
 				}
+				else if(state == ParseState.IN_CONFIG_SUBSCRIBER) {
+					state = ParseState.IN_CONFIG_SUBSCRIBER_PARAM;
+				}
 				else if(state == ParseState.IN_CONFIG_REQUEST){
 					state = ParseState.IN_CONFIG_REQUEST_PARAM;
 				}
@@ -191,7 +213,13 @@ public class StreamsManagerConfiguration extends Configuration {
 				sconfig = new StreamConfiguration();
 				state = ParseState.IN_CONFIG_STREAM;
 			}
-			
+			else if (name.equalsIgnoreCase("Subscriber")){
+				subscriberId = attributes.getValue("id");
+				value = new StringBuilder();
+				if (subscriberId == null) return;
+				srconfig = new StreamConfiguration();
+				state = ParseState.IN_CONFIG_SUBSCRIBER;
+			}
 			else if (name.equalsIgnoreCase("Storage")){
 				storageId = attributes.getValue("id");
 				value = new StringBuilder();
@@ -225,12 +253,20 @@ public class StreamsManagerConfiguration extends Configuration {
 				sconfig.setParameter(this.name, value.toString().trim());
 				state = ParseState.IN_CONFIG_STREAM;
 			}
+			else if (name.equalsIgnoreCase("Parameter") && state == ParseState.IN_CONFIG_SUBSCRIBER_PARAM){
+				srconfig.setParameter(this.name, value.toString().trim());
+				state = ParseState.IN_CONFIG_SUBSCRIBER;
+			}
 			else if (name.equalsIgnoreCase("Parameter") && state == ParseState.IN_CONFIG_STORAGE_PARAM){
 				storage_config.setParameter(this.name, value.toString().trim());
 				state = ParseState.IN_CONFIG_STORAGE;
 			}
 			else if (name.equalsIgnoreCase("Stream")){
 				config.setStreamConfig(streamId, sconfig);
+				state = ParseState.IDLE;
+			}
+			else if (name.equalsIgnoreCase("Subscriber")){
+				config.setSubscriberConfig(subscriberId, srconfig);
 				state = ParseState.IDLE;
 			}
 			else if (name.equalsIgnoreCase("Storage")){

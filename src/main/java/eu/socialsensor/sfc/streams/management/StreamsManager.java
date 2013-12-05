@@ -14,7 +14,6 @@ import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
 import eu.socialsensor.framework.common.domain.Feed;
-import eu.socialsensor.framework.common.domain.Source;
 import eu.socialsensor.framework.streams.Stream;
 import eu.socialsensor.framework.streams.StreamConfiguration;
 import eu.socialsensor.framework.streams.StreamException;
@@ -44,6 +43,7 @@ public class StreamsManager {
 	}
 
 	private Map<String, Stream> streams = null;
+	private Map<String, Stream> subscribers = null;
 	private StreamsManagerConfiguration config = null;
 	private StoreManager storeManager;
 	private ConfigFeedsCreator configFeedsCreator;
@@ -52,7 +52,6 @@ public class StreamsManager {
 	private ManagerState state = ManagerState.CLOSE;
 	private int numberOfConsumers = 1; //for multi-threaded items' storage
 	private long requestPeriod;
-	private Set<String> streamConfigs;
 	private List<Feed> feeds = new ArrayList<Feed>();
 	private boolean isAlive = true;
 
@@ -66,16 +65,17 @@ public class StreamsManager {
 
 		this.config = config;
 		
-		streamConfigs = config.getStreamIds();
+		//Set up the Subscribers
+		initSubscribers();
 		
-		mongoFeedsCreator = new MongoFeedCreator(config);
-		
-		monitor = new StreamsMonitor(streamConfigs.size());
-		
-		requestPeriod = Long.parseLong(config.getParameter(StreamsManager.REQUEST_PERIOD,"120")) * 1000;  //convert in milliseconds
-
+		//Set up the Streams
 		initStreams();
-		
+		//If there are Streams to monitor start the StreamsMonitor
+		if(streams != null && !streams.isEmpty()){
+			monitor = new StreamsMonitor(streams.size());
+			requestPeriod = Long.parseLong(config.getParameter(StreamsManager.REQUEST_PERIOD,"120")) * 1000;  //convert in milliseconds
+		}
+
 		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
 	}
 	/**
@@ -92,55 +92,83 @@ public class StreamsManager {
 		logger.info("Streams are now open");
 		
 		try {
-
+			//Start store Manager 
 			storeManager = new StoreManager(config, numberOfConsumers);
 			storeManager.start();	
+			logger.info("Store Manager is ready to store.");
 			
-			for (String streamId : streamConfigs) {
+			//Start the Subscribers
+			for(String subscriberId : subscribers.keySet()){
+				logger.info("Stream Manager - Start Subscriber : "+subscriberId);
+				StreamConfiguration srconfig = config.getSubscriberConfig(subscriberId);
+				Stream stream = subscribers.get(subscriberId);
+				stream.setHandler(storeManager);
+				stream.open(srconfig);
+				
+				/**
+				 * Here is to add the query builder that is a different instance for subscribers and streams
+				 * The output will be the input feeds - if input feeds are null or none for the subscribers, 
+				 * the subscribers just trace messages of general content 
+				 */
+				//track with news hounds from mongo - temporary solution
+				//Input - This will change
+				mongoFeedsCreator = new MongoFeedCreator(config);
+				mongoFeedsCreator.setTypeOfStream(subscriberId);
+				mongoFeedsCreator.extractFeedInfo();
+				feeds = mongoFeedsCreator.createFeeds();
+				stream.setUserLists(mongoFeedsCreator.usersToLists);
+				
+				stream.subscribe(feeds);
+			}
+			
+			//Start the Streams
+			for (String streamId : streams.keySet()) {
+				logger.info("Stream Manager - Start Stream : "+streamId);
 				StreamConfiguration sconfig = config.getStreamConfig(streamId);
 				Stream stream = streams.get(streamId);
 				stream.setHandler(storeManager);
 				stream.open(sconfig);
+				
+				/**
+				 * Here is to add the query builder that is a different instance for subscribers and streams
+				 * The output will be the input feeds - if input feeds are null or none for the streams, 
+				 * the streams close
+				 */
 			
 				//track with data from config file
-				//configFeedsCreator = new ConfigFeedsCreator(sconfig);
-				//configFeedsCreator.extractFeedInfo();
+				configFeedsCreator = new ConfigFeedsCreator(sconfig);
+				configFeedsCreator.extractFeedInfo();
 				
-				//feeds = configFeedsCreator.createFeeds();
+				feeds = configFeedsCreator.createFeeds();
 				
-				//track with news hounds from mongo
-				mongoFeedsCreator.setTypeOfStream(streamId);
-				mongoFeedsCreator.extractFeedInfo();
+				//track with news hounds from mongo - temporary solution
+				//Input - This will change
+				//mongoFeedsCreator = new MongoFeedCreator(config);
+				//mongoFeedsCreator.setTypeOfStream(streamId);
+				//mongoFeedsCreator.extractFeedInfo();
+				//feeds = mongoFeedsCreator.createFeeds();
 				
-				feeds = mongoFeedsCreator.createFeeds();
+				if(feeds.isEmpty()){
+					logger.error("No feeds for Stream : "+streamId);
+					logger.error("Close Stream : "+streamId);
+					stream.close();
+					continue;
+				}
 				
-				stream.setUserLists(mongoFeedsCreator.usersToLists);
+				//stream.setUserLists(mongoFeedsCreator.usersToLists);
+				
 				monitor.addStream(streamId, stream, feeds);
+				monitor.startStream(streamId);
+			}
+			
+			if(monitor.getNumberOfStreamFetchTasks() > 0){
+				monitor.startReInitializer();
 			}
 
 		}catch(Exception e) {
 			e.printStackTrace();
 			throw new StreamException("Error during streams open", e);
 		}
-	}
-	
-	public synchronized void search(){
-		long currentTime = System.currentTimeMillis();
-		long timeOfSearch = currentTime; 
-		
-		//start monitor for the first time
-		monitor.start();
-		
-		while(isAlive){
-			
-			if(Math.abs(currentTime - timeOfSearch)>= requestPeriod){
-				monitor.reinitializePolling();
-				timeOfSearch = currentTime;
-			}
-			currentTime = System.currentTimeMillis();
-		}
-		
-		
 	}
 	
 	/**
@@ -186,6 +214,19 @@ public class StreamsManager {
 		}
 	}
 	
+	private void initSubscribers() throws StreamException {
+		subscribers = new HashMap<String,Stream>();
+		try{
+			for (String subscriberId : config.getSubscriberIds()){
+				StreamConfiguration sconfig = config.getSubscriberConfig(subscriberId);
+				subscribers.put(subscriberId,(Stream)Class.forName(sconfig.getParameter(StreamConfiguration.CLASS_PATH)).newInstance());
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+			throw new StreamException("Error during streams initialization",e);
+		}
+	}
+	
 	/**
 	 * Class in case system is shutdown 
 	 * Responsible to close all services 
@@ -220,7 +261,7 @@ public class StreamsManager {
 			File configFile;
 			
 			if(args.length != 1 ) {
-				configFile = new File("./conf/newshounds.streams.conf.xml");
+				configFile = new File("./conf/streams.conf.xml");
 				
 			}
 			else {
@@ -233,7 +274,6 @@ public class StreamsManager {
 	        
 			StreamsManager streamsManager = new StreamsManager(config);
 			streamsManager.open();
-			streamsManager.search();
 		
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();

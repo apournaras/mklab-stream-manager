@@ -43,8 +43,6 @@ public class StreamCollector {
 			
 			manager.open();		
 			
-			manager.search();
-			
 			waiting();
 			
 			//close manager

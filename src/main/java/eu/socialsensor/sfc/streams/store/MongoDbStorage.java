@@ -149,11 +149,13 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				}
 			}
 			
-			String[] mentions = item.getMentions();
-			for(String mention : mentions) {
-				streamUserDAO.updateStreamUserMentions(mention);
+			if(item.getMentions() != null){
+				String[] mentions = item.getMentions();
+				for(String mention : mentions) {
+					streamUserDAO.updateStreamUserMentions(mention);
+				}
 			}
-			
+
 			// Handle Media Items
 			for(MediaItem mediaItem : item.getMediaItems()) {
 				if(!mediaItemDAO.exists(mediaItem.getId())) {
