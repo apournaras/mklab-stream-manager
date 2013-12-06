@@ -16,7 +16,6 @@ import eu.socialsensor.framework.common.domain.Keyword;
 import eu.socialsensor.framework.common.domain.Stopwords;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Entity;
-import eu.socialsensor.framework.common.domain.dysco.Ngram;
 import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
 import eu.socialsensor.sfc.streams.input.FeedsCreator;
 import eu.socialsensor.sfc.streams.input.RSSComparator;
