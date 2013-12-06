@@ -24,7 +24,6 @@ import eu.socialsensor.framework.client.dao.DyscoRequestDAO;
 import eu.socialsensor.framework.client.dao.ItemDAO;
 import eu.socialsensor.framework.client.dao.TopicDAO;
 import eu.socialsensor.framework.client.dao.impl.DyscoRequestDAOImpl;
-import eu.socialsensor.framework.client.dao.impl.ItemDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.TopicDAOImpl;
 import eu.socialsensor.framework.client.search.MediaSearcher;
 import eu.socialsensor.framework.client.search.solr.SolrDyscoHandler;
