@@ -49,12 +49,9 @@ public class StreamsManager {
 	private StreamsMonitor monitor;
 	private ManagerState state = ManagerState.CLOSE;
 	private int numberOfConsumers = 1; //for multi-threaded items' storage
-	private long requestPeriod;
-	private List<Feed> feeds = new ArrayList<Feed>();
-	private boolean isAlive = true;
 
-	
-	
+	private List<Feed> feeds = new ArrayList<Feed>();
+
 	public StreamsManager(StreamsManagerConfiguration config) throws StreamException {
 
 		if (config == null) {
@@ -100,6 +97,7 @@ public class StreamsManager {
 				StreamConfiguration srconfig = config.getSubscriberConfig(subscriberId);
 				Stream stream = subscribers.get(subscriberId);
 				stream.setHandler(storeManager);
+				stream.setAsSubscriber();
 				stream.open(srconfig);
 				
 				/**
@@ -114,8 +112,7 @@ public class StreamsManager {
 				mongoFeedsCreator.extractFeedInfo();
 				feeds = mongoFeedsCreator.createFeeds();
 				stream.setUserLists(mongoFeedsCreator.usersToLists);
-				
-				stream.subscribe(feeds);
+				stream.stream(feeds);
 			}
 			
 			//Start the Streams
@@ -156,7 +153,7 @@ public class StreamsManager {
 				monitor.startStream(streamId);
 			}
 			
-			if(monitor.getNumberOfStreamFetchTasks() > 0){
+			if(monitor != null && monitor.getNumberOfStreamFetchTasks() > 0){
 				monitor.startReInitializer();
 			}
 
@@ -175,7 +172,7 @@ public class StreamsManager {
 		if (state == ManagerState.CLOSE) {
 			return;
 		}
-		isAlive = false;
+		
 		try{
 			for (Stream stream : streams.values()) {
 				stream.close();
@@ -221,11 +218,7 @@ public class StreamsManager {
 			throw new StreamException("Error during streams initialization",e);
 		}
 	}
-	
-	private void fetchDesiredSources(){
-		
-	}
-	
+
 	/**
 	 * Class in case system is shutdown 
 	 * Responsible to close all services 
