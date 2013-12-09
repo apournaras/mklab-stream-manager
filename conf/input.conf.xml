@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	   <StorageInput>
+	   		<Storage id = "Mongodb">
+	   			<Parameter name="host"><![CDATA[your.ip]]></Parameter>
+	   			<Parameter name="database"><![CDATA[your.database]]></Parameter>
+	   			<Parameter name="collection"><![CDATA[your.collection]]></Parameter>
+	   		</Storage>
+	   </StorageInput>
+	   
+	   <!-- <StreamInput>
+	   		<Stream id="Facebook">
+		        <Parameter name="since">
+		        	<![CDATA[2013-10-31 00:00:00.000]]>
+		      	</Parameter>
+		        <Parameter name="keywords">
+		        	<![CDATA[rihanna]]>
+		      	</Parameter>
+		      	<Parameter name="follows">
+	        		<![CDATA[]]>
+	        	</Parameter>
+	        	<Parameter name="locations">
+	        		<![CDATA[]]>
+	        	</Parameter>
+			</Stream>
+			
+			<Stream id="Twitter">
+				<Parameter name="since">
+		        	<![CDATA[2013-10-31 00:00:00.000]]>
+		      	</Parameter>
+		       	<Parameter name="keywords">
+		        	<![CDATA[rihanna]]>
+		        </Parameter>
+	            <Parameter name="follows">
+		        	<![CDATA[]]>
+		        </Parameter>
+		        <Parameter name="locations">
+		        	<![CDATA[]]>
+		        </Parameter>
+			</Stream>
+				
+			<Stream id="YouTube">
+				<Parameter name="since">
+		        	<![CDATA[2013-10-31 00:00:00.000]]>
+		      	</Parameter>
+				<Parameter name="keywords">
+		        	<![CDATA[rihanna]]>
+		      	</Parameter>
+		      	<Parameter name="follows">
+		        	<![CDATA[]]>
+		        </Parameter>
+		        <Parameter name="locations">
+		        	<![CDATA[]]>
+		        </Parameter>
+			</Stream> 
+			
+			<Stream id="Flickr">
+				<Parameter name="since">
+		        	<![CDATA[2013-10-31 00:00:00.000]]>
+		      	</Parameter>
+				<Parameter name="keywords">
+		        	<![CDATA[rihanna]]>
+		      	</Parameter>
+		      	<Parameter name="follows">
+		        	<![CDATA[]]>
+		        </Parameter>
+		        <Parameter name="locations">
+		        	<![CDATA[]]>
+		        </Parameter>
+			</Stream>
+	
+			<Stream id="GooglePlus">
+				<Parameter name="since">
+		        	<![CDATA[2013-10-31 00:00:00.000]]>
+		      	</Parameter>
+				 <Parameter name="keywords">
+		        	<![CDATA[rihanna]]>
+		      	</Parameter>
+		      	<Parameter name="follows">
+		        	<![CDATA[]]>
+		        </Parameter>
+		        <Parameter name="locations">
+		        	<![CDATA[]]>
+		        </Parameter>
+			</Stream>
+			 
+			<Stream id="Tumblr">
+				<Parameter name="since">
+		        	<![CDATA[2013-10-31 00:00:00.000]]>
+		      	</Parameter>
+				 <Parameter name="keywords">
+		        	<![CDATA[rihanna]]>
+		      	</Parameter>
+		      	<Parameter name="follows">
+		        	<![CDATA[]]>
+		        </Parameter>
+		        <Parameter name="locations">
+		        	<![CDATA[]]>
+		        </Parameter>
+			</Stream>
+			
+			<Stream id="Instagram">
+				<Parameter name="since">
+		        	<![CDATA[2013-10-31 00:00:00.000]]>
+		      	</Parameter>
+				 <Parameter name="keywords">
+		        	<![CDATA[rihanna]]>
+		      	</Parameter>
+		      	<Parameter name="follows">
+		        	<![CDATA[]]>
+		        </Parameter>
+		        <Parameter name="locations">
+		        	<![CDATA[]]>
+		        </Parameter>
+			</Stream> 
+	   		
+	   </StreamInput>
+   		 -->
+   	
+</Configuration>
+
