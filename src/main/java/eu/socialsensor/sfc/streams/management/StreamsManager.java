@@ -247,35 +247,4 @@ public class StreamsManager {
 		}
 	}
 	
-	public static void main(String[] args) {
-		try {
-			
-			File configFile;
-			
-			if(args.length != 1 ) {
-				configFile = new File("./conf/streams.conf.xml");
-				
-			}
-			else {
-				configFile = new File(args[0]);
-			
-			}
-			
-			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(configFile);		
-				
-	        
-			StreamsManager streamsManager = new StreamsManager(config);
-			streamsManager.open();
-		
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (StreamException e) {
-			e.printStackTrace();
-		}
-	}
-	
 }
