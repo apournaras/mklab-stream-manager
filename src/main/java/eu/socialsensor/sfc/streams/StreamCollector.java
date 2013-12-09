@@ -12,6 +12,7 @@ import org.xml.sax.SAXException;
 
 
 import eu.socialsensor.framework.streams.StreamException;
+import eu.socialsensor.sfc.builder.InputConfiguration;
 import eu.socialsensor.sfc.streams.management.StreamsManager;
 
 /**
@@ -28,20 +29,24 @@ public class StreamCollector {
 	
 		Logger logger = Logger.getLogger(StreamCollector.class);
 		
-		File configFile;
-		if(args.length != 1 ) {
-			configFile = new File("./conf/newshounds.streams.conf.xml");
+		File streamConfigFile;
+		File inputConfigFile;
+		
+		if(args.length != 2 ) {
+			streamConfigFile = new File("./conf/newshounds.streams.conf.xml");
+			inputConfigFile = new File("./conf/input.conf.xml");
 		}
 		else {
-			configFile = new File(args[0]);
+			streamConfigFile = new File(args[0]);
+			inputConfigFile = new File(args[1]);
 		}
 		
 		try {
-			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(configFile);
-		
-			StreamsManager manager = new StreamsManager(config);
-			
-			manager.open();		
+			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(streamConfigFile);		
+			InputConfiguration input_config = InputConfiguration.readFromFile(inputConfigFile);		
+	        
+			StreamsManager manager = new StreamsManager(config,input_config);
+			manager.open();
 			
 			waiting();
 			

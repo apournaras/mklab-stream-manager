@@ -16,6 +16,9 @@ import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.streams.Stream;
 import eu.socialsensor.framework.streams.StreamConfiguration;
 import eu.socialsensor.framework.streams.StreamException;
+import eu.socialsensor.sfc.builder.InputConfiguration;
+import eu.socialsensor.sfc.builder.QueryBuilder;
+import eu.socialsensor.sfc.builder.input.DataInputType;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.ConfigFeedsCreator;
 import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.MongoFeedCreator;
@@ -43,22 +46,27 @@ public class StreamsManager {
 	private Map<String, Stream> streams = null;
 	private Map<String, Stream> subscribers = null;
 	private StreamsManagerConfiguration config = null;
+	private InputConfiguration input_config = null;
 	private StoreManager storeManager;
 	private ConfigFeedsCreator configFeedsCreator;
 	private MongoFeedCreator mongoFeedsCreator;
 	private StreamsMonitor monitor;
+	//private  QueryBuilder q_builder;
 	private ManagerState state = ManagerState.CLOSE;
+	
 	private int numberOfConsumers = 1; //for multi-threaded items' storage
 
 	private List<Feed> feeds = new ArrayList<Feed>();
 
-	public StreamsManager(StreamsManagerConfiguration config) throws StreamException {
+	public StreamsManager(StreamsManagerConfiguration config,InputConfiguration input_config) throws StreamException {
 
 		if (config == null) {
 			throw new StreamException("Manager's configuration must be specified");
 		}
-
+		
+		//Set the configuration files
 		this.config = config;
+		this.input_config = input_config;
 		
 		//Set up the Subscribers
 		initSubscribers();
@@ -91,6 +99,9 @@ public class StreamsManager {
 			storeManager.start();	
 			logger.info("Store Manager is ready to store.");
 			
+			QueryBuilder queryBuilder = new QueryBuilder(DataInputType.CONFIGURATION,input_config);
+			Map<String,List<Feed>> results = queryBuilder.getQueryPerStream();
+			
 			//Start the Subscribers
 			for(String subscriberId : subscribers.keySet()){
 				logger.info("Stream Manager - Start Subscriber : "+subscriberId);
@@ -105,13 +116,17 @@ public class StreamsManager {
 				 * The output will be the input feeds - if input feeds are null or none for the subscribers, 
 				 * the subscribers just trace messages of general content 
 				 */
+				
 				//track with news hounds from mongo - temporary solution
-				//Input - This will change
-				mongoFeedsCreator = new MongoFeedCreator(config);
+				//Input - This will change-Replace with code below
+				/*mongoFeedsCreator = new MongoFeedCreator(config);
 				mongoFeedsCreator.setTypeOfStream(subscriberId);
 				mongoFeedsCreator.extractFeedInfo();
-				feeds = mongoFeedsCreator.createFeeds();
-				stream.setUserLists(mongoFeedsCreator.usersToLists);
+				feeds = mongoFeedsCreator.createFeeds();*/
+				
+				
+				feeds = results.get(subscriberId);
+				stream.setUserLists(queryBuilder.getUsersToLists());
 				stream.stream(feeds);
 			}
 			
@@ -130,17 +145,12 @@ public class StreamsManager {
 				 */
 			
 				//track with data from config file
-				configFeedsCreator = new ConfigFeedsCreator(sconfig);
+				/*configFeedsCreator = new ConfigFeedsCreator(sconfig);
 				configFeedsCreator.extractFeedInfo();
 				
-				feeds = configFeedsCreator.createFeeds();
+				feeds = configFeedsCreator.createFeeds();*/
 				
-				//track with news hounds from mongo - temporary solution
-				//Input - This will change
-				//mongoFeedsCreator = new MongoFeedCreator(config);
-				//mongoFeedsCreator.setTypeOfStream(streamId);
-				//mongoFeedsCreator.extractFeedInfo();
-				//feeds = mongoFeedsCreator.createFeeds();
+				feeds = results.get(streamId);
 				
 				if(feeds.isEmpty()){
 					logger.error("No feeds for Stream : "+streamId);
@@ -244,6 +254,39 @@ public class StreamsManager {
 				}
 			}
 			System.out.println("Done...");
+		}
+	}
+	
+	public static void main(String[] args) {
+		try {
+			
+			File streamConfigFile;
+			File inputConfigFile;
+			
+			if(args.length != 2 ) {
+				streamConfigFile = new File("./conf/streams.conf.xml");
+				inputConfigFile = new File("./conf/input.conf.xml");
+				
+			}
+			else {
+				streamConfigFile = new File(args[0]);
+				inputConfigFile = new File(args[1]);
+			}
+			
+			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(streamConfigFile);		
+			InputConfiguration input_config = InputConfiguration.readFromFile(inputConfigFile);		
+	        
+			StreamsManager streamsManager = new StreamsManager(config,input_config);
+			streamsManager.open();
+		
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		} catch (SAXException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (StreamException e) {
+			e.printStackTrace();
 		}
 	}
 	
