@@ -19,7 +19,6 @@ import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.MediaItem;
 import eu.socialsensor.framework.common.domain.StreamUser;
 import eu.socialsensor.framework.common.domain.WebPage;
-import eu.socialsensor.framework.common.domain.StreamUser.Category;
 import eu.socialsensor.framework.common.factories.ItemFactory;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
 /**
@@ -65,12 +64,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private StreamUserDAO streamUserDAO;
 	private WebPageDAO webPageDAO;
 	
-	
-	private String politiciansFile = null;
-	private String journalistsFile = null;
-	private String celebritiesFile = null;
-	private String footballersFile = null;
-	
 	//private String timeSlotId = null;
 	
 	public MongoDbStorage(StorageConfiguration config) {	
@@ -80,12 +73,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.mediaItemsCollectionName = config.getParameter(MongoDbStorage.MEDIA_ITEMS_COLLECTION, "MediaItems");
 		this.streamUsersCollectionName = config.getParameter(MongoDbStorage.USERS_COLLECTION, "StreamUsers");
 		this.webPageCollectionName = config.getParameter(MongoDbStorage.WEBPAGES_COLLECTION, "WebPages");
-		
-		
-		this.politiciansFile =  config.getParameter("politiciansFile");
-		this.journalistsFile =  config.getParameter("journalistsFile");
-		this.celebritiesFile =  config.getParameter("celebritiesFile");
-		this.footballersFile =  config.getParameter("footballersFile");
+
 	}
 	
 	public MongoDbStorage(String hostname, String dbName, String itemsCollectionName,
@@ -118,16 +106,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.mediaItemDAO = new MediaItemDAOImpl(host, dbName, mediaItemsCollectionName);
 		this.streamUserDAO = new StreamUserDAOImpl(host, dbName, streamUsersCollectionName);
 		this.webPageDAO = new WebPageDAOImpl(host, dbName, webPageCollectionName);
-		
-	
-		if(politiciansFile != null)
-			streamUserDAO.loadExpertsList(politiciansFile, Category.politician);
-		if(journalistsFile != null)
-			streamUserDAO.loadExpertsList(journalistsFile, Category.journalist);
-		if(footballersFile != null)
-			streamUserDAO.loadExpertsList(footballersFile, Category.footballer);
-		if(celebritiesFile != null)
-			streamUserDAO.loadExpertsList(celebritiesFile, Category.official);
 		
 	}
 

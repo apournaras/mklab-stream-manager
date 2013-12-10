@@ -49,7 +49,6 @@ public class LuceneStorage implements StreamUpdateStorage {
 	private static final String FIELD_ID = "id";
 	private static final String FIELD_TEXT = "text";
 	private static final String FIELD_TIME = "time";
-	private static final String FIELD_TIMESLOT_ID = "timeslotId";
 	
 	private static final String NGRAMS= "storage.lucene.ngrams";
 	private static final String STOPWORDS = "storage.lucene.stopwords";
