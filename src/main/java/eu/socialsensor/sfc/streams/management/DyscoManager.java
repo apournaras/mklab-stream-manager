@@ -31,6 +31,7 @@ import eu.socialsensor.framework.common.domain.DyscoRequest;
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.Feed.FeedType;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
+import eu.socialsensor.framework.common.domain.dysco.Dysco.DyscoType;
 import eu.socialsensor.framework.common.domain.dysco.Entity;
 import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
 import eu.socialsensor.framework.streams.StreamException;
@@ -157,7 +158,7 @@ public class DyscoManager {
 	/**
 	 * Sets the RSSProcessor that is used for handling
 	 * the rss topics for keywords' extraction
-	 * @param itemDAO
+	 * @param topicDAO
 	 */
 	public void setRSSProcessor(TopicDAO topicDAO){
 		rssProcessor.setRSSProcessor(topicDAO);
@@ -432,7 +433,7 @@ public class DyscoManager {
 				request.setIsSearched(true);
 			}
 			
-    		if(dysco.getEvolution().equals("dynamic")){
+    		if(dysco.getDyscoType().equals(DyscoType.CUSTOM)){
 				request.setDyscoType("custom");
 				
 			}
@@ -454,7 +455,7 @@ public class DyscoManager {
 	     * @param feeds
 	     */
 	    private void findKeywordsAndFeeds(Dysco dysco,List<String> keywords, List<KeywordsFeed> feeds){
-	    	if(dysco.getEvolution().equals("dynamic")){
+	    	if(dysco.getDyscoType().equals(DyscoType.CUSTOM)){
 	    		System.out.println("Custom dysco : "+dysco.getId());
 	    		CustomFeedsCreator c_creator = new CustomFeedsCreator(dysco);
 	    		keywords.addAll(c_creator.extractFeedInfo()); 

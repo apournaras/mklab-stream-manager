@@ -230,7 +230,7 @@ public class MediaSearcher {
 	    	
 	    	Dysco dysco = solrdyscoHandler.findDyscoLight(message);
 	    	
-	    	if(dysco.getSolrQuery() == null){
+	    	if(dysco.getSolrQueryString() == null){
 	    		requests.add(dysco);
 		    	
 		    	logger.info("Dysco "+message+" stored!");
