@@ -110,23 +110,10 @@ public class StreamsManager {
 				stream.setHandler(storeManager);
 				stream.setAsSubscriber();
 				stream.open(srconfig);
-				
-				/**
-				 * Here is to add the query builder that is a different instance for subscribers and streams
-				 * The output will be the input feeds - if input feeds are null or none for the subscribers, 
-				 * the subscribers just trace messages of general content 
-				 */
-				
-				//track with news hounds from mongo - temporary solution
-				//Input - This will change-Replace with code below
-				/*mongoFeedsCreator = new MongoFeedCreator(config);
-				mongoFeedsCreator.setTypeOfStream(subscriberId);
-				mongoFeedsCreator.extractFeedInfo();
-				feeds = mongoFeedsCreator.createFeeds();*/
-				
-				
+			
 				feeds = results.get(subscriberId);
 				stream.setUserLists(queryBuilder.getUsersToLists());
+				stream.setUserCategories(queryBuilder.getUsersToCategories());
 				stream.stream(feeds);
 			}
 			
@@ -137,18 +124,6 @@ public class StreamsManager {
 				Stream stream = streams.get(streamId);
 				stream.setHandler(storeManager);
 				stream.open(sconfig);
-				
-				/**
-				 * Here is to add the query builder that is a different instance for subscribers and streams
-				 * The output will be the input feeds - if input feeds are null or none for the streams, 
-				 * the streams close
-				 */
-			
-				//track with data from config file
-				/*configFeedsCreator = new ConfigFeedsCreator(sconfig);
-				configFeedsCreator.extractFeedInfo();
-				
-				feeds = configFeedsCreator.createFeeds();*/
 				
 				feeds = results.get(streamId);
 				
