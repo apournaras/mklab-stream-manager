@@ -41,7 +41,7 @@ public class SolrStorage implements StreamUpdateStorage {
 		this.mediaItemsCollection = config.getParameter(SolrStorage.MEDIAITEMS_COLLECTION);
 	}
 	
-	public SolrMediaItemHandler getHandler(){
+	public SolrMediaItemHandler getHandler() {
 		return solrMediaHandler;
 	}
 	

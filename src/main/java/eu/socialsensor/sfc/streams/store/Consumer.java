@@ -72,8 +72,11 @@ public class Consumer extends Thread{
 			else if (item.getOperation() == Operation.UPDATE) {
 				store.update(item);
 			}
-			else {
+			else if (item.getOperation() == Operation.DELETED) {
 				store.delete(item.getId());
+			}
+			else {
+				System.out.println(item.getOperation() + ": Not supported operation");		
 			}
 		}
 	}

@@ -2,6 +2,7 @@ package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -53,6 +54,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	private String host;
 	private String dbName;
+	
 	private String itemsCollectionName;
 	private String mediaItemsCollectionName;
 	private String streamUsersCollectionName;
@@ -63,8 +65,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private MediaItemDAO mediaItemDAO;
 	private StreamUserDAO streamUserDAO;
 	private WebPageDAO webPageDAO;
-	
-	//private String timeSlotId = null;
 	
 	public MongoDbStorage(StorageConfiguration config) {	
 		this.host = config.getParameter(MongoDbStorage.HOST);
@@ -106,7 +106,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.mediaItemDAO = new MediaItemDAOImpl(host, dbName, mediaItemsCollectionName);
 		this.streamUserDAO = new StreamUserDAOImpl(host, dbName, streamUsersCollectionName);
 		this.webPageDAO = new WebPageDAOImpl(host, dbName, webPageCollectionName);
-		
 	}
 
 	@Override
@@ -115,6 +114,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		// Handle Items
 		if(!itemDAO.exists(item.getId())) {
 			// save item
+			item.setLastUpdated(new Date());
 			itemDAO.insertItem(item);
 			
 			// Handle Stream Users
@@ -160,7 +160,8 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			}
 		}
 		else {
-			//itemDAO.updateItemCommentsAndPopularity(item);
+			itemDAO.updateItem(item);
+			
 		}
 		
 	}

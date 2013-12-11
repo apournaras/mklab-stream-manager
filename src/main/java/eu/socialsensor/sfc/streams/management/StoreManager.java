@@ -33,7 +33,7 @@ import eu.socialsensor.framework.streams.StreamError;
  * @email  ailiakop@iti.gr
  *
  */
-public class StoreManager implements StreamHandler{
+public class StoreManager implements StreamHandler {
 	
 	private StreamUpdateStorage store = null;
 	private Queue<Item> queue = new LinkedList<Item>();
@@ -100,7 +100,6 @@ public class StoreManager implements StreamHandler{
 	@Override
 	public void update(Item item) {
 		synchronized(queue) {
-		
 			queue.add(item);
 		}	
 	

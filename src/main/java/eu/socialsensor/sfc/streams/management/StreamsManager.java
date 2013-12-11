@@ -103,7 +103,7 @@ public class StreamsManager {
 			Map<String,List<Feed>> results = queryBuilder.getQueryPerStream();
 			
 			//Start the Subscribers
-			for(String subscriberId : subscribers.keySet()){
+			for(String subscriberId : subscribers.keySet()) {
 				logger.info("Stream Manager - Start Subscriber : "+subscriberId);
 				StreamConfiguration srconfig = config.getSubscriberConfig(subscriberId);
 				Stream stream = subscribers.get(subscriberId);
@@ -169,7 +169,7 @@ public class StreamsManager {
 			
 			state = ManagerState.CLOSE;
 		}catch(Exception e) {
-			throw new StreamException("Error during streams close",e);
+			throw new StreamException("Error during streams close", e);
 		}
 	}
 	
