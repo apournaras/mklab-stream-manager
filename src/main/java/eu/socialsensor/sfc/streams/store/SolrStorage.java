@@ -47,6 +47,7 @@ public class SolrStorage implements StreamUpdateStorage {
 	
 	@Override
 	public void open() throws IOException {
+		
 		if(itemsCollection != null) {	
 			solrItemHandler = SolrItemHandler.getInstance(hostname+"/"+service+"/"+itemsCollection);
 		}
@@ -57,7 +58,7 @@ public class SolrStorage implements StreamUpdateStorage {
 
 	@Override
 	public void store(Item item) throws IOException {
-		
+	
 		// Index only original Items and MediaItems come from original Items
 		if(!item.isOriginal())
 			return;
@@ -75,6 +76,7 @@ public class SolrStorage implements StreamUpdateStorage {
 					solrMediaHandler.insertMediaItem(mediaItem);
 				}
 				else {
+					
 					for(String key : mediaItem.getFeedKeywords()){
 						if(!mi.getFeedKeywords().contains(key)){
 							mi.getFeedKeywords().add(key);
@@ -127,36 +129,7 @@ public class SolrStorage implements StreamUpdateStorage {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		System.out.println("DEBUG SOLR STORAGE");
 		
-		StorageConfiguration conf = new StorageConfiguration();
-		conf.setParameter(HOSTNAME, "http://160.40.50.230:8080");
-		conf.setParameter(SERVICE, "solr");
-		conf.setParameter(MEDIAITEMS_COLLECTION, "DyscoMediaItems");
-		
-		SolrStorage solrStorage = new SolrStorage(conf);
-		solrStorage.open();
-		List<String> keywords = new ArrayList<String>();
-		keywords.add("kidnapper");
-		keywords.add("ohio");
-		keywords.add("ariel castro");
-		List<MediaItem> mediaItems = solrStorage.getHandler().findAllMediaItemsByKeywords(keywords,"image",100);
-		System.out.println("I have retrieved "+mediaItems.size()+" media items");
-//		for(MediaItem mItem : mediaItems)
-//			System.out.println(mItem.toJSONString());
-		/*Item item = items.get(0);
-		MediaItem mi = mitems.get(0);
-		
-		Map<URL, MediaItem> mediaItems = new HashMap<URL, MediaItem>();
-		mi.setId("Twitter::12345678");
-		
-		mediaItems.put(new URL(mi.getUrl()), mi);
-		
-		item.setMediaItems(mediaItems );
-		
-		System.out.println(items.get(0).toJSONString());
-		
-		solrStorage.store(items.get(0));*/
 	}
 	
 }
