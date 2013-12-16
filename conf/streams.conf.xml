@@ -68,15 +68,7 @@
 			<Parameter name="feedsSeedlist">
 	        	<![CDATA[./conf/facebook_feeds.txt]]>
 	        </Parameter>
-	        <Parameter name="keywords">
-	        	<![CDATA[keyword.of.search]]>
-	      	</Parameter>
-	      	<Parameter name="follows">
-	        	<![CDATA[user.to.follow]]>
-	      	</Parameter>
-	      	<Parameter name="locations">
-	        	<![CDATA[location.of.relevance]]>
-	      	</Parameter>
+	       
 		</Stream>
 		-->
 		
@@ -97,15 +89,7 @@
         	<Parameter name="AccessTokenSecret">
 	        	<![CDATA[your.secret.accesstoken]]>
 	       	</Parameter>
-	       	<Parameter name="keywords">
-	        	<![CDATA[keyword.of.search]]>
-	      	</Parameter>
-	      	<Parameter name="follows">
-	        	<![CDATA[user.to.follow]]>
-	      	</Parameter>
-	      	<Parameter name="locations">
-	        	<![CDATA[location.of.relevance]]>
-	      	</Parameter>
+	       
 		</Stream>
 	
 		<!-- YouTube Handler 
@@ -128,15 +112,7 @@
 			<Parameter name="maxRequests">
 				<![CDATA[2]]>
 			</Parameter>
-				<Parameter name="keywords">
-	        	<![CDATA[keyword.of.search]]>
-	      	</Parameter>
-	      	<Parameter name="follows">
-	        	<![CDATA[user.to.follow]]>
-	      	</Parameter>
-	      	<Parameter name="locations">
-	        	<![CDATA[location.of.relevance]]>
-	      	</Parameter>
+			
 		</Stream> 
 		-->
 		
@@ -161,15 +137,7 @@
 				<![CDATA[50]]>
 			</Parameter>
 			</Parameter>
-				<Parameter name="keywords">
-	        	<![CDATA[keyword.of.search]]>
-	      	</Parameter>
-	      	<Parameter name="follows">
-	        	<![CDATA[user.to.follow]]>
-	      	</Parameter>
-	      	<Parameter name="locations">
-	        	<![CDATA[location.of.relevance]]>
-	      	</Parameter>
+			
 		</Stream>
 		-->
 		<!-- Google+ Stream Handler 
@@ -196,15 +164,7 @@
 				<![CDATA[1]]>
 			</Parameter>
 			</Parameter>
-				<Parameter name="keywords">
-	        	<![CDATA[keyword.of.search]]>
-	      	</Parameter>
-	      	<Parameter name="follows">
-	        	<![CDATA[user.to.follow]]>
-	      	</Parameter>
-	      	<Parameter name="locations">
-	        	<![CDATA[location.of.relevance]]>
-	      	</Parameter>
+			
 		</Stream>
 		 --> 
 		<!-- Tumblr Stream Handler  
@@ -228,15 +188,7 @@
 				<![CDATA[1]]>
 			</Parameter>
 			</Parameter>
-				<Parameter name="keywords">
-	        	<![CDATA[keyword.of.search]]>
-	      	</Parameter>
-	      	<Parameter name="follows">
-	        	<![CDATA[user.to.follow]]>
-	      	</Parameter>
-	      	<Parameter name="locations">
-	        	<![CDATA[location.of.relevance]]>
-	      	</Parameter>
+			
 		</Stream>
 		
 		-->
@@ -264,15 +216,7 @@
 				<![CDATA[1]]>
 			</Parameter>
 			</Parameter>
-			<Parameter name="keywords">
-	        	<![CDATA[keyword.of.search]]>
-	      	</Parameter>
-	      	<Parameter name="follows">
-	        	<![CDATA[user.to.follow]]>
-	      	</Parameter>
-	      	<Parameter name="locations">
-	        	<![CDATA[location.of.relevance]]>
-	      	</Parameter>
+			
 		</Stream> 
 	-->
 	</Streams>
