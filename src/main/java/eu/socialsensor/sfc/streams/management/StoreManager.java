@@ -99,6 +99,7 @@ public class StoreManager implements StreamHandler {
 	
 	@Override
 	public void update(Item item) {
+		
 		synchronized(queue) {
 			queue.add(item);
 		}	

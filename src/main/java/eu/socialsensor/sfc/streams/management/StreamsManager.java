@@ -127,7 +127,7 @@ public class StreamsManager {
 				
 				feeds = results.get(streamId);
 				
-				if(feeds.isEmpty()){
+				if(feeds == null || feeds.isEmpty()){
 					logger.error("No feeds for Stream : "+streamId);
 					logger.error("Close Stream : "+streamId);
 					stream.close();
