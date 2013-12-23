@@ -16,8 +16,8 @@ import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.streams.Stream;
 import eu.socialsensor.framework.streams.StreamConfiguration;
 import eu.socialsensor.framework.streams.StreamException;
+import eu.socialsensor.sfc.builder.FeedsCreator;
 import eu.socialsensor.sfc.builder.InputConfiguration;
-import eu.socialsensor.sfc.builder.QueryBuilder;
 import eu.socialsensor.sfc.builder.input.DataInputType;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.ConfigFeedsCreator;
@@ -51,7 +51,6 @@ public class StreamsManager {
 	private ConfigFeedsCreator configFeedsCreator;
 	private MongoFeedCreator mongoFeedsCreator;
 	private StreamsMonitor monitor;
-	//private  QueryBuilder q_builder;
 	private ManagerState state = ManagerState.CLOSE;
 	
 	private int numberOfConsumers = 1; //for multi-threaded items' storage
@@ -99,8 +98,8 @@ public class StreamsManager {
 			storeManager.start();	
 			logger.info("Store Manager is ready to store.");
 			
-			QueryBuilder queryBuilder = new QueryBuilder(DataInputType.CONFIGURATION,input_config);
-			Map<String,List<Feed>> results = queryBuilder.getQueryPerStream();
+			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.MONGO_STORAGE,input_config);
+			Map<String,List<Feed>> results = feedsCreator.getQueryPerStream();
 			
 			//Start the Subscribers
 			for(String subscriberId : subscribers.keySet()) {
@@ -112,8 +111,8 @@ public class StreamsManager {
 				stream.open(srconfig);
 			
 				feeds = results.get(subscriberId);
-				stream.setUserLists(queryBuilder.getUsersToLists());
-				stream.setUserCategories(queryBuilder.getUsersToCategories());
+				stream.setUserLists(feedsCreator.getUsersToLists());
+				stream.setUserCategories(feedsCreator.getUsersToCategories());
 				stream.stream(feeds);
 			}
 			
