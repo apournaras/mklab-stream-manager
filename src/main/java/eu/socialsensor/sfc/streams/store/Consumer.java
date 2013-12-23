@@ -66,6 +66,7 @@ public class Consumer extends Thread{
 		//dump update to store
 		if (store != null) {
 			if (item.getOperation() == Operation.NEW) {
+				
 				store.store(item);
 				
 			} 
