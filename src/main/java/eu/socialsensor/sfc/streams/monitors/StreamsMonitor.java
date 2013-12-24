@@ -39,7 +39,6 @@ public class StreamsMonitor {
 	
 	public StreamsMonitor(int numberOfStreams){
 		executor = Executors.newFixedThreadPool(numberOfStreams);
-		
 	}
 	
 	public int getTotalRetrievedItems(){
@@ -134,10 +133,11 @@ public class StreamsMonitor {
 		private Map<String,Long> reformedRunningTimes = new HashMap<String,Long>();
 		
 		public ReInitializer(){
-			logger.info("ReInitializer Thread started");
+			logger.info("ReInitializer Thread instantiated");
 		}
 		
 		public void run(){
+			logger.info("ReInitializer Thread started");
 			while(!isFinished){
 				long currentTime = System.currentTimeMillis();
 				
