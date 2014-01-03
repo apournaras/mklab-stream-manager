@@ -32,7 +32,6 @@ public class SolrStorage implements StreamUpdateStorage {
 	
 	private String itemsCollection = null;
 	private String mediaItemsCollection = null;
-	private String documentsCollection = null;
 	
 	private SolrItemHandler solrItemHandler = null; 
 	private SolrMediaItemHandler solrMediaHandler = null;
@@ -42,7 +41,7 @@ public class SolrStorage implements StreamUpdateStorage {
 		this.service = config.getParameter(SolrStorage.SERVICE);
 		this.itemsCollection = config.getParameter(SolrStorage.ITEMS_COLLECTION);
 		this.mediaItemsCollection = config.getParameter(SolrStorage.MEDIAITEMS_COLLECTION);
-		this.documentsCollection = config.getParameter(SolrStorage.DOCUMENTS_COLLECTION);
+		
 	}
 	
 	public SolrItemHandler getItemHandler() {
