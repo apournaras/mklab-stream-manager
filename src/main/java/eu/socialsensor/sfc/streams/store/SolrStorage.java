@@ -26,8 +26,6 @@ public class SolrStorage implements StreamUpdateStorage {
 	private static final String ITEMS_COLLECTION = "solr.items.collection";
 	private static final String MEDIAITEMS_COLLECTION = "solr.mediaitems.collection";
 	
-	private static String DOCUMENTS_COLLECTION = "mongodb.documents.collection";
-	
 	private String hostname, service;
 	
 	private String itemsCollection = null;
