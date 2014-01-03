@@ -30,7 +30,7 @@
 	<Subscribers>
 		<Subscriber id ="Twitter">
 			<Parameter name="Classpath">
-				<![CDATA[eu.socialsensor.framework.streams.twitter.TwitterStream]]>
+				<![CDATA[eu.socialsensor.framework.streams.socialmedia.twitter.TwitterStream]]>
 			</Parameter>
             <Parameter name="Key">
 				<![CDATA[your.key]]>
