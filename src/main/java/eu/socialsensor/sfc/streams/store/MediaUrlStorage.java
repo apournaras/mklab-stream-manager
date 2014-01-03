@@ -104,7 +104,7 @@ public class MediaUrlStorage implements StreamUpdateStorage {
 		}
 		
 	}
-
+	
 	private String test(String url) {
 		Matcher instagramMatcher = instagramPattern.matcher(url);
 		Matcher youtubeMatcher = youtubePattern.matcher(url);
@@ -160,7 +160,7 @@ public class MediaUrlStorage implements StreamUpdateStorage {
 	public boolean delete(String id) throws IOException {
 		return false;
 	}
-
+	
 	@Override
 	public void updateTimeslot() {
 		

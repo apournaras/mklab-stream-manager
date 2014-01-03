@@ -20,8 +20,6 @@ import eu.socialsensor.sfc.builder.FeedsCreator;
 import eu.socialsensor.sfc.builder.InputConfiguration;
 import eu.socialsensor.sfc.builder.input.DataInputType;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
-import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.ConfigFeedsCreator;
-import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.MongoFeedCreator;
 import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 
 
@@ -48,8 +46,6 @@ public class StreamsManager {
 	private StreamsManagerConfiguration config = null;
 	private InputConfiguration input_config = null;
 	private StoreManager storeManager;
-	private ConfigFeedsCreator configFeedsCreator;
-	private MongoFeedCreator mongoFeedsCreator;
 	private StreamsMonitor monitor;
 	private ManagerState state = ManagerState.CLOSE;
 	
@@ -98,7 +94,7 @@ public class StreamsManager {
 			storeManager.start();	
 			logger.info("Store Manager is ready to store.");
 			
-			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.MONGO_STORAGE,input_config);
+			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.CONFIG_FILE,input_config);
 			Map<String,List<Feed>> results = feedsCreator.getQueryPerStream();
 			
 			//Start the Subscribers

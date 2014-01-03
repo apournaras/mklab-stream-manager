@@ -1,7 +1,6 @@
 package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.List;
 
@@ -15,12 +14,10 @@ import eu.socialsensor.framework.client.dao.impl.ItemDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.MediaItemDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.StreamUserDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.WebPageDAOImpl;
-import eu.socialsensor.framework.client.mongo.MongoHandler;
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.MediaItem;
 import eu.socialsensor.framework.common.domain.StreamUser;
 import eu.socialsensor.framework.common.domain.WebPage;
-import eu.socialsensor.framework.common.factories.ItemFactory;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
 /**
  * Class for storing items in mongo db
@@ -60,7 +57,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private String streamUsersCollectionName;
 	private String webPageCollectionName;
 	
-	
 	private ItemDAO itemDAO;
 	private MediaItemDAO mediaItemDAO;
 	private StreamUserDAO streamUserDAO;
@@ -69,21 +65,29 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	public MongoDbStorage(StorageConfiguration config) {	
 		this.host = config.getParameter(MongoDbStorage.HOST);
 		this.dbName = config.getParameter(MongoDbStorage.DATABASE);
-		this.itemsCollectionName = config.getParameter(MongoDbStorage.ITEMS_COLLECTION, "Items");
-		this.mediaItemsCollectionName = config.getParameter(MongoDbStorage.MEDIA_ITEMS_COLLECTION, "MediaItems");
-		this.streamUsersCollectionName = config.getParameter(MongoDbStorage.USERS_COLLECTION, "StreamUsers");
-		this.webPageCollectionName = config.getParameter(MongoDbStorage.WEBPAGES_COLLECTION, "WebPages");
 
+		this.itemsCollectionName = config.getParameter(MongoDbStorage.ITEMS_COLLECTION);
+		this.mediaItemsCollectionName = config.getParameter(MongoDbStorage.MEDIA_ITEMS_COLLECTION);
+		this.streamUsersCollectionName = config.getParameter(MongoDbStorage.USERS_COLLECTION);
+		this.webPageCollectionName = config.getParameter(MongoDbStorage.WEBPAGES_COLLECTION);
+	
 	}
 	
 	public MongoDbStorage(String hostname, String dbName, String itemsCollectionName,
 			String mediaItemsCollectionName, String streamUsersCollectionName, String webPageCollectionName) {	
 		this.host = hostname;
 		this.dbName = dbName;
+		
 		this.itemsCollectionName = itemsCollectionName;
 		this.mediaItemsCollectionName = mediaItemsCollectionName;
 		this.streamUsersCollectionName = streamUsersCollectionName;
 		this.webPageCollectionName = webPageCollectionName; 
+	}
+	
+	public MongoDbStorage(String hostname, String dbName, String documentsCollectionName) {	
+		this.host = hostname;
+		this.dbName = dbName;
+		
 	}
 	
 	@Override
@@ -95,19 +99,28 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	public boolean delete(String id) throws IOException {
 		return itemDAO.deleteItem(id);
 	}
-
+	
 	@Override
 	public void open() throws IOException {
 		
 		logger.info("Open MongoDB storage <host: " + host + ", database: " + dbName + 
 				", items collection: " + itemsCollectionName +">");
 
-		this.itemDAO = new ItemDAOImpl(host, dbName, itemsCollectionName);
-		this.mediaItemDAO = new MediaItemDAOImpl(host, dbName, mediaItemsCollectionName);
-		this.streamUserDAO = new StreamUserDAOImpl(host, dbName, streamUsersCollectionName);
-		this.webPageDAO = new WebPageDAOImpl(host, dbName, webPageCollectionName);
+		if(itemsCollectionName != null)
+			this.itemDAO = new ItemDAOImpl(host, dbName, itemsCollectionName);
+		
+		if(mediaItemsCollectionName != null)
+			this.mediaItemDAO = new MediaItemDAOImpl(host, dbName, mediaItemsCollectionName);
+		
+		if(streamUsersCollectionName != null)
+			this.streamUserDAO = new StreamUserDAOImpl(host, dbName, streamUsersCollectionName);
+		
+		if(webPageCollectionName != null)
+			this.webPageDAO = new WebPageDAOImpl(host, dbName, webPageCollectionName);
+		
 	}
 
+	
 	@Override
 	public void store(Item item) throws IOException {
 		
@@ -182,27 +195,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	@Override
 	public void updateTimeslot() {
-	}
-	
-	
-	/**
-	 * Read all items from a collection in mongo db
-	 * @param collection
-	 * @param mongoItems
-	 * @throws UnknownHostException
-	 */
-	public void readItemsFromMongo(String collection,List<Item> mongoItems) throws UnknownHostException{
-		MongoHandler mongo = new MongoHandler(host, dbName, collection, null);
-		List<String> jsonItems = mongo.findMany(-1);
-	
-		for(String json : jsonItems){
-			
-			Item item = ItemFactory.create(json);
-			
-			mongoItems.add(item);
-			
-		}
-		
 	}
 	
 }

@@ -25,6 +25,7 @@ public interface StreamUpdateStorage {
 	 */
 	public void store(Item update) throws IOException;
 	
+	
 	/**
 	 * Stores a single stream update within store
 	 * @param update
@@ -42,6 +43,8 @@ public interface StreamUpdateStorage {
 	 * @throws IOException
 	 */
 	public boolean delete(String id) throws IOException;
+	
+	
 	
 	/**
 	 * Update timeslot

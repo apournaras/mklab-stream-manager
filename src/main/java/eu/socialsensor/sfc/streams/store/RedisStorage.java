@@ -63,7 +63,6 @@ public class RedisStorage implements StreamUpdateStorage {
 			}
 		}
 	}
-
 	
 	@Override
 	public void update(Item update) throws IOException {
@@ -74,6 +73,8 @@ public class RedisStorage implements StreamUpdateStorage {
 	public boolean delete(String id) throws IOException {
 		return false;
 	}
+	
+	
 
 	@Override
 	public void updateTimeslot() {

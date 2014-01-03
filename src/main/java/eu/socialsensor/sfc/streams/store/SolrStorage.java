@@ -1,8 +1,6 @@
 package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -24,24 +22,34 @@ public class SolrStorage implements StreamUpdateStorage {
 	
 	private static final String HOSTNAME = "solr.hostname";
 	private static final String SERVICE = "solr.service";
+	
 	private static final String ITEMS_COLLECTION = "solr.items.collection";
 	private static final String MEDIAITEMS_COLLECTION = "solr.mediaitems.collection";
 	
+	private static String DOCUMENTS_COLLECTION = "mongodb.documents.collection";
+	
 	private String hostname, service;
+	
 	private String itemsCollection = null;
 	private String mediaItemsCollection = null;
+	private String documentsCollection = null;
 	
 	private SolrItemHandler solrItemHandler = null; 
-	private SolrMediaItemHandler solrMediaHandler = null; 
+	private SolrMediaItemHandler solrMediaHandler = null;
 	
 	public SolrStorage(StorageConfiguration config) throws IOException {
 		this.hostname = config.getParameter(SolrStorage.HOSTNAME);
 		this.service = config.getParameter(SolrStorage.SERVICE);
 		this.itemsCollection = config.getParameter(SolrStorage.ITEMS_COLLECTION);
 		this.mediaItemsCollection = config.getParameter(SolrStorage.MEDIAITEMS_COLLECTION);
+		this.documentsCollection = config.getParameter(SolrStorage.DOCUMENTS_COLLECTION);
 	}
 	
-	public SolrMediaItemHandler getHandler() {
+	public SolrItemHandler getItemHandler() {
+		return solrItemHandler;
+	}
+	
+	public SolrMediaItemHandler getMediaItemHandler() {
 		return solrMediaHandler;
 	}
 	
@@ -54,6 +62,7 @@ public class SolrStorage implements StreamUpdateStorage {
 		if(mediaItemsCollection != null) {	
 			solrMediaHandler = SolrMediaItemHandler.getInstance(hostname+"/"+service+"/"+mediaItemsCollection);
 		}
+		
 	}
 
 	@Override
@@ -93,6 +102,7 @@ public class SolrStorage implements StreamUpdateStorage {
 		}
 		
 	}
+	
 
 	@Override
 	public void update(Item update) throws IOException {
@@ -105,6 +115,7 @@ public class SolrStorage implements StreamUpdateStorage {
 		solrItemHandler.deleteItem(itemId);
 		return true;
 	}
+	
 
 	@Override
 	public void close() {
@@ -125,7 +136,11 @@ public class SolrStorage implements StreamUpdateStorage {
 	}
 	
 	private void commit() throws IOException {
-	
+		try {
+			commit();
+		} catch (Exception e) {
+			logger.error(e);
+		}
 	}
 	
 	public static void main(String[] args) throws IOException {

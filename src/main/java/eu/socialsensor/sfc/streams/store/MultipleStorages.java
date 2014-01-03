@@ -57,7 +57,7 @@ public class MultipleStorages implements StreamUpdateStorage {
 			}
 		}
 	}
-
+	
 	@Override
 	public void update(Item update) throws IOException {
 		synchronized(storages) {

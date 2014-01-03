@@ -23,8 +23,6 @@ import eu.socialsensor.framework.client.dao.impl.ItemDAOImpl;
 import eu.socialsensor.framework.client.search.MediaSearcher;
 import eu.socialsensor.framework.client.search.solr.SolrDyscoHandler;
 import eu.socialsensor.framework.common.domain.DyscoRequest;
-import eu.socialsensor.framework.common.domain.Feed;
-import eu.socialsensor.framework.common.domain.Feed.FeedType;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Entity;
 import eu.socialsensor.framework.common.domain.dysco.Dysco.DyscoType;
@@ -33,8 +31,6 @@ import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.input.RSSComparator;
-import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.CustomFeedsCreator;
-import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.TrendingFeedsCreator;
 
 /**
  * @brief  Class for receiving dysco requests and extracting 
@@ -375,37 +371,37 @@ public class DyscoManagerOld {
 	     * @param feeds
 	     */
 	    public void findKeywordsAndFeeds(Dysco dysco,List<String> keywords, List<KeywordsFeed> feeds){
-	    	if(dysco.getDyscoType().equals(DyscoType.CUSTOM)){
-	    		System.out.println("Custom dysco : "+dysco.getId());
-	    		CustomFeedsCreator c_creator = new CustomFeedsCreator(dysco);
-	    		keywords.addAll(c_creator.extractFeedInfo()); 
-				
-				if(keywords.size()>0){
-					for(Feed feed : c_creator.createFeeds()){
-						if(feed.getFeedtype().equals(FeedType.KEYWORDS)){
-							KeywordsFeed keyFeed = (KeywordsFeed) feed;
-							feeds.add(keyFeed);
-						}
-					}
-				}
-					
-	    	}
-	    	else{
-	    		System.out.println("Trending dysco : "+dysco.getId());
-	    		TrendingFeedsCreator t_creator = new TrendingFeedsCreator(dysco,dyscoManager.getRSSComparator());
-	    	
-				keywords.addAll(t_creator.extractFeedInfo()); 
-				
-				if(keywords.size()>0){
-					for(Feed feed : t_creator.createFeeds()){
-						if(feed.getFeedtype().equals(FeedType.KEYWORDS)){
-							KeywordsFeed keyFeed = (KeywordsFeed) feed;
-							feeds.add(keyFeed);
-						}
-					}
-				}
-				request.setIsSearched(t_creator.isAlreadySearched());	
-	    	}
+//	    	if(dysco.getDyscoType().equals(DyscoType.CUSTOM)){
+//	    		System.out.println("Custom dysco : "+dysco.getId());
+//	    		CustomFeedsCreator c_creator = new CustomFeedsCreator(dysco);
+//	    		keywords.addAll(c_creator.extractFeedInfo()); 
+//				
+//				if(keywords.size()>0){
+//					for(Feed feed : c_creator.createFeeds()){
+//						if(feed.getFeedtype().equals(FeedType.KEYWORDS)){
+//							KeywordsFeed keyFeed = (KeywordsFeed) feed;
+//							feeds.add(keyFeed);
+//						}
+//					}
+//				}
+//					
+//	    	}
+//	    	else{
+//	    		System.out.println("Trending dysco : "+dysco.getId());
+//	    		TrendingFeedsCreator t_creator = new TrendingFeedsCreator(dysco,dyscoManager.getRSSComparator());
+//	    	
+//				keywords.addAll(t_creator.extractFeedInfo()); 
+//				
+//				if(keywords.size()>0){
+//					for(Feed feed : t_creator.createFeeds()){
+//						if(feed.getFeedtype().equals(FeedType.KEYWORDS)){
+//							KeywordsFeed keyFeed = (KeywordsFeed) feed;
+//							feeds.add(keyFeed);
+//						}
+//					}
+//				}
+//				request.setIsSearched(t_creator.isAlreadySearched());	
+//	    	}
 	    }
 			
 	}

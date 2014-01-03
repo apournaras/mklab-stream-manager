@@ -40,11 +40,13 @@ public class FlatFileStorage implements StreamUpdateStorage {
 		
 	}
 
+	
 	@Override
 	public boolean delete(String id) throws IOException {
 		// cannot delete rows from flat files
 		return false;
 	}
+	
 
 	@Override
 	public void open() throws IOException {

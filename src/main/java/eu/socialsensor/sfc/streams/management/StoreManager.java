@@ -113,12 +113,14 @@ public class StoreManager implements StreamHandler {
 		}
 	}
 	
+	
 	@Override
 	public void delete(Item item) {
 		synchronized(queue) {
 			queue.add(item);
 		}		
 	}
+	
 	
 	/**
 	 * Initializes the databases that are going to be used in the service

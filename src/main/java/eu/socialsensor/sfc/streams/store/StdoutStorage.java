@@ -17,7 +17,8 @@ public class StdoutStorage implements StreamUpdateStorage {
 	public void store(Item update) throws IOException {
 		System.out.println(update.toJSONString());	
 	}
-
+	
+	
 
 	@Override
 	public boolean delete(String id) throws IOException {

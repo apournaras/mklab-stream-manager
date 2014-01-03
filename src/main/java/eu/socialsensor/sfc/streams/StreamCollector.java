@@ -33,7 +33,7 @@ public class StreamCollector {
 		File inputConfigFile;
 		
 		if(args.length != 2 ) {
-			streamConfigFile = new File("./conf/newshounds.streams.conf.xml");
+			streamConfigFile = new File("./conf/streams.conf.xml");
 			inputConfigFile = new File("./conf/input.conf.xml");
 		}
 		else {

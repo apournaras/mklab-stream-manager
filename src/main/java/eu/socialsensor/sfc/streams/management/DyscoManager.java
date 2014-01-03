@@ -4,11 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -28,18 +26,13 @@ import eu.socialsensor.framework.client.dao.impl.TopicDAOImpl;
 import eu.socialsensor.framework.client.search.MediaSearcher;
 import eu.socialsensor.framework.client.search.solr.SolrDyscoHandler;
 import eu.socialsensor.framework.common.domain.DyscoRequest;
-import eu.socialsensor.framework.common.domain.Feed;
-import eu.socialsensor.framework.common.domain.Feed.FeedType;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Dysco.DyscoType;
-import eu.socialsensor.framework.common.domain.dysco.Entity;
 import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
 import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.input.RSSProcessor;
-import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.CustomFeedsCreator;
-import eu.socialsensor.sfc.streams.input.FeedsCreatorImpl.DynamicFeedsCreator;
 
 
 /**
@@ -456,85 +449,85 @@ public class DyscoManager {
 	     */
 	    private void findKeywordsAndFeeds(Dysco dysco,List<String> keywords, List<KeywordsFeed> feeds){
 	    	if(dysco.getDyscoType().equals(DyscoType.CUSTOM)){
-	    		System.out.println("Custom dysco : "+dysco.getId());
-	    		CustomFeedsCreator c_creator = new CustomFeedsCreator(dysco);
-	    		keywords.addAll(c_creator.extractFeedInfo()); 
-				
-				if(keywords.size()>0){
-					for(Feed feed : c_creator.createFeeds()){
-						if(feed.getFeedtype().equals(FeedType.KEYWORDS)){
-							KeywordsFeed keyFeed = (KeywordsFeed) feed;
-							feeds.add(keyFeed);
-						}
-					}
-				}
+//	    		System.out.println("Custom dysco : "+dysco.getId());
+//	    		CustomFeedsCreator c_creator = new CustomFeedsCreator(dysco);
+//	    		keywords.addAll(c_creator.extractFeedInfo()); 
+//				
+//				if(keywords.size()>0){
+//					for(Feed feed : c_creator.createFeeds()){
+//						if(feed.getFeedtype().equals(FeedType.KEYWORDS)){
+//							KeywordsFeed keyFeed = (KeywordsFeed) feed;
+//							feeds.add(keyFeed);
+//						}
+//					}
+//				}
 					
 	    	}
 	    	else{
 	    		System.out.println("Trending dysco : "+dysco.getId());
 	    		
-	    		DynamicFeedsCreator dynamicCreator = new DynamicFeedsCreator(rssProcessor.getWordsToRSSItems());
-	    		
-	    		List<String> mostSimilarRSSTopics = dynamicCreator.extractSimilarRSSForDysco(dysco);
-	    		
-	    		//add most important entities first
-	    		if(dynamicCreator.getMostImportantEntities() != null){
-	    			for(Entity ent : dynamicCreator.getMostImportantEntities())
-	    				keywords.add(ent.getName());
-	    		}
-	    		//if there is need for more keywords add those that were found to be relevant from similar rss topics
-	    		if(keywords.size()<KEYWORDS_LIMIT){
-	    			
-		    		List<String> processorKeywords = rssProcessor.getTopKeywordsFromSimilarRSS(mostSimilarRSSTopics, dysco);
-		    		
-		    		Set<String> keywordsToAdd = new HashSet<String>();
-		    		
-		    		//remove possible duplicates
-					for(String p_key : processorKeywords){
-						boolean exists = false;
-						for(String key : keywords){
-						
-							if(key.toLowerCase().equals(p_key.toLowerCase()) || key.toLowerCase().contains(p_key.toLowerCase())){
-									exists = true;
-									break;
-							}
-						}
-						if(!exists){
-						
-							keywordsToAdd.add(p_key);
-						}
-					}
-		
-					for(String keyToAdd : keywordsToAdd){
-						boolean exists = false;
-						for(String keyToAdd_ : keywordsToAdd){
-							
-							if(!keyToAdd.equals(keyToAdd_)){
-								if(keyToAdd_.contains(keyToAdd)){
-									exists = true;
-								}
-							}
-						}
-						
-						if(!exists)
-							keywords.add(keyToAdd);
-					}
-					
-	    		}
-	    		
-					
-				dynamicCreator.setTopKeywords(keywords);
-				
-				//create feeds with the extracted keywords
-				List<Feed> inputFeeds = dynamicCreator.createFeeds();
-				for(Feed feed : inputFeeds){
-					if(feed.getFeedtype().equals(FeedType.KEYWORDS)){
-						KeywordsFeed keyFeed = (KeywordsFeed) feed;
-						feeds.add(keyFeed);
-					}
-				}
-				
-			
+//	    		DynamicFeedsCreator dynamicCreator = new DynamicFeedsCreator(rssProcessor.getWordsToRSSItems());
+//	    		
+//	    		List<String> mostSimilarRSSTopics = dynamicCreator.extractSimilarRSSForDysco(dysco);
+//	    		
+//	    		//add most important entities first
+//	    		if(dynamicCreator.getMostImportantEntities() != null){
+//	    			for(Entity ent : dynamicCreator.getMostImportantEntities())
+//	    				keywords.add(ent.getName());
+//	    		}
+//	    		//if there is need for more keywords add those that were found to be relevant from similar rss topics
+//	    		if(keywords.size()<KEYWORDS_LIMIT){
+//	    			
+//		    		List<String> processorKeywords = rssProcessor.getTopKeywordsFromSimilarRSS(mostSimilarRSSTopics, dysco);
+//		    		
+//		    		Set<String> keywordsToAdd = new HashSet<String>();
+//		    		
+//		    		//remove possible duplicates
+//					for(String p_key : processorKeywords){
+//						boolean exists = false;
+//						for(String key : keywords){
+//						
+//							if(key.toLowerCase().equals(p_key.toLowerCase()) || key.toLowerCase().contains(p_key.toLowerCase())){
+//									exists = true;
+//									break;
+//							}
+//						}
+//						if(!exists){
+//						
+//							keywordsToAdd.add(p_key);
+//						}
+//					}
+//		
+//					for(String keyToAdd : keywordsToAdd){
+//						boolean exists = false;
+//						for(String keyToAdd_ : keywordsToAdd){
+//							
+//							if(!keyToAdd.equals(keyToAdd_)){
+//								if(keyToAdd_.contains(keyToAdd)){
+//									exists = true;
+//								}
+//							}
+//						}
+//						
+//						if(!exists)
+//							keywords.add(keyToAdd);
+//					}
+//					
+//	    		}
+//	    		
+//					
+//				dynamicCreator.setTopKeywords(keywords);
+//				
+//				//create feeds with the extracted keywords
+//				List<Feed> inputFeeds = dynamicCreator.createFeeds();
+//				for(Feed feed : inputFeeds){
+//					if(feed.getFeedtype().equals(FeedType.KEYWORDS)){
+//						KeywordsFeed keyFeed = (KeywordsFeed) feed;
+//						feeds.add(keyFeed);
+//					}
+//				}
+//				
+//			
 	    	}
 	    }
 	    
