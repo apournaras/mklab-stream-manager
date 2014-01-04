@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 import eu.socialsensor.framework.client.search.solr.SolrItemHandler;
 import eu.socialsensor.framework.client.search.solr.SolrMediaItemHandler;
+import eu.socialsensor.framework.client.search.solr.SolrNewsFeedHandler;
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.MediaItem;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
@@ -25,21 +26,24 @@ public class SolrStorage implements StreamUpdateStorage {
 	
 	private static final String ITEMS_COLLECTION = "solr.items.collection";
 	private static final String MEDIAITEMS_COLLECTION = "solr.mediaitems.collection";
+	private static final String NEWSFEED_COLLECTION = "solr.newsfeed.collection";
 	
 	private String hostname, service;
 	
 	private String itemsCollection = null;
 	private String mediaItemsCollection = null;
+	private String newsFeedCollection = null;
 	
 	private SolrItemHandler solrItemHandler = null; 
 	private SolrMediaItemHandler solrMediaHandler = null;
+	private SolrNewsFeedHandler solrNewsFeedHandler = null;
 	
 	public SolrStorage(StorageConfiguration config) throws IOException {
 		this.hostname = config.getParameter(SolrStorage.HOSTNAME);
 		this.service = config.getParameter(SolrStorage.SERVICE);
 		this.itemsCollection = config.getParameter(SolrStorage.ITEMS_COLLECTION);
 		this.mediaItemsCollection = config.getParameter(SolrStorage.MEDIAITEMS_COLLECTION);
-		
+		this.newsFeedCollection = config.getParameter(SolrStorage.NEWSFEED_COLLECTION);
 	}
 	
 	public SolrItemHandler getItemHandler() {
@@ -48,6 +52,10 @@ public class SolrStorage implements StreamUpdateStorage {
 	
 	public SolrMediaItemHandler getMediaItemHandler() {
 		return solrMediaHandler;
+	}
+	
+	public SolrNewsFeedHandler getNewsFeedHandler() {
+		return solrNewsFeedHandler;
 	}
 	
 	@Override
@@ -59,7 +67,9 @@ public class SolrStorage implements StreamUpdateStorage {
 		if(mediaItemsCollection != null) {	
 			solrMediaHandler = SolrMediaItemHandler.getInstance(hostname+"/"+service+"/"+mediaItemsCollection);
 		}
-		
+		if(newsFeedCollection != null) {	
+			solrNewsFeedHandler = SolrNewsFeedHandler.getInstance(hostname+"/"+service+"/"+newsFeedCollection);
+		}
 	}
 
 	@Override
@@ -71,6 +81,10 @@ public class SolrStorage implements StreamUpdateStorage {
 		
 		if(solrItemHandler != null) {
 			solrItemHandler.insertItem(item);
+		}
+		
+		if(solrNewsFeedHandler != null){
+			solrNewsFeedHandler.insertItem(item);
 		}
 		
 		if(solrMediaHandler != null) {
