@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <RequestPeriod>
+    	<Parameter name="period">
+    		<![CDATA[3600]]>
+    	</Parameter>
+    </RequestPeriod>
+    <Storages>
+    	<!-- Mongodb storage configuaration-->  
+    	<!-- <Storage id="Mongodb">
+    		<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.MongoDbStorage]]></Parameter>
+    		<Parameter name="mongodb.host"><![CDATA[your.ip]]></Parameter>
+    		<Parameter name="mongodb.database"><![CDATA[your.database]]></Parameter>
+    		<Parameter name="mongodb.items.collection"><![CDATA[NewsFeed]]></Parameter>
+    	
+    	</Storage> -->
+    	
+    	<!--Solr storage configuaration  -->
+    	<Storage id="Solr">
+    		<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.SolrStorage]]></Parameter>
+    		<Parameter name="solr.hostname"><![CDATA[http://your.ip:8080]]></Parameter>
+    		<Parameter name="solr.service"><![CDATA[solr]]></Parameter>
+    		<Parameter name="solr.newsfeed.collection"><![CDATA[NewsFeed]]></Parameter>
+    	</Storage> 
+    	
+    </Storages>
+	
+	<Streams>
+	
+		<!--  RSS Stream Handler  -->
+        <Stream id="RSS">
+			<Parameter name="Classpath">
+				<![CDATA[eu.socialsensor.framework.streams.newsfeed.rss.RSSStream]]>
+			</Parameter>
+			<Parameter name="date">
+		        <![CDATA[2014-01-03 00:00:00.000]]>
+		    </Parameter>
+	       <Parameter name="path">
+	        	<![CDATA[./conf/RSSFeeds/ALLRSSFeeds.txt]]>
+			</Parameter>
+		</Stream>
+		
+		
+		
+	</Streams>
+</Configuration>
+
