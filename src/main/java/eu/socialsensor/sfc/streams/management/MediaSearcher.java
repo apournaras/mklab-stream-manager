@@ -40,6 +40,8 @@ public class MediaSearcher {
 	private static String SOLR_SERVICE = "solr.service";
 	private static String DYSCO_COLLECTION = "dyscos.collection";
 	
+	
+	
 	public final Logger logger = Logger.getLogger(StreamsManager.class);
 	
 	enum MediaSearcherState {
@@ -56,11 +58,15 @@ public class MediaSearcher {
 	private DyscoRequestHandler dyscoRequestHandler;
 	private DyscoRequestReceiver dyscoRequestReceiver;
 	private TrendingSearchHandler trendingSearchHandler;
+	private CustomSearchHandler customSearchHandler;
 	
 	private String redisHost;
 	private String solrHost;
 	private String solrService;
 	private String dyscoCollection;
+	private String newsfeedHost;
+	private String newsfeedDatabase;
+	private String newsfeedCollection;
 	
 	private Map<String, Stream> streams = null;
 	
@@ -73,10 +79,11 @@ public class MediaSearcher {
 		}
 
 		this.config = config;
-		this.redisHost = config.getParameter(REDIS_HOST);
-		this.solrHost = config.getParameter(SOLR_HOST);
-		this.solrService = config.getParameter(SOLR_SERVICE);
-		this.dyscoCollection = config.getParameter(DYSCO_COLLECTION);
+		this.redisHost = config.getParameter(MediaSearcher.REDIS_HOST);
+		this.solrHost = config.getParameter(MediaSearcher.SOLR_HOST);
+		this.solrService = config.getParameter(MediaSearcher.SOLR_SERVICE);
+		this.dyscoCollection = config.getParameter(MediaSearcher.DYSCO_COLLECTION);
+		
 		
 		//Set up the Streams
 		initStreams();
@@ -113,9 +120,11 @@ public class MediaSearcher {
 		this.dyscoRequestHandler = new DyscoRequestHandler();
 		this.dyscoRequestReceiver = new DyscoRequestReceiver();
 		this.trendingSearchHandler = new TrendingSearchHandler();
+		this.customSearchHandler = new CustomSearchHandler();
 		
 		dyscoRequestHandler.start();
         trendingSearchHandler.start();
+		customSearchHandler.start();
 		
 		JedisPoolConfig poolConfig = new JedisPoolConfig();
         JedisPool jedisPool = new JedisPool(poolConfig, redisHost, 6379, 0);
@@ -234,7 +243,7 @@ public class MediaSearcher {
 		public void run(){
 			String dyscoId = null;
 			while(isAlive){
-				
+				updateCustomQueue();
 				dyscoId = poll();
 				if(dyscoId == null){
 					continue;
@@ -244,8 +253,9 @@ public class MediaSearcher {
 					List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
 					inputFeedsPerDysco.remove(dyscoId);
 					search(feeds);
-				}
 					
+				}
+				
 			}
 		}
 		/**
@@ -474,7 +484,7 @@ public class MediaSearcher {
 						trendingSearchHandler.addTrendingDysco(receivedDysco.getId(), feeds);
 					}
 					else if(receivedDysco.getDyscoType().equals(DyscoType.CUSTOM)){
-						//Do nothing for now
+						customSearchHandler.addCustomDysco(receivedDysco.getId(), feeds);
 					}
 					else{
 						logger.error("Unsupported dysco - Cannot be processed from MediaSearcher");
