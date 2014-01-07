@@ -101,6 +101,7 @@ public class StoreManager implements StreamHandler {
 	public void update(Item item) {
 		
 		synchronized(queue) {
+			logger.info("Queue size: " + queue.size());
 			queue.add(item);
 		}	
 	

@@ -16,7 +16,7 @@ import eu.socialsensor.framework.common.domain.Item.Operation;
  * @email  ailiakop@iti.gr
  *
  */
-public class Consumer extends Thread{
+public class Consumer extends Thread {
 	private boolean isAlive = true;
 	private StreamUpdateStorage store = null;
 	private Queue<Item> queue;
