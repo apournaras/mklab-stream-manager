@@ -128,6 +128,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		if(!itemDAO.exists(item.getId())) {
 			// save item
 			item.setLastUpdated(new Date());
+			item.setInsertionTime(System.currentTimeMillis());
 			itemDAO.insertItem(item);
 			
 			// Handle Stream Users
