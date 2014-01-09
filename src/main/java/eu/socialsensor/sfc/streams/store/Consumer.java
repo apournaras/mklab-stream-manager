@@ -34,7 +34,10 @@ public class Consumer extends Thread {
 		while (isAlive) {
 			try {
 				item = poll();
-				if (item == null){
+				if (item == null) {
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) { }
 					continue;
 				}else {
 					dump(item);
@@ -88,16 +91,8 @@ public class Consumer extends Thread {
 	 */
 	private Item poll() {
 		synchronized (queue) {					
-			if (!queue.isEmpty()) {
-				Item item = queue.remove();
-				return item;
-			}
-			try {
-				queue.wait(1000);
-			} catch (InterruptedException e) {
-				
-			}
-			return null;
+			Item item = queue.poll();	
+			return item;
 		}
 	}
 	

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,7 +37,7 @@ import eu.socialsensor.framework.streams.StreamError;
 public class StoreManager implements StreamHandler {
 	
 	private StreamUpdateStorage store = null;
-	private Queue<Item> queue = new LinkedList<Item>();
+	private Queue<Item> queue = new ArrayDeque<Item>();
 	private StreamsManagerConfiguration config;
 	private Integer numberOfConsumers = 1;
 	private List<Consumer> consumers;
@@ -78,11 +79,11 @@ public class StoreManager implements StreamHandler {
 	 * Initiates the consumer threads that are responsible for storing
 	 * to the database.
 	 */
-	public void start(){
+	public void start() {
 		consumers = new ArrayList<Consumer>(numberOfConsumers);
 		
 		for(int i=0;i<numberOfConsumers;i++)
-			consumers.add(new Consumer(queue,store));
+			consumers.add(new Consumer(queue, store));
 		
 		for(Consumer consumer : consumers)
 			consumer.start();
