@@ -97,16 +97,6 @@ public class SolrStorage implements StreamUpdateStorage {
 				}
 				else {
 					
-					for(String key : mediaItem.getFeedKeywords()){
-						if(!mi.getFeedKeywords().contains(key)){
-							mi.getFeedKeywords().add(key);
-						}
-							
-					}
-					for(String key : mediaItem.getFeedKeywordsString()) {
-						if(!mi.getFeedKeywordsString().contains(key))
-							mi.getFeedKeywordsString().add(key);
-					}
 					solrMediaHandler.insertMediaItem(mi);
 				}
 			}
