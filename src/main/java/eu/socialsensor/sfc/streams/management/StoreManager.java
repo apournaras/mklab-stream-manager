@@ -2,21 +2,16 @@ package eu.socialsensor.sfc.streams.management;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
-import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import eu.socialsensor.framework.client.dao.TimeslotDAO;
-import eu.socialsensor.framework.client.dao.impl.TimeslotDAOImpl;
+
+
 import eu.socialsensor.framework.common.domain.Item;
-import eu.socialsensor.framework.common.domain.Timeslot;
 import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.framework.streams.StreamHandler;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
@@ -41,6 +36,8 @@ public class StoreManager implements StreamHandler {
 	private StreamsManagerConfiguration config;
 	private Integer numberOfConsumers = 1;
 	private List<Consumer> consumers;
+	
+	private Map<String,Boolean> workingStatus = new HashMap<String,Boolean>();
 	
 	public StoreManager(StreamsManagerConfiguration config) {
 		super();
@@ -73,6 +70,10 @@ public class StoreManager implements StreamHandler {
 			return;
 		}
 		
+	}
+	
+	public Map<String,Boolean> getWorkingDataBases(){
+		return workingStatus;
 	}
 	
 	/**
@@ -147,11 +148,11 @@ public class StoreManager implements StreamHandler {
 			}
 			storage.register(storageInstance);
 			
-		}
-		try {
-			storage.open();
-		} catch (IOException e) {
-			throw new StreamException(e);
+			if(storage.open(storageInstance))
+				workingStatus.put(storageId, true);
+			else
+				workingStatus.put(storageId, false);	
+			
 		}
 		
 		return storage;

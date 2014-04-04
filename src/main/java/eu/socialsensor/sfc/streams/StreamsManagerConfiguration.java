@@ -100,7 +100,7 @@ public class StreamsManagerConfiguration extends Configuration {
 	}
 	
 	public static StreamsManagerConfiguration readFromMongo(String host, String dbName, String collectionName) 
-			throws UnknownHostException {
+			throws Exception {
 		MongoHandler mongo = new MongoHandler(host, dbName, collectionName, null);
 		
 		String json = mongo.findOne();
@@ -111,7 +111,7 @@ public class StreamsManagerConfiguration extends Configuration {
         return config;
 	}
 	
-	public void readItemsFromMongo(String host, String dbName, String collection, List<Item> mongoItems) throws UnknownHostException{
+	public void readItemsFromMongo(String host, String dbName, String collection, List<Item> mongoItems) throws Exception{
 		MongoHandler mongo = new MongoHandler(host, dbName, collection, null);
 		List<String> jsonItems = mongo.findMany(-1);
 	
@@ -126,7 +126,7 @@ public class StreamsManagerConfiguration extends Configuration {
 	}
 	
 	public void saveToMongo(String host, String dbName, String collectionName) 
-			throws UnknownHostException {
+			throws Exception {
 		MongoHandler mongo = new MongoHandler(host, dbName, collectionName, null);
 		
 		mongo.insert(this);
