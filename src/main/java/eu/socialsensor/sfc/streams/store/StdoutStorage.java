@@ -28,8 +28,8 @@ public class StdoutStorage implements StreamUpdateStorage {
 
 
 	@Override
-	public void open() throws IOException {
-		
+	public boolean open(){
+		return true;
 	}
 
 

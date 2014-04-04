@@ -1,10 +1,13 @@
 package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+
+import com.mongodb.MongoException;
 
 import eu.socialsensor.framework.client.dao.ItemDAO;
 import eu.socialsensor.framework.client.dao.MediaItemDAO;
@@ -101,22 +104,29 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public void open() throws IOException {
+	public boolean open(){
 		
 		logger.info("Open MongoDB storage <host: " + host + ", database: " + dbName + 
 				", items collection: " + itemsCollectionName +">");
 
-		if(itemsCollectionName != null)
-			this.itemDAO = new ItemDAOImpl(host, dbName, itemsCollectionName);
+		try {
+			if(itemsCollectionName != null)
+				this.itemDAO = new ItemDAOImpl(host, dbName, itemsCollectionName);
+			
+			if(mediaItemsCollectionName != null)
+				this.mediaItemDAO = new MediaItemDAOImpl(host, dbName, mediaItemsCollectionName);
+			
+			if(streamUsersCollectionName != null)
+				this.streamUserDAO = new StreamUserDAOImpl(host, dbName, streamUsersCollectionName);
+			
+			if(webPageCollectionName != null)
+				this.webPageDAO = new WebPageDAOImpl(host, dbName, webPageCollectionName);
+		} catch (Exception e) {
+			
+			return false;
+		}
 		
-		if(mediaItemsCollectionName != null)
-			this.mediaItemDAO = new MediaItemDAOImpl(host, dbName, mediaItemsCollectionName);
-		
-		if(streamUsersCollectionName != null)
-			this.streamUserDAO = new StreamUserDAOImpl(host, dbName, streamUsersCollectionName);
-		
-		if(webPageCollectionName != null)
-			this.webPageDAO = new WebPageDAOImpl(host, dbName, webPageCollectionName);
+		return true;
 		
 	}
 

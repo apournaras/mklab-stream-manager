@@ -3,7 +3,9 @@ package eu.socialsensor.sfc.streams.store;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
@@ -19,6 +21,7 @@ public class MultipleStorages implements StreamUpdateStorage {
 	
 	List<StreamUpdateStorage> storages = new ArrayList<StreamUpdateStorage>();
 	
+	
 	public MultipleStorages() {
 		
 	}
@@ -32,6 +35,7 @@ public class MultipleStorages implements StreamUpdateStorage {
 				Constructor<?> constructor
 					= Class.forName(storageClass).getConstructor(StorageConfiguration.class);
 				storage_instance = (StreamUpdateStorage) constructor.newInstance(storage_config);
+				
 			} catch (Exception e) {
 				return;
 			}
@@ -39,14 +43,19 @@ public class MultipleStorages implements StreamUpdateStorage {
 			this.register(storage_instance);
 		}
 	}
-
+	
 	@Override
-	public void open() throws IOException {
+	public boolean open(){
 		synchronized(storages) {
 			for(StreamUpdateStorage storage : storages) {
 				storage.open();
 			}
 		}
+		return true;
+	}
+	
+	public boolean open(StreamUpdateStorage storage){
+		return storage.open();
 	}
 	
 	@Override

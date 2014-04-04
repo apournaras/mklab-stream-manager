@@ -202,9 +202,17 @@ public class LuceneStorage implements StreamUpdateStorage {
 	}
 
 	@Override
-	public void open() throws IOException {
-		writer.commit();
-		tweetIds.clear();
+	public boolean open(){
+		try {
+			writer.commit();
+			tweetIds.clear();
+			return true;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		
 	}
 
 	@Override

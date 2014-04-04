@@ -59,17 +59,25 @@ public class SolrStorage implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public void open() throws IOException {
+	public boolean open(){
+
+		try {
+			if(itemsCollection != null) {
+				solrItemHandler = SolrItemHandler.getInstance(hostname+"/"+service+"/"+itemsCollection);
+			}
+			if(mediaItemsCollection != null) {	
+				solrMediaHandler = SolrMediaItemHandler.getInstance(hostname+"/"+service+"/"+mediaItemsCollection);
+			}
+			if(newsFeedCollection != null) {	
+				solrNewsFeedHandler = SolrNewsFeedHandler.getInstance(hostname+"/"+service+"/"+newsFeedCollection);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			
+			return false;
+		}
+		return true;
 		
-		if(itemsCollection != null) {	
-			solrItemHandler = SolrItemHandler.getInstance(hostname+"/"+service+"/"+itemsCollection);
-		}
-		if(mediaItemsCollection != null) {	
-			solrMediaHandler = SolrMediaItemHandler.getInstance(hostname+"/"+service+"/"+mediaItemsCollection);
-		}
-		if(newsFeedCollection != null) {	
-			solrNewsFeedHandler = SolrNewsFeedHandler.getInstance(hostname+"/"+service+"/"+newsFeedCollection);
-		}
 	}
 
 	@Override

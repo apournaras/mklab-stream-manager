@@ -49,9 +49,15 @@ public class FlatFileStorage implements StreamUpdateStorage {
 	
 
 	@Override
-	public void open() throws IOException {
+	public boolean open(){
 		File storeFile = new File(storageDirectory, STORE_FILE+System.currentTimeMillis());
-		out = new PrintWriter(new BufferedWriter(new FileWriter(storeFile, false)));
+		try {
+			out = new PrintWriter(new BufferedWriter(new FileWriter(storeFile, false)));
+			return true;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			return false;
+		}
 	}
 
 	@Override

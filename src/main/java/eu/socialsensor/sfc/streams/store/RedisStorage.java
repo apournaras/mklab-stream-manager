@@ -21,7 +21,7 @@ public class RedisStorage implements StreamUpdateStorage {
 
 	private static String HOST = "redis.host";
 	private static String WEBPAGES_CHANNEL = "redis.webpages.channel";
-	private static String MEDIA_CHANNEL = "redis.mesia.channel";
+	private static String MEDIA_CHANNEL = "redis.media.channel";
 	private static String ITEMS_CHANNEL = "redis.items.channel";
 	
 	private Jedis publisherJedis;
@@ -39,17 +39,22 @@ public class RedisStorage implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public void open() throws IOException {
+	public boolean open(){
 		JedisPoolConfig poolConfig = new JedisPoolConfig();
         JedisPool jedisPool = new JedisPool(poolConfig, host, 6379, 0);
 		
         this.publisherJedis = jedisPool.getResource();
+        return true;
 	}
 
 	@Override
 	public void store(Item item) throws IOException {
-		if(itemsChannel != null)
+		if(item == null)
+			return;
+		
+		if(itemsChannel != null) {
 			publisherJedis.publish(itemsChannel, item.toJSONString());
+		}
 		
 		if(mediaItemsChannel != null) {
 			for(MediaItem mediaItem : item.getMediaItems()) {
@@ -62,6 +67,7 @@ public class RedisStorage implements StreamUpdateStorage {
 				publisherJedis.publish(webPagesChannel, webPage.toJSONString());
 			}
 		}
+		
 	}
 	
 	@Override

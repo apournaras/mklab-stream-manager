@@ -15,7 +15,7 @@ public interface StreamUpdateStorage {
 	 * Opens the store
 	 * @throws IOException
 	 */
-	public void open() throws IOException;
+	public boolean open();
 	
 	/**
 	 * Stores a single stream update within store

@@ -81,9 +81,16 @@ public class MediaUrlStorage implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public void open() throws IOException {
+	public boolean open(){
 		File storeFile = new File(STORE_FILE);
-		out = new PrintWriter(new BufferedWriter(new FileWriter(storeFile, false)));
+		try {
+			out = new PrintWriter(new BufferedWriter(new FileWriter(storeFile, false)));
+			return true;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	@Override
