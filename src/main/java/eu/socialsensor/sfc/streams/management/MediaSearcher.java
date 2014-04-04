@@ -40,8 +40,6 @@ public class MediaSearcher {
 	private static String SOLR_SERVICE = "solr.service";
 	private static String DYSCO_COLLECTION = "dyscos.collection";
 	
-	
-	
 	public final Logger logger = Logger.getLogger(StreamsManager.class);
 	
 	enum MediaSearcherState {
@@ -64,9 +62,6 @@ public class MediaSearcher {
 	private String solrHost;
 	private String solrService;
 	private String dyscoCollection;
-	private String newsfeedHost;
-	private String newsfeedDatabase;
-	private String newsfeedCollection;
 	
 	private Map<String, Stream> streams = null;
 	
@@ -103,6 +98,13 @@ public class MediaSearcher {
 		state = MediaSearcherState.OPEN;
 		
 		storeManager = new StoreManager(config);
+		
+		if(!storeManager.getWorkingDataBases().get("Solr")){
+			System.out.println("Apache solr is not working - Close Media Searcher");
+			state = MediaSearcherState.CLOSE;
+			return;
+		}
+		
 		storeManager.start();	
 		logger.info("Store Manager is ready to store.");
 		
