@@ -65,6 +65,9 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private StreamUserDAO streamUserDAO;
 	private WebPageDAO webPageDAO;
 	
+	private Integer items;
+	private long t;
+	
 	public MongoDbStorage(StorageConfiguration config) {	
 		this.host = config.getParameter(MongoDbStorage.HOST);
 		this.dbName = config.getParameter(MongoDbStorage.DATABASE);
@@ -91,6 +94,8 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.host = hostname;
 		this.dbName = dbName;
 		
+		this.items = 0;
+		
 	}
 	
 	@Override
@@ -104,11 +109,13 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public boolean open(){
+	public boolean open() {
 		
 		logger.info("Open MongoDB storage <host: " + host + ", database: " + dbName + 
 				", items collection: " + itemsCollectionName +">");
 
+		this.t = System.currentTimeMillis();
+		
 		try {
 			if(itemsCollectionName != null)
 				this.itemDAO = new ItemDAOImpl(host, dbName, itemsCollectionName);
@@ -133,6 +140,11 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	@Override
 	public void store(Item item) throws IOException {
+		
+		if((++items%500) == 0) {
+			logger.info("Mongo I/O rate: " + 500000/(System.currentTimeMillis()-t) + " items/sec");
+			t = System.currentTimeMillis();
+		}
 		
 		// Handle Items
 		if(!itemDAO.exists(item.getId())) {

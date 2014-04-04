@@ -11,6 +11,7 @@ import java.util.Queue;
 
 
 
+
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.framework.streams.StreamHandler;
@@ -38,6 +39,7 @@ public class StoreManager implements StreamHandler {
 	private List<Consumer> consumers;
 	
 	private Map<String,Boolean> workingStatus = new HashMap<String,Boolean>();
+	private int items = 0;
 	
 	public StoreManager(StreamsManagerConfiguration config) {
 		super();
@@ -58,10 +60,6 @@ public class StoreManager implements StreamHandler {
 		this.config = config;
 		this.numberOfConsumers = numberOfConsumers;
 		
-		//Timer timer = new Timer(); 
-		//TimeslotHandler timeslotHandler = new TimeslotHandler(); 
-		//timer.schedule(timeslotHandler, (long)5*60000, (long)2*60000);
-		
 		try {
 			store = initStorage(config);
 		} catch (StreamException e) {
@@ -81,6 +79,10 @@ public class StoreManager implements StreamHandler {
 	 * to the database.
 	 */
 	public void start() {
+		
+		Thread thread = new Thread(new Statistics());
+		thread.start();
+		
 		consumers = new ArrayList<Consumer>(numberOfConsumers);
 		
 		for(int i=0;i<numberOfConsumers;i++)
@@ -103,7 +105,7 @@ public class StoreManager implements StreamHandler {
 	public void update(Item item) {
 		
 		synchronized(queue) {
-			logger.info("Queue size: " + queue.size());
+			items++;
 			queue.add(item);
 		}	
 	
@@ -184,4 +186,25 @@ public class StoreManager implements StreamHandler {
 		System.out.println("Dumper has started - I can store items again!");
 	}
 	
+	private class Statistics implements Runnable {
+		
+		@Override
+		public void run() {
+			int p = items, t = 0;
+			while(true) {
+				try {
+					Thread.sleep(5000);
+					logger.info("Queue size: " + queue.size());
+					logger.info("Handle rate: " + (items-p)/5 + " items/sec");
+					
+					t +=5;
+					logger.info("Mean handle rate: " + (items)/t + " items/sec");
+					p = items;
+					
+				} catch (InterruptedException e) { }
+			}
+			
+		}
+		
+	}
 }
