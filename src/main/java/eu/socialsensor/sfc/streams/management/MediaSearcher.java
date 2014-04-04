@@ -40,6 +40,8 @@ public class MediaSearcher {
 	private static String SOLR_SERVICE = "solr.service";
 	private static String DYSCO_COLLECTION = "dyscos.collection";
 	
+	
+	
 	public final Logger logger = Logger.getLogger(StreamsManager.class);
 	
 	enum MediaSearcherState {
