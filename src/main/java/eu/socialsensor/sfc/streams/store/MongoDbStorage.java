@@ -67,7 +67,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private StreamUserDAO streamUserDAO;
 	private WebPageDAO webPageDAO;
 	
-	private Integer items;
+	private Integer items = 0;
 	private long t;
 	
 	public MongoDbStorage(StorageConfiguration config) {	
@@ -143,17 +143,13 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	@Override
 	public void store(Item item) {
 		
-		if((++items%500) == 0) {
-			logger.info("Mongo I/O rate: " + 500000/(System.currentTimeMillis()-t) + " items/sec");
-			t = System.currentTimeMillis();
-		}
-		
-		if((++items%500) == 0) {
-			logger.info("Mongo I/O rate: " + 500000/(System.currentTimeMillis()-t) + " items/sec");
-			t = System.currentTimeMillis();
-		}
-		
-		try{
+		try {
+			
+			if((++items%500) == 0) {
+				logger.info("Mongo I/O rate: " + 500000/(System.currentTimeMillis()-t) + " items/sec");
+				t = System.currentTimeMillis();
+			}
+			
 			// Handle Items
 			if(!itemDAO.exists(item.getId())) {
 				// save item
