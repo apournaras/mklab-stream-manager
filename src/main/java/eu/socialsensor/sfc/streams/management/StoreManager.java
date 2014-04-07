@@ -54,6 +54,8 @@ public class StoreManager implements StreamHandler {
 		state = StoreManagerState.OPEN;
 		this.config = config;
 		
+		consumers = new ArrayList<Consumer>(numberOfConsumers);
+		
 		try {
 			store = initStorage(config);
 		} catch (StreamException e) {
@@ -63,13 +65,14 @@ public class StoreManager implements StreamHandler {
 		
 		this.statusAgent = new StorageStatusAgent(this);
 		this.statusAgent.start();
+		
 	}
 	
 	public StoreManager(StreamsManagerConfiguration config, Integer numberOfConsumers) throws IOException {
 	
 		this.config = config;
 		this.numberOfConsumers = numberOfConsumers;
-		
+		consumers = new ArrayList<Consumer>(numberOfConsumers);
 		try {
 			store = initStorage(config);
 		} catch (StreamException e) {
@@ -113,8 +116,6 @@ public class StoreManager implements StreamHandler {
 		
 		Thread thread = new Thread(new Statistics());
 		thread.start();
-		
-		consumers = new ArrayList<Consumer>(numberOfConsumers);
 		
 		for(int i=0;i<numberOfConsumers;i++)
 			consumers.add(new Consumer(queue, store));
@@ -223,7 +224,7 @@ public class StoreManager implements StreamHandler {
 	
 	public class StorageStatusAgent extends Thread {
 		private long minuteThreshold = 60000;
-		private long currentTime,periodTime; 
+		
 		private StoreManager storeManager;
 		
 		public StorageStatusAgent(StoreManager storeManager){
@@ -234,12 +235,6 @@ public class StoreManager implements StreamHandler {
 		
 		public void run(){
 			while(storeManager.getState().equals(StoreManagerState.OPEN)){
-				periodTime = System.currentTimeMillis();
-				currentTime = System.currentTimeMillis();
-				while((currentTime - periodTime) < minuteThreshold){
-				
-					currentTime = System.currentTimeMillis();
-				}
 				
 				for(StreamUpdateStorage storage : workingStorages){
 					String storageId = storage.getStorageName();
@@ -254,7 +249,11 @@ public class StoreManager implements StreamHandler {
 						storeManager.restoreStorage(storage);
 					}
 				}
-
+				try {
+					Thread.sleep(minuteThreshold);
+				} catch (InterruptedException e) {
+					
+				}
 			}
 		
 		}
