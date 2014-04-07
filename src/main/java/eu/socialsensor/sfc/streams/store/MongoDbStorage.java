@@ -17,6 +17,7 @@ import eu.socialsensor.framework.client.dao.impl.ItemDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.MediaItemDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.StreamUserDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.WebPageDAOImpl;
+import eu.socialsensor.framework.client.mongo.MongoHandler;
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.MediaItem;
 import eu.socialsensor.framework.common.domain.StreamUser;
@@ -51,6 +52,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	public static void main(String[] args) throws IOException {
 	 
 	}
+	private String storageName = "Mongodb";
 	
 	private String host;
 	private String dbName;
@@ -132,70 +134,74 @@ public class MongoDbStorage implements StreamUpdateStorage {
 
 	
 	@Override
-	public void store(Item item) throws IOException {
-		
-		// Handle Items
-		if(!itemDAO.exists(item.getId())) {
-			// save item
-			item.setLastUpdated(new Date());
-			item.setInsertionTime(System.currentTimeMillis());
-			itemDAO.insertItem(item);
-			
-			// Handle Stream Users
-			StreamUser user = item.getStreamUser();
-			if(user != null) {
-				if(!streamUserDAO.exists(user.getId())) {
-					// save stream user
-					streamUserDAO.insertStreamUser(user);
-				}
-				else {
-					streamUserDAO.incStreamUserValue(user.getId(), "items");
-					streamUserDAO.incStreamUserValue(user.getId(), "mentions");
-				}
-			}
-			
-			if(item.getMentions() != null) {
-				String[] mentions = item.getMentions();
-				for(String mention : mentions) {
-					streamUserDAO.incStreamUserValue(mention, "mentions");
-				}
-			}
-
-			if(item.getReferencedUserId() != null) {
-				String userid = item.getReferencedUserId();
-				streamUserDAO.incStreamUserValue(userid, "shares");
-			}
-			
-			// Handle Media Items
-			for(MediaItem mediaItem : item.getMediaItems()) {
-				if(!mediaItemDAO.exists(mediaItem.getId())) {
-					// save media item
-					mediaItemDAO.addMediaItem(mediaItem);
-				}
-				else {
-					//mediaItemDAO.updateMediaItemPopularity(mediaItem);
-				}
-			}
-			
-			// Handle Web Pages
-			List<WebPage> webPages = item.getWebPages();
-			if(webPages != null) {
-				for(WebPage webPage : webPages) {
-					String webPageURL = webPage.getUrl();
-					if(!webPageDAO.exists(webPageURL)) {
-						webPageDAO.addWebPage(webPage);
+	public void store(Item item) {
+		try{
+			// Handle Items
+			if(!itemDAO.exists(item.getId())) {
+				// save item
+				item.setLastUpdated(new Date());
+				item.setInsertionTime(System.currentTimeMillis());
+				itemDAO.insertItem(item);
+				
+				// Handle Stream Users
+				StreamUser user = item.getStreamUser();
+				if(user != null) {
+					if(!streamUserDAO.exists(user.getId())) {
+						// save stream user
+						streamUserDAO.insertStreamUser(user);
 					}
 					else {
-						webPageDAO.updateWebPageShares(webPageURL);
+						streamUserDAO.incStreamUserValue(user.getId(), "items");
+						streamUserDAO.incStreamUserValue(user.getId(), "mentions");
+					}
+				}
+				
+				if(item.getMentions() != null) {
+					String[] mentions = item.getMentions();
+					for(String mention : mentions) {
+						streamUserDAO.incStreamUserValue(mention, "mentions");
+					}
+				}
+
+				if(item.getReferencedUserId() != null) {
+					String userid = item.getReferencedUserId();
+					streamUserDAO.incStreamUserValue(userid, "shares");
+				}
+				
+				// Handle Media Items
+				for(MediaItem mediaItem : item.getMediaItems()) {
+					if(!mediaItemDAO.exists(mediaItem.getId())) {
+						// save media item
+						mediaItemDAO.addMediaItem(mediaItem);
+					}
+					else {
+						//mediaItemDAO.updateMediaItemPopularity(mediaItem);
+					}
+				}
+				
+				// Handle Web Pages
+				List<WebPage> webPages = item.getWebPages();
+				if(webPages != null) {
+					for(WebPage webPage : webPages) {
+						String webPageURL = webPage.getUrl();
+						if(!webPageDAO.exists(webPageURL)) {
+							webPageDAO.addWebPage(webPage);
+						}
+						else {
+							webPageDAO.updateWebPageShares(webPageURL);
+						}
 					}
 				}
 			}
+			else {
+				itemDAO.updateItem(item);
+				
+			}
 		}
-		else {
-			itemDAO.updateItem(item);
-			
+		catch(MongoException e){
+			System.out.println("Storing item "+item.getId()+" failed - Mongo is not responding");
 		}
-		
+	
 	}
 
 	@Override
@@ -208,4 +214,21 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	public void updateTimeslot() {
 	}
 	
+	@Override
+	public boolean checkStatus(StreamUpdateStorage storage) 
+	{
+		try {
+			MongoHandler handler = new MongoHandler(host,dbName);
+			return handler.checkConnection(host);
+		} catch (Exception e) {
+			
+			return false;
+		}
+		
+	}
+	
+	@Override
+	public String getStorageName(){
+		return this.storageName;
+	}
 }

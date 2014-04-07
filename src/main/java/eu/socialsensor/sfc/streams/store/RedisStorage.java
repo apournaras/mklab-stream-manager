@@ -31,6 +31,8 @@ public class RedisStorage implements StreamUpdateStorage {
 	private String webPagesChannel = null;
 	private String mediaItemsChannel = null;
 	
+	private String storageName = "Redis";
+	
 	public RedisStorage(StorageConfiguration config) {
 		this.host = config.getParameter(RedisStorage.HOST);
 		this.itemsChannel = config.getParameter(RedisStorage.ITEMS_CHANNEL);
@@ -90,6 +92,16 @@ public class RedisStorage implements StreamUpdateStorage {
 	@Override
 	public void close() {
 		publisherJedis.disconnect();
+	}
+	
+	@Override
+	public boolean checkStatus(StreamUpdateStorage storage) {
+		return true;
+	}
+	
+	@Override
+	public String getStorageName(){
+		return this.storageName;
 	}
 
 }

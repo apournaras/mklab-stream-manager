@@ -44,7 +44,7 @@ public interface StreamUpdateStorage {
 	 */
 	public boolean delete(String id) throws IOException;
 	
-	
+	public boolean checkStatus(StreamUpdateStorage storage);
 	
 	/**
 	 * Update timeslot
@@ -55,5 +55,7 @@ public interface StreamUpdateStorage {
 	 * Close the store
 	 */
 	public void close();
+	
+	public String getStorageName();
 	
 }

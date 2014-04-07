@@ -3,6 +3,9 @@ package eu.socialsensor.sfc.streams.store;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 
 import eu.socialsensor.framework.client.search.solr.SolrItemHandler;
 import eu.socialsensor.framework.client.search.solr.SolrMediaItemHandler;
@@ -33,6 +36,8 @@ public class SolrStorage implements StreamUpdateStorage {
 	private String itemsCollection = null;
 	private String mediaItemsCollection = null;
 	private String newsFeedCollection = null;
+	
+	private String storageName = "Solr";
 	
 	private SolrItemHandler solrItemHandler = null; 
 	private SolrMediaItemHandler solrMediaHandler = null;
@@ -125,6 +130,40 @@ public class SolrStorage implements StreamUpdateStorage {
 		return true;
 	}
 	
+	@Override
+	public boolean checkStatus(StreamUpdateStorage storage) {
+		
+		if(itemsCollection != null){
+			try {
+				solrItemHandler.checkServerStatus();
+				return true;
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				return false;
+			}
+		}
+		if(mediaItemsCollection != null){
+			try {
+				solrMediaHandler.checkServerStatus();
+				return true;
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				return false;
+			}
+		}
+		if(newsFeedCollection != null){
+			try {
+				solrNewsFeedHandler.checkServerStatus();
+				return true;
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				return false;
+			}
+		}
+  
+		return false;
+	}
+	
 
 	@Override
 	public void close() {
@@ -150,6 +189,11 @@ public class SolrStorage implements StreamUpdateStorage {
 		} catch (Exception e) {
 			logger.error(e);
 		}
+	}
+	
+	@Override
+	public String getStorageName(){
+		return this.storageName;
 	}
 	
 	public static void main(String[] args) throws IOException {

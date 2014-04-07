@@ -18,6 +18,8 @@ public class FlatFileStorage implements StreamUpdateStorage {
 	
 	public static final String STORE_FILE = "/items.";
 	
+	private String storageName = "FlatFile";
+	
 	private File storageDirectory;
 	private PrintWriter out = null;
 	
@@ -28,16 +30,17 @@ public class FlatFileStorage implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public void store(Item item) throws IOException {
+	public void store(Item item){
 		items++;
 		if (out != null) {
 			out.println(item.toJSONString());
 			out.flush();
+			
 		}
 		if(items%1000==0) {
 			open();	
 		}
-		
+	
 	}
 
 	
@@ -82,4 +85,14 @@ public class FlatFileStorage implements StreamUpdateStorage {
 		}
 	}
 
+	@Override
+	public boolean checkStatus(StreamUpdateStorage storage) {
+		return true;
+	}
+	
+	@Override
+	public String getStorageName(){
+		return this.storageName;
+	}
+	
 }

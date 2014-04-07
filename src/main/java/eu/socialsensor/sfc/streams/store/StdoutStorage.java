@@ -7,6 +7,8 @@ import eu.socialsensor.sfc.streams.StorageConfiguration;
 import java.io.IOException;
 
 public class StdoutStorage implements StreamUpdateStorage {
+	
+	private String storageName = "StdOut";
 
 	public StdoutStorage(StorageConfiguration config) {
 		
@@ -43,10 +45,20 @@ public class StdoutStorage implements StreamUpdateStorage {
 	public void updateTimeslot() {
 	}
 
+	
+	@Override
+	public boolean checkStatus(StreamUpdateStorage storage) {
+		return true;
+	}
 
 	@Override
 	public void update(Item update) throws IOException {
 		System.out.println(update.toJSONString());
+	}
+	
+	@Override
+	public String getStorageName(){
+		return this.storageName;
 	}
 
 }

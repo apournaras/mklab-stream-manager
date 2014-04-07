@@ -96,7 +96,17 @@ public class MultipleStorages implements StreamUpdateStorage {
 	}
 
 	public void register(StreamUpdateStorage storage) {
+		System.out.println("Register storage "+storage.getStorageName());
 		storages.add(storage);
+	}
+	
+	public void remove(StreamUpdateStorage storage){
+		System.out.println("Remove storage "+storage.getStorageName());
+		storages.remove(storage);
+	}
+	
+	public List<StreamUpdateStorage> getRegisteredStorages(){
+		return storages;
 	}
 
 	@Override
@@ -108,6 +118,13 @@ public class MultipleStorages implements StreamUpdateStorage {
 		}
 	}
 
+	@Override
+	public boolean checkStatus(StreamUpdateStorage storage) {
+		return storage.checkStatus(storage);
+	}
 	
-	
+	@Override
+	public String getStorageName(){
+		return null;
+	}
 }

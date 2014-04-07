@@ -54,6 +54,7 @@ public class LuceneStorage implements StreamUpdateStorage {
 	private static final String STOPWORDS = "storage.lucene.stopwords";
 	private static final String INDEX_FILE = "storage.lucene.indexFile";
 	
+	private String storageName = "Lucene";
 	
 	private static List<String> tweetIds;
 	private FieldType fieldTypeText;
@@ -109,7 +110,7 @@ public class LuceneStorage implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public void store(Item item) throws IOException {
+	public void store(Item item) {
 		//logger.info("Store item with id: "+item.getId()+" in the Lucene index");
 		Document doc = new Document();
 		doc.add(new StoredField(FIELD_ID, item.getId()));
@@ -121,7 +122,6 @@ public class LuceneStorage implements StreamUpdateStorage {
 		try {
 			if (writer == null || exists(item.getId()) || tweetIds.contains(item.getId()))
 				return;
-			
 			long t = System.currentTimeMillis();
 			writer.addDocument(doc);
 			tweetIds.add(item.getId());
@@ -129,6 +129,11 @@ public class LuceneStorage implements StreamUpdateStorage {
 			logger.info("Store item " + item.getId() + " in Lucene took " + t +" msecs");
 		} catch (AlreadyClosedException e) {
 			System.err.println("Lucene index is closed");
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			
 		}
 		
 	}
@@ -243,7 +248,15 @@ public class LuceneStorage implements StreamUpdateStorage {
 		
 	}
 	
+	@Override
+	public boolean checkStatus(StreamUpdateStorage storage) {
+		return true;
+	}
 	
+	@Override
+	public String getStorageName(){
+		return this.storageName;
+	}
 	
 //	private class Committer extends TimerTask {
 //		@Override

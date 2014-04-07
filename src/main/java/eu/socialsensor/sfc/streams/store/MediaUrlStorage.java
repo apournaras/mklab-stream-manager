@@ -37,6 +37,8 @@ public class MediaUrlStorage implements StreamUpdateStorage {
 	
 	public static final String STORE_FILE = "./media_urls.txt";
 	
+	private String storageName = "MediaUrl";
+	
 	private PrintWriter out = null;
 	private JsonParser parser = new JsonParser();
 	
@@ -94,7 +96,7 @@ public class MediaUrlStorage implements StreamUpdateStorage {
 	}
 
 	@Override
-	public void store(Item item) throws IOException {
+	public void store(Item item) {
 		
 		URL[] links = item.getLinks();
 		if(links != null && links.length>0) {
@@ -109,7 +111,7 @@ public class MediaUrlStorage implements StreamUpdateStorage {
 				}
 			}
 		}
-		
+	
 	}
 	
 	private String test(String url) {
@@ -181,6 +183,16 @@ public class MediaUrlStorage implements StreamUpdateStorage {
 	@Override
 	public void update(Item update) throws IOException {
 		
+	}
+	
+	@Override
+	public boolean checkStatus(StreamUpdateStorage storage) {
+		return true;
+	}
+	
+	@Override
+	public String getStorageName(){
+		return this.storageName;
 	}
 
 }
