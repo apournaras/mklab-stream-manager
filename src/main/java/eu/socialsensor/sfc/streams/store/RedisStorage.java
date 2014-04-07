@@ -54,22 +54,23 @@ public class RedisStorage implements StreamUpdateStorage {
 		if(item == null)
 			return;
 		
-		if(itemsChannel != null) {
-			publisherJedis.publish(itemsChannel, item.toJSONString());
-		}
-		
-		if(mediaItemsChannel != null) {
-			for(MediaItem mediaItem : item.getMediaItems()) {
-				publisherJedis.publish(mediaItemsChannel, mediaItem.toJSONString());
+		if(item.isOriginal()) { 	
+			if(itemsChannel != null) {
+				publisherJedis.publish(itemsChannel, item.toJSONString());
 			}
-		}
 		
-		if(webPagesChannel != null) {
-			for(WebPage webPage : item.getWebPages()) {
-				publisherJedis.publish(webPagesChannel, webPage.toJSONString());
+			if(mediaItemsChannel != null) {
+				for(MediaItem mediaItem : item.getMediaItems()) {
+					publisherJedis.publish(mediaItemsChannel, mediaItem.toJSONString());
+				}
 			}
-		}
 		
+			if(webPagesChannel != null) {
+				for(WebPage webPage : item.getWebPages()) {
+					publisherJedis.publish(webPagesChannel, webPage.toJSONString());
+				}
+			}	
+		}
 	}
 	
 	@Override
