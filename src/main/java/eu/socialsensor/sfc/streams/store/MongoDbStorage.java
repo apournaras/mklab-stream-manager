@@ -70,9 +70,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private Integer items;
 	private long t;
 	
-	private Integer items;
-	private long t;
-	
 	public MongoDbStorage(StorageConfiguration config) {	
 		this.host = config.getParameter(MongoDbStorage.HOST);
 		this.dbName = config.getParameter(MongoDbStorage.DATABASE);
@@ -151,7 +148,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			t = System.currentTimeMillis();
 		}
 		
-<<<<<<< HEAD
 		if((++items%500) == 0) {
 			logger.info("Mongo I/O rate: " + 500000/(System.currentTimeMillis()-t) + " items/sec");
 			t = System.currentTimeMillis();
@@ -171,58 +167,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					if(!streamUserDAO.exists(user.getId())) {
 						// save stream user
 						streamUserDAO.insertStreamUser(user);
-=======
-		// Handle Items
-		if(!itemDAO.exists(item.getId())) {
-			// save item
-			item.setLastUpdated(new Date());
-			item.setInsertionTime(System.currentTimeMillis());
-			itemDAO.insertItem(item);
-			
-			// Handle Stream Users
-			StreamUser user = item.getStreamUser();
-			if(user != null) {
-				if(!streamUserDAO.exists(user.getId())) {
-					// save stream user
-					streamUserDAO.insertStreamUser(user);
-				}
-				else {
-					streamUserDAO.incStreamUserValue(user.getId(), "items");
-					streamUserDAO.incStreamUserValue(user.getId(), "mentions");
-				}
-			}
-			
-			if(item.getMentions() != null) {
-				String[] mentions = item.getMentions();
-				for(String mention : mentions) {
-					streamUserDAO.incStreamUserValue(mention, "mentions");
-				}
-			}
-
-			if(item.getReferencedUserId() != null) {
-				String userid = item.getReferencedUserId();
-				streamUserDAO.incStreamUserValue(userid, "shares");
-			}
-			
-			// Handle Media Items
-			for(MediaItem mediaItem : item.getMediaItems()) {
-				if(!mediaItemDAO.exists(mediaItem.getId())) {
-					// save media item
-					mediaItemDAO.addMediaItem(mediaItem);
-				}
-				else {
-					//mediaItemDAO.updateMediaItemPopularity(mediaItem);
-				}
-			}
-			
-			// Handle Web Pages
-			List<WebPage> webPages = item.getWebPages();
-			if(webPages != null) {
-				for(WebPage webPage : webPages) {
-					String webPageURL = webPage.getUrl();
-					if(!webPageDAO.exists(webPageURL)) {
-						webPageDAO.addWebPage(webPage);
->>>>>>> refs/remotes/origin/master
 					}
 					else {
 						streamUserDAO.incStreamUserValue(user.getId(), "items");
