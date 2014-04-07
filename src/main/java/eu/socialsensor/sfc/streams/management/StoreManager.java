@@ -11,6 +11,7 @@ import java.util.Queue;
 
 
 
+
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.framework.streams.StreamHandler;
@@ -31,17 +32,26 @@ import eu.socialsensor.framework.streams.StreamError;
  */
 public class StoreManager implements StreamHandler {
 	
-	private StreamUpdateStorage store = null;
+	private MultipleStorages store = null;
 	private Queue<Item> queue = new ArrayDeque<Item>();
 	private StreamsManagerConfiguration config;
 	private Integer numberOfConsumers = 1;
 	private List<Consumer> consumers;
+	private List<StreamUpdateStorage> workingStorages = new ArrayList<StreamUpdateStorage>();
+	
+	private StorageStatusAgent statusAgent;
 	
 	private Map<String,Boolean> workingStatus = new HashMap<String,Boolean>();
+	private int items = 0;
+	
+	enum StoreManagerState {
+		OPEN, CLOSE
+	}
+	private StoreManagerState state = StoreManagerState.CLOSE;
 	
 	public StoreManager(StreamsManagerConfiguration config) {
-		super();
-	
+		
+		state = StoreManagerState.OPEN;
 		this.config = config;
 		
 		try {
@@ -50,17 +60,15 @@ public class StoreManager implements StreamHandler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		this.statusAgent = new StorageStatusAgent(this);
+		this.statusAgent.start();
 	}
 	
 	public StoreManager(StreamsManagerConfiguration config, Integer numberOfConsumers) throws IOException {
-		super();
 	
 		this.config = config;
 		this.numberOfConsumers = numberOfConsumers;
-		
-		//Timer timer = new Timer(); 
-		//TimeslotHandler timeslotHandler = new TimeslotHandler(); 
-		//timer.schedule(timeslotHandler, (long)5*60000, (long)2*60000);
 		
 		try {
 			store = initStorage(config);
@@ -69,11 +77,32 @@ public class StoreManager implements StreamHandler {
 			e.printStackTrace();
 			return;
 		}
-		
+		this.statusAgent = new StorageStatusAgent(this);
+		this.statusAgent.start();
 	}
 	
 	public Map<String,Boolean> getWorkingDataBases(){
 		return workingStatus;
+	}
+	
+	public void updateDataBasesStatus(String storageId,boolean status){
+		workingStatus.put(storageId, status);
+	}
+	
+	public StoreManagerState getState(){
+		return state;
+	}
+	
+	public MultipleStorages getStorages(){
+		return store;
+	}
+	
+	public void eliminateStorage(StreamUpdateStorage storage){
+		store.remove(storage);
+	}
+	
+	public void restoreStorage(StreamUpdateStorage storage){
+		store.register(storage);
 	}
 	
 	/**
@@ -81,6 +110,10 @@ public class StoreManager implements StreamHandler {
 	 * to the database.
 	 */
 	public void start() {
+		
+		Thread thread = new Thread(new Statistics());
+		thread.start();
+		
 		consumers = new ArrayList<Consumer>(numberOfConsumers);
 		
 		for(int i=0;i<numberOfConsumers;i++)
@@ -103,7 +136,7 @@ public class StoreManager implements StreamHandler {
 	public void update(Item item) {
 		
 		synchronized(queue) {
-			logger.info("Queue size: " + queue.size());
+			items++;
 			queue.add(item);
 		}	
 	
@@ -131,7 +164,7 @@ public class StoreManager implements StreamHandler {
 	 * @return
 	 * @throws StreamException
 	 */
-	private StreamUpdateStorage initStorage(StreamsManagerConfiguration config) throws StreamException {
+	private MultipleStorages initStorage(StreamsManagerConfiguration config) throws StreamException {
 		MultipleStorages storage = new MultipleStorages();
 		
 		for (String storageId : config.getStorageIds()) {
@@ -143,13 +176,15 @@ public class StoreManager implements StreamHandler {
 				Constructor<?> constructor
 					= Class.forName(storageClass).getConstructor(StorageConfiguration.class);
 				storageInstance = (StreamUpdateStorage) constructor.newInstance(storageConfig);
+				workingStorages.add(storageInstance);
 			} catch (Exception e) {
 				throw new StreamException("Error during storage initialization", e);
 			}
-			storage.register(storageInstance);
 			
-			if(storage.open(storageInstance))
+			if(storage.open(storageInstance)){
 				workingStatus.put(storageId, true);
+				storage.register(storageInstance);
+			}
 			else
 				workingStatus.put(storageId, false);	
 			
@@ -167,6 +202,8 @@ public class StoreManager implements StreamHandler {
 		}
 		
 		store.close();
+		
+		state = StoreManagerState.CLOSE;
 	}
 	
 	/**
@@ -181,7 +218,68 @@ public class StoreManager implements StreamHandler {
 		
 		this.store = initStorage(config);
 		
-		System.out.println("Dumper has started - I can store items again!");
+		logger.info("Dumper has started - I can store items again!");
 	}
 	
+	public class StorageStatusAgent extends Thread {
+		private long minuteThreshold = 60000;
+		private long currentTime,periodTime; 
+		private StoreManager storeManager;
+		
+		public StorageStatusAgent(StoreManager storeManager){
+			this.storeManager = storeManager;
+			logger.info("Status Check Thread initialized");
+			
+		}
+		
+		public void run(){
+			while(storeManager.getState().equals(StoreManagerState.OPEN)){
+				periodTime = System.currentTimeMillis();
+				currentTime = System.currentTimeMillis();
+				while((currentTime - periodTime) < minuteThreshold){
+				
+					currentTime = System.currentTimeMillis();
+				}
+				
+				for(StreamUpdateStorage storage : workingStorages){
+					String storageId = storage.getStorageName();
+					Boolean status = store.checkStatus(storage);
+					
+					if(!status && storeManager.getWorkingDataBases().get(storageId)){     //was working and now is not responding
+						storeManager.updateDataBasesStatus(storageId, status);
+						storeManager.eliminateStorage(storage);
+					}
+					else if(status && !storeManager.getWorkingDataBases().get(storageId)){//was not working and now is working
+						storeManager.updateDataBasesStatus(storageId, status);
+						storeManager.restoreStorage(storage);
+					}
+				}
+
+			}
+		
+		}
+		
+	}
+	
+	private class Statistics implements Runnable {
+		
+		@Override
+		public void run() {
+			int p = items, t = 0;
+			while(true) {
+				try {
+					Thread.sleep(5000);
+					logger.info("Queue size: " + queue.size());
+					logger.info("Handle rate: " + (items-p)/5 + " items/sec");
+					
+					t +=5;
+					logger.info("Mean handle rate: " + (items)/t + " items/sec");
+					p = items;
+					
+				} catch (InterruptedException e) { }
+			}
+			
+		}
+		
+	}
 }

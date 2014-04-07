@@ -57,6 +57,7 @@ public class MediaSearcher {
 	private DyscoRequestReceiver dyscoRequestReceiver;
 	private TrendingSearchHandler trendingSearchHandler;
 	private CustomSearchHandler customSearchHandler;
+	private SystemAgent systemAgent;
 	
 	private String redisHost;
 	private String solrHost;
@@ -82,8 +83,10 @@ public class MediaSearcher {
 		
 		//Set up the Streams
 		initStreams();
-
-		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
+		
+		//Set up the Storages
+		storeManager = new StoreManager(config);
+		
 	}
 	
 	/**
@@ -97,13 +100,8 @@ public class MediaSearcher {
 		}
 		state = MediaSearcherState.OPEN;
 		
-		storeManager = new StoreManager(config);
-		
-		if(!storeManager.getWorkingDataBases().get("Solr")){
-			System.out.println("Apache solr is not working - Close Media Searcher");
-			state = MediaSearcherState.CLOSE;
-			return;
-		}
+		this.systemAgent = new SystemAgent(storeManager,this);
+		systemAgent.start();
 		
 		storeManager.start();	
 		logger.info("Store Manager is ready to store.");
@@ -146,6 +144,7 @@ public class MediaSearcher {
 		
 		state = MediaSearcherState.OPEN;
 		
+		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
 		
 	}
 	
@@ -164,14 +163,17 @@ public class MediaSearcher {
 				stream.close();
 			}
 			
-			if(dyscoRequestReceiver != null){
-				dyscoRequestReceiver.close();
-			}
-			
-			if(dyscoRequestHandler != null){
-				dyscoRequestHandler.close();
-			}
+//			if(dyscoRequestReceiver != null){
+//				dyscoRequestReceiver.close();
+//				System.out.println("dyscoRequestReceiver closed");
+//			}
+//			
+//			if(dyscoRequestHandler != null){
+//				dyscoRequestHandler.close();
+//				System.out.println("dyscoRequestHandler closed");
+//			}
 			state = MediaSearcherState.CLOSE;
+			System.out.println("MediaSearcher closed");
 		}catch(Exception e) {
 			throw new StreamException("Error during streams close",e);
 		}
@@ -622,6 +624,31 @@ public class MediaSearcher {
 			}
 			System.out.println("Done...");
 		}
+	}
+	
+	private class SystemAgent extends Thread {
+		
+		private StoreManager manager;
+		private MediaSearcher searcher;
+		
+		public SystemAgent(StoreManager manager,MediaSearcher searcher){
+			this.manager = manager;
+			this.searcher = searcher;
+		}
+		
+		public void run(){
+			while(state.equals(MediaSearcherState.OPEN)){
+				if(!storeManager.getWorkingDataBases().get("Solr")){
+					System.out.println("Apache solr is not working - Close Media Searcher");
+
+					storeManager.stop();
+					Shutdown shut = new Shutdown(searcher);
+					shut.run();
+					break;
+				}
+			}
+		}
+		
 	}
 	
 	/**
