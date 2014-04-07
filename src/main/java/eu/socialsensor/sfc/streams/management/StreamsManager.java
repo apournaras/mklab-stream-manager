@@ -49,7 +49,7 @@ public class StreamsManager {
 	private StreamsMonitor monitor;
 	private ManagerState state = ManagerState.CLOSE;
 	
-	private int numberOfConsumers = 1; //for multi-threaded items' storage
+	private int numberOfConsumers = 8; //for multi-threaded items' storage
 
 	private List<Feed> feeds = new ArrayList<Feed>();
 
