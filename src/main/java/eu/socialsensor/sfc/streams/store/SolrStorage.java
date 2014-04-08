@@ -31,15 +31,23 @@ public class SolrStorage implements StreamUpdateStorage {
 	private static final String MEDIAITEMS_COLLECTION = "solr.mediaitems.collection";
 	private static final String NEWSFEED_COLLECTION = "solr.newsfeed.collection";
 	
+	private static final String FACEBOOK_ITEMS_COLLECTION = "solr.facebook.items.collection";
+	private static final String TWITTER_ITEMS_COLLECTION = "solr.twitter.items.collection";
+	
 	private String hostname, service;
 	
 	private String itemsCollection = null;
 	private String mediaItemsCollection = null;
 	private String newsFeedCollection = null;
 	
+	private String facebookItemsCollection = null;
+	private String twitterItemsCollection = null;
+	
 	private String storageName = "Solr";
 	
 	private SolrItemHandler solrItemHandler = null; 
+	private SolrItemHandler solrFacebookItemHandler = null; 
+	private SolrItemHandler solrTwitterItemHandler = null; 
 	private SolrMediaItemHandler solrMediaHandler = null;
 	private SolrNewsFeedHandler solrNewsFeedHandler = null;
 	
@@ -49,10 +57,20 @@ public class SolrStorage implements StreamUpdateStorage {
 		this.itemsCollection = config.getParameter(SolrStorage.ITEMS_COLLECTION);
 		this.mediaItemsCollection = config.getParameter(SolrStorage.MEDIAITEMS_COLLECTION);
 		this.newsFeedCollection = config.getParameter(SolrStorage.NEWSFEED_COLLECTION);
+		this.facebookItemsCollection = config.getParameter(SolrStorage.FACEBOOK_ITEMS_COLLECTION);
+		this.twitterItemsCollection = config.getParameter(SolrStorage.TWITTER_ITEMS_COLLECTION);
 	}
 	
 	public SolrItemHandler getItemHandler() {
 		return solrItemHandler;
+	}
+	
+	public SolrItemHandler getFacebookItemHandler() {
+		return solrFacebookItemHandler;
+	}
+	
+	public SolrItemHandler getTwitterItemHandler() {
+		return solrTwitterItemHandler;
 	}
 	
 	public SolrMediaItemHandler getMediaItemHandler() {
@@ -76,6 +94,12 @@ public class SolrStorage implements StreamUpdateStorage {
 			if(newsFeedCollection != null) {	
 				solrNewsFeedHandler = SolrNewsFeedHandler.getInstance(hostname+"/"+service+"/"+newsFeedCollection);
 			}
+			if(facebookItemsCollection != null) {
+				solrFacebookItemHandler = SolrItemHandler.getInstance(hostname+"/"+service+"/"+facebookItemsCollection);
+			}
+			if(twitterItemsCollection != null) {
+				solrTwitterItemHandler = SolrItemHandler.getInstance(hostname+"/"+service+"/"+twitterItemsCollection);
+			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			
@@ -96,36 +120,12 @@ public class SolrStorage implements StreamUpdateStorage {
 			solrItemHandler.insertItem(item);
 		}
 		
-		if(solrNewsFeedHandler != null){
-			solrNewsFeedHandler.insertItem(item);
+		if(solrFacebookItemHandler != null) {
+			solrFacebookItemHandler.insertItem(item);
 		}
 		
-		if(solrMediaHandler != null) {
-			
-			for(MediaItem mediaItem : item.getMediaItems()) {
-				MediaItem mi = solrMediaHandler.getSolrMediaItem(mediaItem.getId());
-				
-				if(mi==null) {
-					solrMediaHandler.insertMediaItem(mediaItem);
-				}
-				else {
-					
-					solrMediaHandler.insertMediaItem(mi);
-				}
-			}
-		}
-		
-	}
-	
-	public void storeFacebookAndTwitterItems(Item item) throws IOException {
-		
-		// Index only original Items and MediaItems come from original Items
-		if(!item.isOriginal())
-			return;
-		
-		if(solrItemHandler != null) {
-			if(item.getStreamId().equals("Facebook") || item.getStreamId().equals("Twitter"))
-				solrItemHandler.insertItem(item);
+		if(solrTwitterItemHandler != null) {
+			solrTwitterItemHandler.insertItem(item);
 		}
 		
 		if(solrNewsFeedHandler != null){
