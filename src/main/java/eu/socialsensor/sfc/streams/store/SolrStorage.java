@@ -120,11 +120,11 @@ public class SolrStorage implements StreamUpdateStorage {
 			solrItemHandler.insertItem(item);
 		}
 		
-		if(solrFacebookItemHandler != null) {
+		if(solrFacebookItemHandler != null && item.getStreamId().equals("Facebook")) {
 			solrFacebookItemHandler.insertItem(item);
 		}
 		
-		if(solrTwitterItemHandler != null) {
+		if(solrTwitterItemHandler != null && item.getStreamId().equals("Twitter")) {
 			solrTwitterItemHandler.insertItem(item);
 		}
 		
