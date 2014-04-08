@@ -90,15 +90,18 @@ public class SolrStorage implements StreamUpdateStorage {
 			}
 			if(mediaItemsCollection != null) {	
 				solrMediaHandler = SolrMediaItemHandler.getInstance(hostname+"/"+service+"/"+mediaItemsCollection);
+				
 			}
 			if(newsFeedCollection != null) {	
 				solrNewsFeedHandler = SolrNewsFeedHandler.getInstance(hostname+"/"+service+"/"+newsFeedCollection);
 			}
 			if(facebookItemsCollection != null) {
 				solrFacebookItemHandler = SolrItemHandler.getInstance(hostname+"/"+service+"/"+facebookItemsCollection);
+				
 			}
 			if(twitterItemsCollection != null) {
 				solrTwitterItemHandler = SolrItemHandler.getInstance(hostname+"/"+service+"/"+twitterItemsCollection);
+				
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -111,7 +114,7 @@ public class SolrStorage implements StreamUpdateStorage {
 
 	@Override
 	public void store(Item item) throws IOException {
-	
+		
 		// Index only original Items and MediaItems come from original Items
 		if(!item.isOriginal())
 			return;
