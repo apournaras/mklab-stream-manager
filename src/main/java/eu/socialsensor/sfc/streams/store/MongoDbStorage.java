@@ -37,11 +37,17 @@ import eu.socialsensor.sfc.streams.StorageConfiguration;
 public class MongoDbStorage implements StreamUpdateStorage {
 
 	private static String HOST = "mongodb.host";
-	private static String DATABASE = "mongodb.database";
 	
+	private static String ITEMS_DATABASE = "mongodb.items.dbname";
 	private static String ITEMS_COLLECTION = "mongodb.items.collection";
+	
+	private static String MEDIA_ITEMS_DATABASE = "mongodb.mediaitems.dbname";
 	private static String MEDIA_ITEMS_COLLECTION = "mongodb.mediaitems.collection";
+	
+	private static String USERS_DATABASE = "mongodb.streamusers.dbname";
 	private static String USERS_COLLECTION = "mongodb.streamusers.collection";
+	
+	private static String WEBPAGES_DATABASE = "mongodb.webpages.dbname";
 	private static String WEBPAGES_COLLECTION = "mongodb.webpages.collection";
 	
 	private Logger  logger = Logger.getLogger(MongoDbStorage.class);
@@ -56,11 +62,17 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private String storageName = "Mongodb";
 	
 	private String host;
-	private String dbName;
 	
+	private String itemsDbName;
 	private String itemsCollectionName;
+	
+	private String mediaItemsDbName;
 	private String mediaItemsCollectionName;
+	
+	private String streamUsersDbName;
 	private String streamUsersCollectionName;
+	
+	private String webPageDbName;
 	private String webPageCollectionName;
 	
 	private ItemDAO itemDAO;
@@ -73,39 +85,54 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	private HashMap<String, Integer> usersMentionsMap, usersItemsMap, usersSharesMap;
 	private UpdaterThread updaterThread;
+
+	
 	
 	public MongoDbStorage(StorageConfiguration config) {	
 		this.host = config.getParameter(MongoDbStorage.HOST);
-		this.dbName = config.getParameter(MongoDbStorage.DATABASE);
-
+		
+		this.itemsDbName = config.getParameter(MongoDbStorage.ITEMS_DATABASE);
 		this.itemsCollectionName = config.getParameter(MongoDbStorage.ITEMS_COLLECTION);
+		
+		this.mediaItemsDbName = config.getParameter(MongoDbStorage.MEDIA_ITEMS_DATABASE);
 		this.mediaItemsCollectionName = config.getParameter(MongoDbStorage.MEDIA_ITEMS_COLLECTION);
+		
+		this.streamUsersDbName = config.getParameter(MongoDbStorage.USERS_DATABASE);
 		this.streamUsersCollectionName = config.getParameter(MongoDbStorage.USERS_COLLECTION);
+		
+		this.webPageDbName = config.getParameter(MongoDbStorage.WEBPAGES_DATABASE);
 		this.webPageCollectionName = config.getParameter(MongoDbStorage.WEBPAGES_COLLECTION);
 	
+		this.usersMentionsMap = new HashMap<String, Integer>();
+		this.usersItemsMap = new HashMap<String, Integer>();
+		this.usersSharesMap = new HashMap<String, Integer>();
+		
+		this.items = 0;
 	}
 	
-	public MongoDbStorage(String hostname, String dbName, String itemsCollectionName,
-			String mediaItemsCollectionName, String streamUsersCollectionName, String webPageCollectionName) {	
-		this.host = hostname;
-		this.dbName = dbName;
+	public MongoDbStorage(String hostname, String itemsDbName, String itemsCollectionName, String mediaItemsDbName, 
+			String mediaItemsCollectionName, String streamUsersDbName, String streamUsersCollectionName, 
+			String webPageDbName, String webPageCollectionName) {	
 		
+		this.host = hostname;
+		
+		this.itemsDbName = itemsDbName;
 		this.itemsCollectionName = itemsCollectionName;
+		
+		this.mediaItemsDbName = mediaItemsDbName;
 		this.mediaItemsCollectionName = mediaItemsCollectionName;
+		
+		this.streamUsersDbName = streamUsersDbName;
 		this.streamUsersCollectionName = streamUsersCollectionName;
+		
+		this.webPageDbName = webPageDbName; 
 		this.webPageCollectionName = webPageCollectionName; 
 		
 		this.usersMentionsMap = new HashMap<String, Integer>();
 		this.usersItemsMap = new HashMap<String, Integer>();
 		this.usersSharesMap = new HashMap<String, Integer>();
-	}
-	
-	public MongoDbStorage(String hostname, String dbName, String documentsCollectionName) {	
-		this.host = hostname;
-		this.dbName = dbName;
 		
 		this.items = 0;
-		
 	}
 	
 	@Override
@@ -121,23 +148,22 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	@Override
 	public boolean open() {
 		
-		logger.info("Open MongoDB storage <host: " + host + ", database: " + dbName + 
-				", items collection: " + itemsCollectionName +">");
+		logger.info("Open MongoDB storage <host: " + host + ">");
 
 		this.t = System.currentTimeMillis();
 		
 		try {
 			if(itemsCollectionName != null)
-				this.itemDAO = new ItemDAOImpl(host, dbName, itemsCollectionName);
+				this.itemDAO = new ItemDAOImpl(host, itemsDbName, itemsCollectionName);
 			
 			if(mediaItemsCollectionName != null)
-				this.mediaItemDAO = new MediaItemDAOImpl(host, dbName, mediaItemsCollectionName);
+				this.mediaItemDAO = new MediaItemDAOImpl(host, mediaItemsDbName, mediaItemsCollectionName);
 			
 			if(streamUsersCollectionName != null)
-				this.streamUserDAO = new StreamUserDAOImpl(host, dbName, streamUsersCollectionName);
+				this.streamUserDAO = new StreamUserDAOImpl(host, streamUsersDbName, streamUsersCollectionName);
 			
 			if(webPageCollectionName != null)
-				this.webPageDAO = new WebPageDAOImpl(host, dbName, webPageCollectionName);
+				this.webPageDAO = new WebPageDAOImpl(host, webPageDbName, webPageCollectionName);
 		} catch (Exception e) {
 			
 			return false;
@@ -269,7 +295,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	public boolean checkStatus(StreamUpdateStorage storage) 
 	{
 		try {
-			MongoHandler handler = new MongoHandler(host, dbName);
+			MongoHandler handler = new MongoHandler(host, itemsDbName);
 			return handler.checkConnection(host);
 		} catch (Exception e) {
 			
