@@ -1,9 +1,10 @@
 package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
@@ -70,6 +71,9 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private Integer items = 0;
 	private long t;
 	
+	private HashMap<String, Integer> usersMentionsMap, usersItemsMap, usersSharesMap;
+	private UpdaterThread updaterThread;
+	
 	public MongoDbStorage(StorageConfiguration config) {	
 		this.host = config.getParameter(MongoDbStorage.HOST);
 		this.dbName = config.getParameter(MongoDbStorage.DATABASE);
@@ -90,6 +94,10 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.mediaItemsCollectionName = mediaItemsCollectionName;
 		this.streamUsersCollectionName = streamUsersCollectionName;
 		this.webPageCollectionName = webPageCollectionName; 
+		
+		this.usersMentionsMap = new HashMap<String, Integer>();
+		this.usersItemsMap = new HashMap<String, Integer>();
+		this.usersSharesMap = new HashMap<String, Integer>();
 	}
 	
 	public MongoDbStorage(String hostname, String dbName, String documentsCollectionName) {	
@@ -102,7 +110,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	@Override
 	public void close() {
-		
+		updaterThread.stopThread();
 	}
 
 	@Override
@@ -135,6 +143,9 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			return false;
 		}
 		
+		this.updaterThread = new UpdaterThread();
+		updaterThread.start();
+		
 		return true;
 		
 	}
@@ -165,21 +176,47 @@ public class MongoDbStorage implements StreamUpdateStorage {
 						streamUserDAO.insertStreamUser(user);
 					}
 					else {
-						streamUserDAO.incStreamUserValue(user.getId(), "items");
-						streamUserDAO.incStreamUserValue(user.getId(), "mentions");
+						//streamUserDAO.incStreamUserValue(user.getId(), "items");
+						//streamUserDAO.incStreamUserValue(user.getId(), "mentions");
+						
+						synchronized(usersItemsMap) {
+							Integer items = usersItemsMap.get(user.getId());
+							if(items == null)
+								items = 0;
+							usersItemsMap.put(user.getId(), ++items);
+						}
+						
+						synchronized(usersMentionsMap) {
+							Integer mentions = usersMentionsMap.get(user.getId());
+							if(mentions == null)
+								mentions = 0;
+							usersMentionsMap.put(user.getId(), ++mentions);
+						}
 					}
 				}
 				
 				if(item.getMentions() != null) {
-					String[] mentions = item.getMentions();
-					for(String mention : mentions) {
-						streamUserDAO.incStreamUserValue(mention, "mentions");
+					String[] mentionedUsers = item.getMentions();
+					for(String mentionedUser : mentionedUsers) {
+						//streamUserDAO.incStreamUserValue(mention, "mentions");
+						synchronized(usersMentionsMap) {
+							Integer mentions = usersMentionsMap.get(mentionedUser);
+							if(mentions == null)
+								mentions = 0;
+							usersMentionsMap.put(mentionedUser, ++mentions);
+						}
 					}
 				}
 
 				if(item.getReferencedUserId() != null) {
 					String userid = item.getReferencedUserId();
-					streamUserDAO.incStreamUserValue(userid, "shares");
+					//streamUserDAO.incStreamUserValue(userid, "shares");
+					synchronized(usersSharesMap) {
+						Integer shares = usersSharesMap.get(userid);
+						if(shares == null)
+							shares = 0;
+						usersSharesMap.put(userid, ++shares);
+					}
 				}
 				
 				// Handle Media Items
@@ -232,7 +269,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	public boolean checkStatus(StreamUpdateStorage storage) 
 	{
 		try {
-			MongoHandler handler = new MongoHandler(host,dbName);
+			MongoHandler handler = new MongoHandler(host, dbName);
 			return handler.checkConnection(host);
 		} catch (Exception e) {
 			
@@ -244,5 +281,47 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	@Override
 	public String getStorageName(){
 		return this.storageName;
+	}
+	
+	private class UpdaterThread extends Thread {
+
+		private boolean stop = false;
+
+		@Override
+		public void run() {
+			while(!stop) {
+				try {
+					synchronized(usersMentionsMap) {
+						for(Entry<String, Integer> e : usersMentionsMap.entrySet()) {
+							streamUserDAO.incStreamUserValue(e.getKey(), "mentions", e.getValue());
+						}
+						usersMentionsMap.clear();
+					}
+					
+					synchronized(usersSharesMap) {
+						for(Entry<String, Integer> e : usersSharesMap.entrySet()) {
+							streamUserDAO.incStreamUserValue(e.getKey(), "shares", e.getValue());
+						}
+						usersSharesMap.clear();
+					}
+
+					synchronized(usersItemsMap) {
+						for(Entry<String, Integer> e : usersItemsMap.entrySet()) {
+							streamUserDAO.incStreamUserValue(e.getKey(), "items", e.getValue());
+						}
+						usersItemsMap.clear();
+					}
+
+					Thread.sleep(10*60*1000);
+				} catch (InterruptedException e) {
+					continue;
+				}
+			}
+		}
+		
+		public void stopThread() {
+			this.stop = true;
+			this.interrupt();
+		}
 	}
 }
