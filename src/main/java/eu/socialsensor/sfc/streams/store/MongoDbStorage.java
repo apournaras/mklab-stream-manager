@@ -38,16 +38,16 @@ public class MongoDbStorage implements StreamUpdateStorage {
 
 	private static String HOST = "mongodb.host";
 	
-	private static String ITEMS_DATABASE = "mongodb.items.dbname";
+	private static String ITEMS_DATABASE = "mongodb.items.database";
 	private static String ITEMS_COLLECTION = "mongodb.items.collection";
 	
-	private static String MEDIA_ITEMS_DATABASE = "mongodb.mediaitems.dbname";
+	private static String MEDIA_ITEMS_DATABASE = "mongodb.mediaitems.database";
 	private static String MEDIA_ITEMS_COLLECTION = "mongodb.mediaitems.collection";
 	
-	private static String USERS_DATABASE = "mongodb.streamusers.dbname";
+	private static String USERS_DATABASE = "mongodb.streamusers.database";
 	private static String USERS_COLLECTION = "mongodb.streamusers.collection";
 	
-	private static String WEBPAGES_DATABASE = "mongodb.webpages.dbname";
+	private static String WEBPAGES_DATABASE = "mongodb.webpages.database";
 	private static String WEBPAGES_COLLECTION = "mongodb.webpages.collection";
 	
 	private Logger  logger = Logger.getLogger(MongoDbStorage.class);
