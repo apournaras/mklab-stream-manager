@@ -37,7 +37,8 @@ import eu.socialsensor.sfc.streams.StorageConfiguration;
 public class MongoDbStorage implements StreamUpdateStorage {
 
 	private static String HOST = "mongodb.host";
-	
+	private static String DB = "mongodb.database";
+
 	private static String ITEMS_DATABASE = "mongodb.items.database";
 	private static String ITEMS_COLLECTION = "mongodb.items.collection";
 	
@@ -62,6 +63,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private String storageName = "Mongodb";
 	
 	private String host;
+	private String database;
 	
 	private String itemsDbName;
 	private String itemsCollectionName;
@@ -90,6 +92,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	public MongoDbStorage(StorageConfiguration config) {	
 		this.host = config.getParameter(MongoDbStorage.HOST);
+		this.database = config.getParameter(MongoDbStorage.DB);
 		
 		this.itemsDbName = config.getParameter(MongoDbStorage.ITEMS_DATABASE);
 		this.itemsCollectionName = config.getParameter(MongoDbStorage.ITEMS_COLLECTION);
@@ -135,6 +138,24 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.items = 0;
 	}
 	
+	public MongoDbStorage(String hostname, String database, String itemsCollectionName,
+			String mediaItemsCollectionName, String streamUsersCollectionName, String webPageCollectionName) {	
+		
+		this.host = hostname;
+		this.database = database;
+		
+		this.itemsCollectionName = itemsCollectionName;
+		this.mediaItemsCollectionName = mediaItemsCollectionName;
+		this.streamUsersCollectionName = streamUsersCollectionName;
+		this.webPageCollectionName = webPageCollectionName; 
+		
+		this.usersMentionsMap = new HashMap<String, Integer>();
+		this.usersItemsMap = new HashMap<String, Integer>();
+		this.usersSharesMap = new HashMap<String, Integer>();
+		
+		this.items = 0;
+	}
+	
 	@Override
 	public void close() {
 		updaterThread.stopThread();
@@ -152,22 +173,43 @@ public class MongoDbStorage implements StreamUpdateStorage {
 
 		this.t = System.currentTimeMillis();
 		
-		try {
-			if(itemsCollectionName != null)
-				this.itemDAO = new ItemDAOImpl(host, itemsDbName, itemsCollectionName);
-			
-			if(mediaItemsCollectionName != null)
-				this.mediaItemDAO = new MediaItemDAOImpl(host, mediaItemsDbName, mediaItemsCollectionName);
-			
-			if(streamUsersCollectionName != null)
-				this.streamUserDAO = new StreamUserDAOImpl(host, streamUsersDbName, streamUsersCollectionName);
-			
-			if(webPageCollectionName != null)
-				this.webPageDAO = new WebPageDAOImpl(host, webPageDbName, webPageCollectionName);
-		} catch (Exception e) {
-			
-			return false;
+		if(database != null){
+			try {
+				if(itemsCollectionName != null)
+					this.itemDAO = new ItemDAOImpl(host, database, itemsCollectionName);
+				
+				if(mediaItemsCollectionName != null)
+					this.mediaItemDAO = new MediaItemDAOImpl(host, database, mediaItemsCollectionName);
+				
+				if(streamUsersCollectionName != null)
+					this.streamUserDAO = new StreamUserDAOImpl(host, database, streamUsersCollectionName);
+				
+				if(webPageCollectionName != null)
+					this.webPageDAO = new WebPageDAOImpl(host, database, webPageCollectionName);
+			} catch (Exception e) {
+				
+				return false;
+			}
 		}
+		else{
+			try {
+				if(itemsCollectionName != null)
+					this.itemDAO = new ItemDAOImpl(host, itemsDbName, itemsCollectionName);
+				
+				if(mediaItemsCollectionName != null)
+					this.mediaItemDAO = new MediaItemDAOImpl(host, mediaItemsDbName, mediaItemsCollectionName);
+				
+				if(streamUsersCollectionName != null)
+					this.streamUserDAO = new StreamUserDAOImpl(host, streamUsersDbName, streamUsersCollectionName);
+				
+				if(webPageCollectionName != null)
+					this.webPageDAO = new WebPageDAOImpl(host, webPageDbName, webPageCollectionName);
+			} catch (Exception e) {
+				
+				return false;
+			}
+		}
+		
 		
 		this.updaterThread = new UpdaterThread();
 		updaterThread.start();
