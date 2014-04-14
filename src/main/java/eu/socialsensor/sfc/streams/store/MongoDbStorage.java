@@ -37,18 +37,17 @@ import eu.socialsensor.sfc.streams.StorageConfiguration;
 public class MongoDbStorage implements StreamUpdateStorage {
 
 	private static String HOST = "mongodb.host";
-	private static String DB = "mongodb.database";
 	
-	private static String ITEMS_DATABASE = "mongodb.items.dbname";
+	private static String ITEMS_DATABASE = "mongodb.items.database";
 	private static String ITEMS_COLLECTION = "mongodb.items.collection";
 	
-	private static String MEDIA_ITEMS_DATABASE = "mongodb.mediaitems.dbname";
+	private static String MEDIA_ITEMS_DATABASE = "mongodb.mediaitems.database";
 	private static String MEDIA_ITEMS_COLLECTION = "mongodb.mediaitems.collection";
 	
-	private static String USERS_DATABASE = "mongodb.streamusers.dbname";
+	private static String USERS_DATABASE = "mongodb.streamusers.database";
 	private static String USERS_COLLECTION = "mongodb.streamusers.collection";
 	
-	private static String WEBPAGES_DATABASE = "mongodb.webpages.dbname";
+	private static String WEBPAGES_DATABASE = "mongodb.webpages.database";
 	private static String WEBPAGES_COLLECTION = "mongodb.webpages.collection";
 	
 	private Logger  logger = Logger.getLogger(MongoDbStorage.class);
@@ -63,7 +62,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private String storageName = "Mongodb";
 	
 	private String host;
-	private String dbName;
 	
 	private String itemsDbName;
 	private String itemsCollectionName;
@@ -92,7 +90,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	public MongoDbStorage(StorageConfiguration config) {	
 		this.host = config.getParameter(MongoDbStorage.HOST);
-		this.dbName = config.getParameter(MongoDbStorage.DB);
 		
 		this.itemsDbName = config.getParameter(MongoDbStorage.ITEMS_DATABASE);
 		this.itemsCollectionName = config.getParameter(MongoDbStorage.ITEMS_COLLECTION);
@@ -138,24 +135,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.items = 0;
 	}
 	
-	public MongoDbStorage(String hostname, String dbName, String itemsCollectionName, 
-			String mediaItemsCollectionName, String streamUsersCollectionName, String webPageCollectionName) {	
-		
-		this.host = hostname;
-		this.dbName = dbName;
-		
-		this.itemsCollectionName = itemsCollectionName;
-		this.mediaItemsCollectionName = mediaItemsCollectionName;
-		this.streamUsersCollectionName = streamUsersCollectionName;
-		this.webPageCollectionName = webPageCollectionName; 
-		
-		this.usersMentionsMap = new HashMap<String, Integer>();
-		this.usersItemsMap = new HashMap<String, Integer>();
-		this.usersSharesMap = new HashMap<String, Integer>();
-		
-		this.items = 0;
-	}
-	
 	@Override
 	public void close() {
 		updaterThread.stopThread();
@@ -173,42 +152,21 @@ public class MongoDbStorage implements StreamUpdateStorage {
 
 		this.t = System.currentTimeMillis();
 		
-		if(this.dbName != null){
-			try {
-				if(itemsCollectionName != null)
-					this.itemDAO = new ItemDAOImpl(host, dbName, itemsCollectionName);
-				
-				if(mediaItemsCollectionName != null)
-					this.mediaItemDAO = new MediaItemDAOImpl(host, dbName, mediaItemsCollectionName);
-				
-				if(streamUsersCollectionName != null)
-					this.streamUserDAO = new StreamUserDAOImpl(host, dbName, streamUsersCollectionName);
-				
-				if(webPageCollectionName != null)
-					this.webPageDAO = new WebPageDAOImpl(host, dbName, webPageCollectionName);
-			} catch (Exception e) {
-				System.err.println("Open MongoDB failed");
-				return false;
-			}
-		}
-		else{
-		
-			try {
-				if(itemsCollectionName != null)
-					this.itemDAO = new ItemDAOImpl(host, itemsDbName, itemsCollectionName);
-				
-				if(mediaItemsCollectionName != null)
-					this.mediaItemDAO = new MediaItemDAOImpl(host, mediaItemsDbName, mediaItemsCollectionName);
-				
-				if(streamUsersCollectionName != null)
-					this.streamUserDAO = new StreamUserDAOImpl(host, streamUsersDbName, streamUsersCollectionName);
-				
-				if(webPageCollectionName != null)
-					this.webPageDAO = new WebPageDAOImpl(host, webPageDbName, webPageCollectionName);
-			} catch (Exception e) {
-				System.err.println("Open MongoDB failed");
-				return false;
-			}
+		try {
+			if(itemsCollectionName != null)
+				this.itemDAO = new ItemDAOImpl(host, itemsDbName, itemsCollectionName);
+			
+			if(mediaItemsCollectionName != null)
+				this.mediaItemDAO = new MediaItemDAOImpl(host, mediaItemsDbName, mediaItemsCollectionName);
+			
+			if(streamUsersCollectionName != null)
+				this.streamUserDAO = new StreamUserDAOImpl(host, streamUsersDbName, streamUsersCollectionName);
+			
+			if(webPageCollectionName != null)
+				this.webPageDAO = new WebPageDAOImpl(host, webPageDbName, webPageCollectionName);
+		} catch (Exception e) {
+			
+			return false;
 		}
 		
 		this.updaterThread = new UpdaterThread();
