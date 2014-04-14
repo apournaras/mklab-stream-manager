@@ -12,8 +12,13 @@
                     <Parameter name="mongodb.host"><![CDATA[your.ip]]></Parameter>
                     <Parameter name="mongodb.private.host"><![CDATA[your.ip]]></Parameter>
                     <Parameter name="mongodb.database"><![CDATA[name.of.your.database]]></Parameter>
-                    <Parameter name="mongodb.dyscos.collection"><![CDATA[collection.one]]></Parameter>
-                    <Parameter name="mongodb.rss.collection"><![CDATA[collection.two]]></Parameter>
+                   
+                   <!-- In case you want to create separate databases for each collection - comment the database field above -->
+<!--                <Parameter name="mongodb.items.database"><![CDATA[name.of.your.database]]></Parameter>
+          			<Parameter name="mongodb.mediaitems.database"><![CDATA[name.of.your.database]]></Parameter>
+                    <Parameter name="mongodb.streamusers.database"><![CDATA[name.of.your.database]]></Parameter>
+                     <Parameter name="mongodb.webpages.database"><![CDATA[name.of.your.database]]></Parameter> -->
+                    
                     <Parameter name="mongodb.items.collection"><![CDATA[collection.three]]></Parameter>
                     <Parameter name="mongodb.mediaitems.collection"><![CDATA[collection.four]]></Parameter>
                     <Parameter name="mongodb.streamusers.collection"><![CDATA[collection.five]]></Parameter>
