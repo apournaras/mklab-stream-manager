@@ -94,7 +94,12 @@
                 <Parameter name="AccessTokenSecret">
                         <![CDATA[your.secret.accesstoken]]>
                        </Parameter>
-               
+               			 <Parameter name="maxResults">
+                                <![CDATA[100]]>
+                        </Parameter>
+                        <Parameter name="maxRequests">
+                                <![CDATA[1]]>
+                        </Parameter>
                 </Stream>
         
                 <!-- YouTube Handler 
