@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import org.apache.log4j.Logger;
 
 import eu.socialsensor.framework.common.domain.Feed;
+import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.streams.Stream;
 
 /**
@@ -23,17 +24,17 @@ public class StreamsMonitor {
 	
 	public final Logger logger = Logger.getLogger(StreamsMonitor.class);
 
-	ExecutorService executor;
+	private ExecutorService executor;
 	
-	Map<String,Stream> streams = new HashMap<String,Stream>();
-	Map<String,List<Feed>> feedsPerStream = new HashMap<String,List<Feed>>();
-	Map<String,Long> requestTimePerStream = new HashMap<String,Long>();
-	Map<String,Long> runningTimePerStream = new HashMap<String,Long>();
-	Map<String,StreamFetchTask> streamsFetchTasks = new HashMap<String,StreamFetchTask>();
+	private Map<String,Stream> streams = new HashMap<String,Stream>();
+	private Map<String,List<Feed>> feedsPerStream = new HashMap<String,List<Feed>>();
+	private Map<String,Long> requestTimePerStream = new HashMap<String,Long>();
+	private Map<String,Long> runningTimePerStream = new HashMap<String,Long>();
+	private Map<String,StreamFetchTask> streamsFetchTasks = new HashMap<String,StreamFetchTask>();
+	
+	private List<Item> totalRetrievedItems = new ArrayList<Item>();
 	
 	boolean isFinished = false;
-	
-	int totalRetrievedItems = 0;
 	
 	private ReInitializer reInitializer = new ReInitializer();
 	
@@ -41,7 +42,7 @@ public class StreamsMonitor {
 		executor = Executors.newFixedThreadPool(numberOfStreams);
 	}
 	
-	public int getTotalRetrievedItems(){
+	public List<Item> getTotalRetrievedItems(){
 		return totalRetrievedItems;
 	}
 	
@@ -116,7 +117,7 @@ public class StreamsMonitor {
 	 * @param feeds
 	 */
 	public void startAllStreamsAtOnceWithStandarFeeds(List<Feed> feeds){
-		totalRetrievedItems = 0;
+		totalRetrievedItems.clear();
 		
 		for(Map.Entry<String, Stream> entry : streams.entrySet()){
 			
@@ -194,7 +195,7 @@ public class StreamsMonitor {
 		while(allStreamsDone < allRunningStreams)
 			for(StreamFetchTask streamTask : streamsFetchTasks.values()){
 				if(streamTask.completed && !finishedTasks.contains(streamTask)){
-					totalRetrievedItems += streamTask.getTotalRetrievedItems();
+					totalRetrievedItems.addAll(streamTask.getTotalRetrievedItems());
 					finishedTasks.add(streamTask);
 					allStreamsDone++;
 				}	

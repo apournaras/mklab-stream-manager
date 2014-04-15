@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import eu.socialsensor.framework.common.domain.Feed;
+import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.streams.Stream;
 import eu.socialsensor.framework.streams.StreamException;
 
@@ -17,11 +18,10 @@ public class StreamFetchTask implements Runnable{
 	
 	Stream stream;
 	
-	int totalRetrievedItems = 0;
-	
 	boolean completed = false;
 	
 	List<Feed> feeds = new ArrayList<Feed>();
+	List<Item> totalRetrievedItems = new ArrayList<Item>();
 	
 	public StreamFetchTask(Stream stream){
 		this.stream = stream;
@@ -53,7 +53,7 @@ public class StreamFetchTask implements Runnable{
 	 * for the associated stream
 	 * @return
 	 */
-	public int getTotalRetrievedItems(){
+	public List<Item> getTotalRetrievedItems(){
 		return totalRetrievedItems;
 	}
 	
@@ -77,7 +77,8 @@ public class StreamFetchTask implements Runnable{
 	public void run(){
 		try {
 			
-			totalRetrievedItems = stream.poll(feeds);
+			stream.poll(feeds);
+			totalRetrievedItems.addAll(stream.getTotalRetrievedItems());
 			
 		} catch (StreamException e) {
 			// TODO Auto-generated catch block
