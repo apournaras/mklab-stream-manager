@@ -4,11 +4,13 @@ package eu.socialsensor.sfc.streams.management;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.UUID;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -22,14 +24,19 @@ import redis.clients.jedis.JedisPubSub;
 
 import eu.socialsensor.framework.client.search.solr.SolrDyscoHandler;
 import eu.socialsensor.framework.common.domain.Feed;
+import eu.socialsensor.framework.common.domain.Item;
+import eu.socialsensor.framework.common.domain.Keyword;
+import eu.socialsensor.framework.common.domain.Query;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Dysco.DyscoType;
 import eu.socialsensor.framework.common.domain.dysco.Message;
 import eu.socialsensor.framework.common.domain.dysco.Message.Action;
+import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
 import eu.socialsensor.framework.streams.Stream;
 import eu.socialsensor.framework.streams.StreamConfiguration;
 import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.sfc.builder.FeedsCreator;
+import eu.socialsensor.sfc.builder.SolrQueryBuilder;
 import eu.socialsensor.sfc.builder.input.DataInputType;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
@@ -50,14 +57,18 @@ public class MediaSearcher {
 	private StreamsManagerConfiguration config = null;
 	
 	private StoreManager storeManager;
+	
+	private StreamsMonitor monitor;
 
 	private Jedis subscriberJedis;
 	
 	private DyscoRequestHandler dyscoRequestHandler;
 	private DyscoRequestReceiver dyscoRequestReceiver;
+	private DyscoUpdateAgent dyscoUpdateAgent;
 	private TrendingSearchHandler trendingSearchHandler;
 	private CustomSearchHandler customSearchHandler;
 	private SystemAgent systemAgent;
+	private SolrQueryBuilder queryBuilder;
 	
 	private String redisHost;
 	private String solrHost;
@@ -67,7 +78,9 @@ public class MediaSearcher {
 	private Map<String, Stream> streams = null;
 	
 	private Queue<Dysco> requests = new LinkedList<Dysco>();
+	private Queue<String> dyscosToUpdate = new LinkedList<String>();
 	
+	private Map<String,List<Query>> dyscosToQueries = new HashMap<String,List<Query>>();
 	
 	public MediaSearcher(StreamsManagerConfiguration config) throws StreamException{
 		if (config == null) {
@@ -116,13 +129,32 @@ public class MediaSearcher {
 		
 		logger.info("Streams are now open");
 		
+		//If there are Streams to monitor start the StreamsMonitor
+		if(streams != null && !streams.isEmpty()){
+			monitor = new StreamsMonitor(streams.size());
+			monitor.addStreams(streams);
+			logger.info("Streams added to monitor");
+		}
+		else {
+			logger.error("Streams Monitor cannot be started");
+		}
+		
 		//start handlers
 		this.dyscoRequestHandler = new DyscoRequestHandler();
 		this.dyscoRequestReceiver = new DyscoRequestReceiver();
-		this.trendingSearchHandler = new TrendingSearchHandler();
-		this.customSearchHandler = new CustomSearchHandler();
+		this.dyscoUpdateAgent = new DyscoUpdateAgent();
+		this.trendingSearchHandler = new TrendingSearchHandler(this);
+		this.customSearchHandler = new CustomSearchHandler(this);
+		
+		try {
+			this.queryBuilder = new SolrQueryBuilder();
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
 		dyscoRequestHandler.start();
+		dyscoUpdateAgent.start();
         trendingSearchHandler.start();
 		customSearchHandler.start();
 		
@@ -144,6 +176,17 @@ public class MediaSearcher {
 		
 		state = MediaSearcherState.OPEN;
 		
+		//Code to be removed
+		
+		String dyscoId = "b56b3905-c44c-44d7-81a0-6e050c2ae3a6";
+    	Action action = Action.NEW;
+    	SolrDyscoHandler testSolrdyscoHandler = SolrDyscoHandler.getInstance(solrHost+"/"+solrService+"/"+dyscoCollection);;
+    	Dysco dysco = testSolrdyscoHandler.findDyscoLight(dyscoId);
+    	
+    	requests.add(dysco);
+    	
+    	//Code to be removed
+    	
 		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
 		
 	}
@@ -180,6 +223,32 @@ public class MediaSearcher {
 	}
 	
 	/**
+	 * Searches for a dysco request depending on its feeds
+	 * @param feeds to search
+	 */
+	public synchronized List<Item> search(List<Feed> feeds){
+		Integer totalItems = 0; 
+		
+		long t1 = System.currentTimeMillis();
+		
+		if(feeds != null && !feeds.isEmpty()){
+			
+			monitor.startAllStreamsAtOnceWithStandarFeeds(feeds);
+			
+			while(!monitor.areAllStreamFinished()){
+				
+			}
+			totalItems = monitor.getTotalRetrievedItems().size();
+		}
+			
+		long t2 = System.currentTimeMillis();
+		
+		logger.info("Total items fetched : "+totalItems+" in "+(t2-t1)/1000+" seconds");
+		return monitor.getTotalRetrievedItems();
+	}
+	
+	
+	/**
 	 * Initializes the streams that correspond to the wrappers 
 	 * that are used for multimedia retrieval
 	 * @throws StreamException
@@ -209,24 +278,15 @@ public class MediaSearcher {
 		private Map<String,Long> requestsLifetime = new HashMap<String,Long>();
 		private Map<String,Long> requestsTimestamps = new HashMap<String,Long>();
 		
-		private StreamsMonitor monitor;
+		private MediaSearcher searcher;
 
 		private boolean isAlive = true;
 		
 		private static final long frequency = 2 * 300000; //ten minutes
 		private static final long periodOfTime = 48 * 3600000; //two days
 		
-		public CustomSearchHandler(){
-			
-			//If there are Streams to monitor start the StreamsMonitor
-			if(streams != null && !streams.isEmpty()){
-				monitor = new StreamsMonitor(streams.size());
-				monitor.addStreams(streams);
-				logger.info("Streams added to monitor");
-			}
-			else {
-				logger.error("Streams Monitor cannot be started");
-			}
+		public CustomSearchHandler(MediaSearcher mediaSearcher){
+			this.searcher = mediaSearcher;
 			
 		}
 		
@@ -256,7 +316,7 @@ public class MediaSearcher {
 					logger.info("Media Searcher handling #"+dyscoId);
 					List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
 					inputFeedsPerDysco.remove(dyscoId);
-					search(feeds);
+					searcher.search(feeds);
 					
 				}
 				
@@ -324,30 +384,6 @@ public class MediaSearcher {
 			
 		}
 		
-		/**
-		 * Searches for a trending dysco request
-		 * @param request
-		 */
-		private synchronized void search(List<Feed> feeds){
-			Integer totalItems = 0; 
-			
-			long t1 = System.currentTimeMillis();
-			logger.info("Start searching in Social Media...");
-			if(feeds != null && !feeds.isEmpty()){
-				
-				monitor.startAllStreamsAtOnceWithStandarFeeds(feeds);
-				
-				while(!monitor.areAllStreamFinished()){
-					
-				}
-				totalItems = monitor.getTotalRetrievedItems();
-			}
-				
-			long t2 = System.currentTimeMillis();
-			
-			logger.info("Total items fetched : "+totalItems+" in "+(t2-t1)/1000+" seconds");
-			
-		}
 		
 	}
 	
@@ -362,21 +398,16 @@ public class MediaSearcher {
 		
 		private Map<String,List<Feed>> inputFeedsPerDysco = new HashMap<String,List<Feed>>();
 		
-		private StreamsMonitor monitor;
+		private List<Item> retrievedItems = new ArrayList<Item>();
+		
+		private MediaSearcher searcher;
 
 		private boolean isAlive = true;
+		
+		private Date retrievalDate; 
 
-		public TrendingSearchHandler(){
-			
-			//If there are Streams to monitor start the StreamsMonitor
-			if(streams != null && !streams.isEmpty()){
-				monitor = new StreamsMonitor(streams.size());
-				monitor.addStreams(streams);
-				logger.info("Streams added to monitor");
-			}
-			else {
-				logger.error("Streams Monitor cannot be started");
-			}
+		public TrendingSearchHandler(MediaSearcher mediaSearcher){
+			this.searcher = mediaSearcher;
 			
 		}
 		
@@ -395,10 +426,21 @@ public class MediaSearcher {
 					continue;
 				}
 				else{
+					long start = System.currentTimeMillis();
 					logger.info("Media Searcher handling #"+dyscoId);
 					List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
+					retrievalDate = feeds.get(0).getDateToRetrieve();
 					inputFeedsPerDysco.remove(dyscoId);
-					search(feeds);
+					retrievedItems = searcher.search(feeds);
+					List<Query> queries = queryBuilder.getFurtherProcessedSolrQueries(retrievedItems,5);
+					dyscosToQueries.put(dyscoId, queries);
+					dyscosToUpdate.add(dyscoId);
+					List<Feed> newFeeds = translateQueriesToKeywordsFeeds(queries,retrievalDate);
+					long end = System.currentTimeMillis();
+					System.out.println("Media Searcher Time : "+(end-start)/1000+" sec ");
+					searcher.search(newFeeds);
+					long afterEnd = System.currentTimeMillis();
+					System.out.println("Total Time : "+(afterEnd-start)/1000+" sec ");
 				}
 					
 			}
@@ -428,32 +470,18 @@ public class MediaSearcher {
 		public synchronized void close(){
 			isAlive = false;
 		}
-	
-		/**
-		 * Searches for a trending dysco request
-		 * @param request
-		 */
-		private synchronized void search(List<Feed> feeds){
-			Integer totalItems = 0; 
-			
-			long t1 = System.currentTimeMillis();
-			logger.info("Start searching in Social Media...");
-			if(feeds != null && !feeds.isEmpty()){
-				
-				monitor.startAllStreamsAtOnceWithStandarFeeds(feeds);
-				
-				while(!monitor.areAllStreamFinished()){
-					
-				}
-				totalItems = monitor.getTotalRetrievedItems();
-			}
-				
-			long t2 = System.currentTimeMillis();
-			
-			logger.info("Total items fetched : "+totalItems+" in "+(t2-t1)/1000+" seconds");
-			
-		}
 		
+		private List<Feed> translateQueriesToKeywordsFeeds(List<Query> queries,Date dateToRetrieve)
+		{	
+			List<Feed> feeds = new ArrayList<Feed>();
+			
+			for(Query query : queries){
+				UUID UUid = UUID.randomUUID(); 
+				feeds.add(new KeywordsFeed(new Keyword(query.getName(),query.getScore()),dateToRetrieve,UUid.toString()));
+			}
+			
+			return feeds;
+		}
 	}
 	
 	/**
@@ -522,6 +550,57 @@ public class MediaSearcher {
 		}
 	}
 	
+	public class DyscoUpdateAgent extends Thread{
+		private SolrDyscoHandler solrdyscoHandler;
+		private boolean isAlive = true;
+		
+		public DyscoUpdateAgent(){
+			
+			this.solrdyscoHandler = SolrDyscoHandler.getInstance(solrHost+"/"+solrService+"/"+dyscoCollection);
+		}
+		
+		public void run(){
+			String dyscoToUpdate = null;
+			while(isAlive){
+				dyscoToUpdate = poll();
+				if(dyscoToUpdate == null){
+					continue;
+				}
+				else{
+					List<Query> solrQueries = dyscosToQueries.get(dyscoToUpdate);
+					Dysco updatedDysco = solrdyscoHandler.findDyscoLight(dyscoToUpdate);
+					updatedDysco.setSolrQueries(solrQueries);
+					solrdyscoHandler.insertDysco(updatedDysco);
+					dyscosToQueries.remove(dyscoToUpdate);
+				}
+			}
+		}
+		
+		/**
+		 * Polls a trending dysco request from the queue
+		 * @return
+		 */
+		private String poll(){
+			synchronized (dyscosToUpdate) {					
+				if (!dyscosToUpdate.isEmpty()) {
+					String dyscoToUpdate = dyscosToUpdate.poll();
+					return dyscoToUpdate;
+				}
+				try {
+					dyscosToUpdate.wait(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
+				return null;
+			}
+		}
+		
+		public void close(){
+			isAlive = false;
+		}
+	}
+	
 	public class DyscoRequestReceiver extends JedisPubSub{
 
 		private SolrDyscoHandler solrdyscoHandler;
@@ -539,7 +618,7 @@ public class MediaSearcher {
 		 */
 	    @Override
 	    public void onMessage(String channel, String message) {
-	   
+	    	
 	    	logger.info("Received dysco request : "+message);
 	    	Message dyscoMessage = Message.create(message);
 	    	

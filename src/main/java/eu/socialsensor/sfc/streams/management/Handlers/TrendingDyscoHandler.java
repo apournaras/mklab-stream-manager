@@ -302,7 +302,7 @@ public class TrendingDyscoHandler{
 				while(!monitor.areAllStreamFinished()){
 					
 				}
-				totalItems = monitor.getTotalRetrievedItems();
+				totalItems = monitor.getTotalRetrievedItems().size();
 			}
 				
 			long t2 = System.currentTimeMillis();
