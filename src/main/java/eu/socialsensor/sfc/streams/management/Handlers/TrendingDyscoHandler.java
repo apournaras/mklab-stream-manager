@@ -297,9 +297,9 @@ public class TrendingDyscoHandler{
 			long t1 = System.currentTimeMillis();
 			
 			if(feeds != null && !feeds.isEmpty()){
-				monitor.startAllStreamsAtOnceWithStandarFeeds(feeds);
+				monitor.retrieveFromAllStreams(feeds);
 				
-				while(!monitor.areAllStreamFinished()){
+				while(!monitor.areAllStreamsFinished()){
 					
 				}
 				totalItems = monitor.getTotalRetrievedItems().size();
