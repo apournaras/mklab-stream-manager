@@ -41,7 +41,7 @@ public class RedisStorage implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public boolean open(){
+	public boolean open() {
 		JedisPoolConfig poolConfig = new JedisPoolConfig();
         JedisPool jedisPool = new JedisPool(poolConfig, host, 6379, 0);
 		
@@ -97,7 +97,36 @@ public class RedisStorage implements StreamUpdateStorage {
 	
 	@Override
 	public boolean checkStatus(StreamUpdateStorage storage) {
-		return true;
+		try {
+			boolean connected = publisherJedis.isConnected();
+			if(!connected) {
+				connected = reconnect();
+			}
+			return connected;
+		}
+		catch(Exception e) {
+			return false;
+		}
+	}
+	
+	private boolean reconnect() {
+		try {
+			if(publisherJedis != null) {
+				publisherJedis.disconnect();
+			}
+		}
+		catch(Exception e) { }
+		try {
+			JedisPoolConfig poolConfig = new JedisPoolConfig();
+        	JedisPool jedisPool = new JedisPool(poolConfig, host, 6379, 0);
+		
+        	this.publisherJedis = jedisPool.getResource();
+        	return publisherJedis.isConnected();
+		}
+		catch(Exception e) {
+			return false;
+		}
+
 	}
 	
 	@Override
