@@ -1,6 +1,7 @@
 package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -25,8 +26,6 @@ import eu.socialsensor.framework.common.domain.MediaItem;
 import eu.socialsensor.framework.common.domain.StreamUser;
 import eu.socialsensor.framework.common.domain.WebPage;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
-
-
 /**
  * Class for storing items in mongo db
  * 
@@ -47,9 +46,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	private static String MEDIA_ITEMS_DATABASE = "mongodb.mediaitems.database";
 	private static String MEDIA_ITEMS_COLLECTION = "mongodb.mediaitems.collection";
-	
-	private static String MEDIA_SHARES_DATABASE = "mongodb.mediashares.database";
-	private static String MEDIA_SHARES_COLLECTION = "mongodb.mediashares.collection";
 	
 	private static String MEDIA_SHARES_DATABASE = "mongodb.mediashares.database";
 	private static String MEDIA_SHARES_COLLECTION = "mongodb.mediashares.collection";
@@ -254,6 +250,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			// Handle Items
 			if(!itemDAO.exists(item.getId())) {
 				// save item
+				
 				item.setInsertionTime(System.currentTimeMillis());
 				itemDAO.insertItem(item);
 				
