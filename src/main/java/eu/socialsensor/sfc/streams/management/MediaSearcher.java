@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -226,15 +228,14 @@ public class MediaSearcher {
 	 * Searches for a dysco request depending on its feeds
 	 * @param feeds to search
 	 */
-	public synchronized List<Item> search(List<Feed> feeds){
+	public synchronized List<Item> search(List<Feed> feeds,Set<String>streamsToSearch){
 		Integer totalItems = 0; 
 		
 		long t1 = System.currentTimeMillis();
 		
 		if(feeds != null && !feeds.isEmpty()){
 			
-			monitor.retrieveFromAllStreams(feeds);
-			
+			monitor.retrieveFromSelectedStreams(streamsToSearch, feeds);
 			while(!monitor.areAllStreamsFinished()){
 				
 			}
@@ -316,7 +317,7 @@ public class MediaSearcher {
 					logger.info("Media Searcher handling #"+dyscoId);
 					List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
 					inputFeedsPerDysco.remove(dyscoId);
-					searcher.search(feeds);
+					searcher.search(feeds,streams.keySet());
 					
 				}
 				
@@ -400,6 +401,8 @@ public class MediaSearcher {
 		
 		private List<Item> retrievedItems = new ArrayList<Item>();
 		
+		private Set<String> primaryStreamsToSearch = new HashSet<String>();
+		
 		private MediaSearcher searcher;
 
 		private boolean isAlive = true;
@@ -408,7 +411,8 @@ public class MediaSearcher {
 
 		public TrendingSearchHandler(MediaSearcher mediaSearcher){
 			this.searcher = mediaSearcher;
-			
+			primaryStreamsToSearch.addAll(streams.keySet());
+			primaryStreamsToSearch.remove("Facebook");
 		}
 		
 		public void addTrendingDysco(String dyscoId,List<Feed> inputFeeds){
@@ -431,14 +435,14 @@ public class MediaSearcher {
 					List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
 					retrievalDate = feeds.get(0).getDateToRetrieve();
 					inputFeedsPerDysco.remove(dyscoId);
-					retrievedItems = searcher.search(feeds);
+					retrievedItems = searcher.search(feeds,primaryStreamsToSearch);
 					List<Query> queries = queryBuilder.getFurtherProcessedSolrQueries(retrievedItems,5);
 					dyscosToQueries.put(dyscoId, queries);
 					dyscosToUpdate.add(dyscoId);
 					List<Feed> newFeeds = translateQueriesToKeywordsFeeds(queries,retrievalDate);
 					long end = System.currentTimeMillis();
 					System.out.println("Media Searcher Time : "+(end-start)/1000+" sec ");
-					searcher.search(newFeeds);
+					searcher.search(newFeeds,streams.keySet());
 					long afterEnd = System.currentTimeMillis();
 					System.out.println("Total Time : "+(afterEnd-start)/1000+" sec ");
 				}
