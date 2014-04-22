@@ -12,11 +12,13 @@ import java.util.Queue;
 
 
 
+
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.framework.streams.StreamHandler;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
+import eu.socialsensor.sfc.streams.filters.ItemFilter;
 import eu.socialsensor.sfc.streams.store.Consumer;
 import eu.socialsensor.sfc.streams.store.MultipleStorages;
 import eu.socialsensor.sfc.streams.store.StreamUpdateStorage;
@@ -38,6 +40,8 @@ public class StoreManager implements StreamHandler {
 	private Integer numberOfConsumers = 1;
 	private List<Consumer> consumers;
 	private List<StreamUpdateStorage> workingStorages = new ArrayList<StreamUpdateStorage>();
+	
+	private List<ItemFilter> filters = new ArrayList<ItemFilter>();
 	
 	private StorageStatusAgent statusAgent;
 	
@@ -136,6 +140,11 @@ public class StoreManager implements StreamHandler {
 	@Override
 	public void update(Item item) {
 		
+		for(ItemFilter filter : filters) {
+			if(!filter.accept(item))
+				return;
+		}
+		
 		synchronized(queue) {
 			items++;
 			queue.add(item);
@@ -220,6 +229,14 @@ public class StoreManager implements StreamHandler {
 		this.store = initStorage(config);
 		
 		logger.info("Dumper has started - I can store items again!");
+	}
+	
+	public void addItemFilter(ItemFilter filter) {
+		this.filters.add(filter);
+	}
+	
+	public void addItemFilters(List<ItemFilter> filters) {
+		this.filters.addAll(filters);
 	}
 	
 	public class StorageStatusAgent extends Thread {

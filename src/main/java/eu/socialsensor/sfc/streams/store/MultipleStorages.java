@@ -3,9 +3,7 @@ package eu.socialsensor.sfc.streams.store;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
@@ -45,10 +43,15 @@ public class MultipleStorages implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public boolean open(){
+	public boolean open() {
 		synchronized(storages) {
 			for(StreamUpdateStorage storage : storages) {
-				storage.open();
+				try {
+					storage.open();
+				}
+				catch(Exception e) {
+					// TODO: remove storages failed to open
+				}
 			}
 		}
 		return true;
@@ -62,7 +65,12 @@ public class MultipleStorages implements StreamUpdateStorage {
 	public void store(Item update) throws IOException {
 		synchronized(storages) {
 			for(StreamUpdateStorage storage : storages) {
-				storage.store(update);
+				try {
+					storage.store(update);
+				}
+				catch(Exception e) {
+					continue;
+				}
 			}
 		}
 	}
@@ -71,7 +79,12 @@ public class MultipleStorages implements StreamUpdateStorage {
 	public void update(Item update) throws IOException {
 		synchronized(storages) {
 			for(StreamUpdateStorage storage : storages) {
-				storage.update(update);
+				try {
+					storage.update(update);
+				}
+				catch(Exception e) {
+					continue;
+				}
 			}
 		}
 	}
@@ -81,7 +94,13 @@ public class MultipleStorages implements StreamUpdateStorage {
 		synchronized(storages) {
 			boolean deleted = true;
 			for(StreamUpdateStorage storage : storages) {
-				deleted = deleted && storage.delete(id);
+				try {
+					deleted = deleted && storage.delete(id);
+				}
+				catch(Exception e) {
+					deleted = false;
+					continue;
+				}
 			}
 			return deleted;
 		}
@@ -90,7 +109,12 @@ public class MultipleStorages implements StreamUpdateStorage {
 	@Override
 	public void close() {
 		for(StreamUpdateStorage storage : storages) {
-			storage.close();
+			try {
+				storage.close();
+			}
+			catch(Exception e){
+				continue;
+			}
 		}
 		storages.clear();
 	}

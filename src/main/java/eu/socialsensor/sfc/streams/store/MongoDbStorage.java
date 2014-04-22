@@ -12,10 +12,12 @@ import com.mongodb.MongoException;
 
 import eu.socialsensor.framework.client.dao.ItemDAO;
 import eu.socialsensor.framework.client.dao.MediaItemDAO;
+import eu.socialsensor.framework.client.dao.MediaSharesDAO;
 import eu.socialsensor.framework.client.dao.StreamUserDAO;
 import eu.socialsensor.framework.client.dao.WebPageDAO;
 import eu.socialsensor.framework.client.dao.impl.ItemDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.MediaItemDAOImpl;
+import eu.socialsensor.framework.client.dao.impl.MediaSharesDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.StreamUserDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.WebPageDAOImpl;
 import eu.socialsensor.framework.client.mongo.MongoHandler;
@@ -45,6 +47,9 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private static String MEDIA_ITEMS_DATABASE = "mongodb.mediaitems.database";
 	private static String MEDIA_ITEMS_COLLECTION = "mongodb.mediaitems.collection";
 	
+	private static String MEDIA_SHARES_DATABASE = "mongodb.mediashares.database";
+	private static String MEDIA_SHARES_COLLECTION = "mongodb.mediashares.collection";
+	
 	private static String USERS_DATABASE = "mongodb.streamusers.database";
 	private static String USERS_COLLECTION = "mongodb.streamusers.collection";
 	
@@ -71,6 +76,9 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private String mediaItemsDbName;
 	private String mediaItemsCollectionName;
 	
+	private String mediaSharesDbName;
+	private String mediaSharesCollectionName;
+	
 	private String streamUsersDbName;
 	private String streamUsersCollectionName;
 	
@@ -79,6 +87,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	private ItemDAO itemDAO;
 	private MediaItemDAO mediaItemDAO;
+	private MediaSharesDAO mediaSharesDAO;
 	private StreamUserDAO streamUserDAO;
 	private WebPageDAO webPageDAO;
 	
@@ -99,6 +108,9 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		
 		this.mediaItemsDbName = config.getParameter(MongoDbStorage.MEDIA_ITEMS_DATABASE);
 		this.mediaItemsCollectionName = config.getParameter(MongoDbStorage.MEDIA_ITEMS_COLLECTION);
+		
+		this.mediaSharesDbName = config.getParameter(MongoDbStorage.MEDIA_SHARES_DATABASE);
+		this.mediaSharesCollectionName = config.getParameter(MongoDbStorage.MEDIA_SHARES_COLLECTION);
 		
 		this.streamUsersDbName = config.getParameter(MongoDbStorage.USERS_DATABASE);
 		this.streamUsersCollectionName = config.getParameter(MongoDbStorage.USERS_COLLECTION);
@@ -181,6 +193,9 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				if(mediaItemsCollectionName != null)
 					this.mediaItemDAO = new MediaItemDAOImpl(host, database, mediaItemsCollectionName);
 				
+				if(mediaSharesCollectionName != null)
+					this.mediaSharesDAO = new MediaSharesDAOImpl(host, database, mediaSharesCollectionName);
+				
 				if(streamUsersCollectionName != null)
 					this.streamUserDAO = new StreamUserDAOImpl(host, database, streamUsersCollectionName);
 				
@@ -198,6 +213,9 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				
 				if(mediaItemsCollectionName != null)
 					this.mediaItemDAO = new MediaItemDAOImpl(host, mediaItemsDbName, mediaItemsCollectionName);
+				
+				if(mediaSharesCollectionName != null)
+					this.mediaSharesDAO = new MediaSharesDAOImpl(host, mediaSharesDbName, mediaSharesCollectionName);
 				
 				if(streamUsersCollectionName != null)
 					this.streamUserDAO = new StreamUserDAOImpl(host, streamUsersDbName, streamUsersCollectionName);
@@ -295,6 +313,11 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					}
 					else {
 						//mediaItemDAO.updateMediaItemPopularity(mediaItem);
+					}
+					
+					if(mediaSharesDAO != null) {
+						mediaSharesDAO.addMediaShare(mediaItem.getId(), mediaItem.getRef(), 
+								mediaItem.getPublicationTime(), mediaItem.getUserId());
 					}
 				}
 				

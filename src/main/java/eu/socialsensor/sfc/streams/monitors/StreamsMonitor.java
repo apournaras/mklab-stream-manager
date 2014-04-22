@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -116,7 +117,7 @@ public class StreamsMonitor {
 	 * as a different thread with the same input feeds
 	 * @param feeds
 	 */
-	public void startAllStreamsAtOnceWithStandarFeeds(List<Feed> feeds){
+	public void retrieveFromAllStreams(List<Feed> feeds){
 		totalRetrievedItems.clear();
 		
 		for(Map.Entry<String, Stream> entry : streams.entrySet()){
@@ -127,6 +128,27 @@ public class StreamsMonitor {
 			runningTimePerStream.put(entry.getKey(), System.currentTimeMillis());
 			
 			System.out.println("Start stream task : "+entry.getKey()+" with "+feeds.size()+" feeds");
+		}
+	}
+	
+	/**
+	 * Starts the retrieval process for each stream separately 
+	 * as a different thread with the same input feeds
+	 * @param feeds
+	 */
+	public void retrieveFromSelectedStreams(Set<String> selectedStreams, List<Feed> feeds){
+		totalRetrievedItems.clear();
+		
+		for(Map.Entry<String, Stream> entry : streams.entrySet()){
+			if(selectedStreams.contains(entry.getKey())){
+				StreamFetchTask streamTask = new StreamFetchTask(entry.getValue(),feeds);
+				streamsFetchTasks.put(entry.getKey(), streamTask);
+				executor.execute(streamTask);
+				runningTimePerStream.put(entry.getKey(), System.currentTimeMillis());
+				
+				System.out.println("Start stream task : "+entry.getKey()+" with "+feeds.size()+" feeds");
+			}
+			
 		}
 	}
 	
@@ -184,7 +206,7 @@ public class StreamsMonitor {
 	 * and if yes sets the stream monitor as finished
 	 * @return
 	 */
-	public boolean areAllStreamFinished(){
+	public boolean areAllStreamsFinished(){
 		int allStreamsDone = 0;
 		int allRunningStreams;
 		
@@ -200,6 +222,8 @@ public class StreamsMonitor {
 					allStreamsDone++;
 				}	
 			}
+		
+		streamsFetchTasks.clear();
 		
 		return true;
 	}

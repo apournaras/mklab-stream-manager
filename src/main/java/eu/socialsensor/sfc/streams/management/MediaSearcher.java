@@ -178,7 +178,7 @@ public class MediaSearcher {
 		
 		//Code to be removed
 		
-		String dyscoId = "b56b3905-c44c-44d7-81a0-6e050c2ae3a6";
+		String dyscoId = "efa3bb3c-9247-4bd9-be49-440615c754df";
     	Action action = Action.NEW;
     	SolrDyscoHandler testSolrdyscoHandler = SolrDyscoHandler.getInstance(solrHost+"/"+solrService+"/"+dyscoCollection);;
     	Dysco dysco = testSolrdyscoHandler.findDyscoLight(dyscoId);
@@ -233,9 +233,9 @@ public class MediaSearcher {
 		
 		if(feeds != null && !feeds.isEmpty()){
 			
-			monitor.startAllStreamsAtOnceWithStandarFeeds(feeds);
+			monitor.retrieveFromAllStreams(feeds);
 			
-			while(!monitor.areAllStreamFinished()){
+			while(!monitor.areAllStreamsFinished()){
 				
 			}
 			totalItems = monitor.getTotalRetrievedItems().size();
