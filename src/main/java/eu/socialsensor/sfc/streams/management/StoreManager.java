@@ -73,6 +73,7 @@ public class StoreManager implements StreamHandler {
 	public StoreManager(StreamsManagerConfiguration config, Integer numberOfConsumers) throws IOException {
 	
 		this.config = config;
+		state = StoreManagerState.OPEN;
 		this.numberOfConsumers = numberOfConsumers;
 		consumers = new ArrayList<Consumer>(numberOfConsumers);
 		try {
@@ -83,11 +84,12 @@ public class StoreManager implements StreamHandler {
 			e.printStackTrace();
 			return;
 		}
+		
 		this.statusAgent = new StorageStatusAgent(this);
 		this.statusAgent.start();
 	}
 	
-	public Map<String,Boolean> getWorkingDataBases(){
+	public Map<String,Boolean> getWorkingDataBases() {
 		return workingStatus;
 	}
 	
@@ -258,12 +260,14 @@ public class StoreManager implements StreamHandler {
 			
 		}
 		
-		public void run(){
+		public void run() {
 			while(storeManager.getState().equals(StoreManagerState.OPEN)){
 				
-				for(StreamUpdateStorage storage : workingStorages){
+				for(StreamUpdateStorage storage : workingStorages) {
 					String storageId = storage.getStorageName();
 					Boolean status = store.checkStatus(storage);
+					
+					logger.info(storageId + " is working: " + status);
 					
 					if(!status && storeManager.getWorkingDataBases().get(storageId)){     //was working and now is not responding
 						storeManager.updateDataBasesStatus(storageId, status);
@@ -292,7 +296,7 @@ public class StoreManager implements StreamHandler {
 			int p = items, t = 0;
 			while(true) {
 				try {
-					Thread.sleep(60000);
+					Thread.sleep(5 * 60000);
 					logger.info("Queue size: " + queue.size());
 					logger.info("Handle rate: " + (items-p)/5 + " items/sec");
 					

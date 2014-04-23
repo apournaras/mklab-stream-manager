@@ -1,7 +1,6 @@
 package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -242,8 +241,8 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		
 		try {
 			
-			if((++items%500) == 0) {
-				logger.info("Mongo I/O rate: " + 500000/(System.currentTimeMillis()-t) + " items/sec");
+			if((++items%5000) == 0) {
+				logger.info("Mongo I/O rate: " + 5000000/(System.currentTimeMillis()-t) + " items/sec");
 				t = System.currentTimeMillis();
 			}
 			
@@ -360,10 +359,11 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	public boolean checkStatus(StreamUpdateStorage storage) 
 	{
 		try {
-			MongoHandler handler = new MongoHandler(host, itemsDbName);
+			String testDB = (database!=null)?database:itemsDbName;
+			MongoHandler handler = new MongoHandler(host, testDB);
 			return handler.checkConnection(host);
 		} catch (Exception e) {
-			
+			e.printStackTrace();
 			return false;
 		}
 		
