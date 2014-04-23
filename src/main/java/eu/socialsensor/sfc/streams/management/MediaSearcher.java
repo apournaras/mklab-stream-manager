@@ -48,6 +48,7 @@ public class MediaSearcher {
 	private static String SOLR_HOST = "solr.hostname";
 	private static String SOLR_SERVICE = "solr.service";
 	private static String DYSCO_COLLECTION = "dyscos.collection";
+	private static String CHANNEL = "channel";
 	
 	public final Logger logger = Logger.getLogger(StreamsManager.class);
 	
@@ -169,7 +170,7 @@ public class MediaSearcher {
             public void run() {
                 try {
                 	logger.info("Try to subscribe to redis");
-                    subscriberJedis.subscribe(dyscoRequestReceiver,eu.socialsensor.framework.client.search.MediaSearcher.CHANNEL);
+                    subscriberJedis.subscribe(dyscoRequestReceiver,CHANNEL);
                    
                 } catch (Exception e) {
                 }
