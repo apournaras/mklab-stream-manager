@@ -1,17 +1,33 @@
 package eu.socialsensor.sfc.streams.filters;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import eu.socialsensor.framework.client.dao.SourceDAO;
+import eu.socialsensor.framework.client.dao.impl.SourceDAOImpl;
 import eu.socialsensor.framework.common.domain.Item;
+import eu.socialsensor.framework.common.domain.Source;
+import eu.socialsensor.sfc.streams.FilterConfiguration;
 
-public class MentionsItemFilter implements ItemFilter {
+public class MentionsItemFilter extends ItemFilter {
 
 	private List<String> ids;
 	private String listId;
 
-	public MentionsItemFilter(String listId, List<String> ids) {
-		this.ids  = ids;
-		this.listId = listId;
+	public MentionsItemFilter(FilterConfiguration configuration) {
+		super(configuration);
+		this.listId =configuration.getParameter("listId");
+		
+		String host =configuration.getParameter("host");
+		String database =configuration.getParameter("database");
+		String collection =configuration.getParameter("collection");
+			
+		SourceDAO dao = new SourceDAOImpl(host, database, collection);
+		List<Source> sources = dao.findListSources(listId);
+		ids = new ArrayList<String>();
+		for(Source source : sources) {
+			ids.add(source.getStreamId() + "#" + source.getId());
+		}
 	}
 	
 	@Override

@@ -2,7 +2,6 @@ package eu.socialsensor.sfc.streams;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +43,13 @@ public class StreamsManagerConfiguration extends Configuration {
 	private Map<String, StorageConfiguration> storageConfigMap = null;
 	
 	@Expose
+	@SerializedName(value = "filters")
+	private Map<String, FilterConfiguration> filterConfigMap = null;
+	
+	@Expose
 	@SerializedName(value = "subscribers")
 	private Map<String, StreamConfiguration> subscriberConfigMap = null;
+	
 	
 	public StreamsManagerConfiguration() {
 		streamConfigMap = new HashMap<String, StreamConfiguration>();
@@ -66,7 +70,6 @@ public class StreamsManagerConfiguration extends Configuration {
 		storageConfigMap.put(storageId,config);
 	}
 	
-	
 	public StorageConfiguration getStorageConfig(String storageId){
 		return storageConfigMap.get(storageId);
 	}
@@ -77,6 +80,14 @@ public class StreamsManagerConfiguration extends Configuration {
 	
 	public StreamConfiguration getSubscriberConfig(String subscriberId){
 		return subscriberConfigMap.get(subscriberId);
+	}
+	
+	public void setFilterConfig(String filterId, FilterConfiguration config){
+		filterConfigMap.put(filterId,config);
+	}
+	
+	public FilterConfiguration getFilterConfig(String filterId){
+		return filterConfigMap.get(filterId);
 	}
 	
 	public void setParameter(String name, String value){
@@ -97,6 +108,10 @@ public class StreamsManagerConfiguration extends Configuration {
 	
 	public Set<String> getSubscriberIds(){
 		return subscriberConfigMap.keySet();
+	}
+	
+	public Set<String> getFilterIds(){
+		return filterConfigMap.keySet();
 	}
 	
 	public static StreamsManagerConfiguration readFromMongo(String host, String dbName, String collectionName) 
@@ -154,6 +169,8 @@ public class StreamsManagerConfiguration extends Configuration {
 			IN_CONFIG_SUBSCRIBER_PARAM,
 			IN_CONFIG_STORAGE,
 			IN_CONFIG_STORAGE_PARAM,
+			IN_CONFIG_FILTER,
+			IN_CONFIG_FILTER_PARAM,
 			
 		}
 		
@@ -164,7 +181,8 @@ public class StreamsManagerConfiguration extends Configuration {
 	    private StreamConfiguration sconfig = null;
 	    private StreamConfiguration srconfig = null;
 	    private StorageConfiguration storage_config = null; 
-	    private String streamId = null, storageId = null, subscriberId = null;
+	    private FilterConfiguration filter_config = null; 
+	    private String streamId = null, storageId = null, subscriberId = null, filterId = null;
 		
 		public StreamsManagerConfiguration getConfig() {
 			return config;
@@ -191,6 +209,9 @@ public class StreamsManagerConfiguration extends Configuration {
 				else if(state == ParseState.IN_CONFIG_SUBSCRIBER) {
 					state = ParseState.IN_CONFIG_SUBSCRIBER_PARAM;
 				}
+				else if(state == ParseState.IN_CONFIG_FILTER) {
+					state = ParseState.IN_CONFIG_FILTER_PARAM;
+				}
 			
 			}
 			
@@ -214,6 +235,13 @@ public class StreamsManagerConfiguration extends Configuration {
 				if (storageId == null) return;
 				storage_config = new StorageConfiguration();
 				state = ParseState.IN_CONFIG_STORAGE;
+			}
+			else if (name.equalsIgnoreCase("Filter")){
+				filterId = attributes.getValue("id");
+				value = new StringBuilder();
+				if (filterId == null) return;
+				filter_config = new FilterConfiguration();
+				state = ParseState.IN_CONFIG_FILTER;
 			}
 			
 		}
@@ -246,6 +274,10 @@ public class StreamsManagerConfiguration extends Configuration {
 				storage_config.setParameter(this.name, value.toString().trim());
 				state = ParseState.IN_CONFIG_STORAGE;
 			}
+			else if (name.equalsIgnoreCase("Parameter") && state == ParseState.IN_CONFIG_FILTER_PARAM){
+				filter_config.setParameter(this.name, value.toString().trim());
+				state = ParseState.IN_CONFIG_FILTER;
+			}
 			else if (name.equalsIgnoreCase("Stream")){
 				config.setStreamConfig(streamId, sconfig);
 				state = ParseState.IDLE;
@@ -258,7 +290,10 @@ public class StreamsManagerConfiguration extends Configuration {
 				config.setStorageConfig(storageId, storage_config);
 				state = ParseState.IDLE;
 			}
-			
+			else if (name.equalsIgnoreCase("Filter")){
+				config.setFilterConfig(filterId, filter_config);
+				state = ParseState.IDLE;
+			}
 				
 		}
 
