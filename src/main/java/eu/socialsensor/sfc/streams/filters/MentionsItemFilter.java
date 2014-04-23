@@ -16,6 +16,7 @@ public class MentionsItemFilter extends ItemFilter {
 
 	public MentionsItemFilter(FilterConfiguration configuration) {
 		super(configuration);
+		try {
 		this.listId =configuration.getParameter("listId");
 		
 		String host =configuration.getParameter("host");
@@ -28,20 +29,28 @@ public class MentionsItemFilter extends ItemFilter {
 		for(Source source : sources) {
 			ids.add(source.getStreamId() + "#" + source.getId());
 		}
+		System.out.println(ids.size() + " ids from list " + listId 
+				+ " to be used in mentions filter");
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
 	public boolean accept(Item item) {
 		String[] lists = item.getList();
-		if(lists == null || lists.length==0 || lists.length>1)
+		if(lists == null || lists.length==0 || lists.length>1) {
 			return true;
+		}
 		
 		if(!lists[0].equals(listId))
 			return true;
 		
 		String uid = item.getUserId();
-		if (!ids.contains(uid))
+		if (!ids.contains(uid)) {
 			return false;
+		}
 		
 		return true;
 	}

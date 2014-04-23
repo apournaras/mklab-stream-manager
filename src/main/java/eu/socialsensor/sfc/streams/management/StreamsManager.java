@@ -198,7 +198,7 @@ public class StreamsManager {
 			throw new StreamException("Error during streams initialization",e);
 		}
 	}
-
+	
 	/**
 	 * Class in case system is shutdown 
 	 * Responsible to close all services 

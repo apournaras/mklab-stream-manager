@@ -54,6 +54,7 @@ public class StreamsManagerConfiguration extends Configuration {
 	public StreamsManagerConfiguration() {
 		streamConfigMap = new HashMap<String, StreamConfiguration>();
 		storageConfigMap = new HashMap<String, StorageConfiguration>();
+		filterConfigMap = new HashMap<String, FilterConfiguration>();
 		subscriberConfigMap = new HashMap<String, StreamConfiguration>();
 	}
 	

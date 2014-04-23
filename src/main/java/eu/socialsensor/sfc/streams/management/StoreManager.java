@@ -9,13 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
-
-
-
-
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.framework.streams.StreamHandler;
+import eu.socialsensor.sfc.streams.FilterConfiguration;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.filters.ItemFilter;
@@ -41,7 +38,7 @@ public class StoreManager implements StreamHandler {
 	private List<Consumer> consumers;
 	private List<StreamUpdateStorage> workingStorages = new ArrayList<StreamUpdateStorage>();
 	
-	private List<ItemFilter> filters = new ArrayList<ItemFilter>();
+	private Map<String, ItemFilter> filtersMap = new HashMap<String, ItemFilter>();
 	
 	private StorageStatusAgent statusAgent;
 	
@@ -61,9 +58,10 @@ public class StoreManager implements StreamHandler {
 		consumers = new ArrayList<Consumer>(numberOfConsumers);
 		
 		try {
-			store = initStorage(config);
+			createFilters();
+			logger.info(filtersMap.size() + " filters initialized!");
+			store = initStorage(config);	
 		} catch (StreamException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -78,9 +76,10 @@ public class StoreManager implements StreamHandler {
 		this.numberOfConsumers = numberOfConsumers;
 		consumers = new ArrayList<Consumer>(numberOfConsumers);
 		try {
+			createFilters();
+			logger.info(filtersMap.size() + " filters initialized!");
 			store = initStorage(config);
 		} catch (StreamException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -140,7 +139,7 @@ public class StoreManager implements StreamHandler {
 	@Override
 	public void update(Item item) {
 		
-		for(ItemFilter filter : filters) {
+		for(ItemFilter filter : filtersMap.values()) {
 			if(!filter.accept(item))
 				return;
 		}
@@ -203,6 +202,23 @@ public class StoreManager implements StreamHandler {
 		return storage;
 	}
 	
+	private void createFilters() throws StreamException {
+		try{
+			for (String filterId : config.getFilterIds()) {
+				
+				FilterConfiguration fconfig = config.getFilterConfig(filterId);
+				String className = fconfig.getParameter(FilterConfiguration.CLASS_PATH);
+				Constructor<?> constructor = Class.forName(className).getConstructor(FilterConfiguration.class);
+				ItemFilter filterInstance = (ItemFilter) constructor.newInstance(fconfig);
+			
+				filtersMap.put(filterId, filterInstance);
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+			throw new StreamException("Error during streams initialization",e);
+		}
+	}
+	
 	/**
 	 * Stops all consumer threads and all the databases used
 	 */
@@ -229,14 +245,6 @@ public class StoreManager implements StreamHandler {
 		this.store = initStorage(config);
 		
 		logger.info("Dumper has started - I can store items again!");
-	}
-	
-	public void addItemFilter(ItemFilter filter) {
-		this.filters.add(filter);
-	}
-	
-	public void addItemFilters(List<ItemFilter> filters) {
-		this.filters.addAll(filters);
 	}
 	
 	public class StorageStatusAgent extends Thread {
