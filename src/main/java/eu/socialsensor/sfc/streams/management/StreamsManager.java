@@ -94,7 +94,7 @@ public class StreamsManager {
 			storeManager.start();	
 			logger.info("Store Manager is ready to store.");
 			
-			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.CONFIG_FILE, input_config);
+			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.MONGO_STORAGE, input_config);
 			Map<String,List<Feed>> results = feedsCreator.getQueryPerStream();
 			
 			//Start the Subscribers

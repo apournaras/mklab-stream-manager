@@ -284,7 +284,7 @@ public class StoreManager implements StreamHandler {
 			int p = items, t = 0;
 			while(true) {
 				try {
-					Thread.sleep(5000);
+					Thread.sleep(60000);
 					logger.info("Queue size: " + queue.size());
 					logger.info("Handle rate: " + (items-p)/5 + " items/sec");
 					
