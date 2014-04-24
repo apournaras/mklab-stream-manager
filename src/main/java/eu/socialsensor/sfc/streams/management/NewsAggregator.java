@@ -167,7 +167,7 @@ public class NewsAggregator {
 
 	private class Eliminator extends Thread {
 		private NewsAggregator aggregator = null;
-		private long checkTime = 60000 * 5; //1-day 
+		private long checkTime = 60000 * 60 * 24; //1-day 
 		private long lastCheck = System.currentTimeMillis();
 		private long currentTime = System.currentTimeMillis();
 		private long dateThreshold = 60000 * 60 * 24 * 30; //1-week
