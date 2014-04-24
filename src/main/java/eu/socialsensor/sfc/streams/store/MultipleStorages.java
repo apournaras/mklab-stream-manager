@@ -90,6 +90,17 @@ public class MultipleStorages implements StreamUpdateStorage {
 	}
 	
 	@Override
+	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
+		for(StreamUpdateStorage storage : storages) {
+			if(!storage.deleteItemsOlderThan(dateThreshold)){
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	
+	@Override
 	public boolean delete(String id) throws IOException {
 		synchronized(storages) {
 			boolean deleted = true;

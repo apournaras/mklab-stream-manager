@@ -258,6 +258,12 @@ public class LuceneStorage implements StreamUpdateStorage {
 		return this.storageName;
 	}
 	
+	@Override
+	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
+		return true;
+	}
+	
+	
 //	private class Committer extends TimerTask {
 //		@Override
 //		public void run() {

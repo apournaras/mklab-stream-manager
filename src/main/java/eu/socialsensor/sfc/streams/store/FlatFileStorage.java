@@ -95,4 +95,9 @@ public class FlatFileStorage implements StreamUpdateStorage {
 		return this.storageName;
 	}
 	
+	@Override
+	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
+		return true;
+	}
+	
 }

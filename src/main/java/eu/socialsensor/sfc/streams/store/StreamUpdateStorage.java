@@ -44,6 +44,8 @@ public interface StreamUpdateStorage {
 	 */
 	public boolean delete(String id) throws IOException;
 	
+	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException;
+	
 	public boolean checkStatus(StreamUpdateStorage storage);
 	
 	/**

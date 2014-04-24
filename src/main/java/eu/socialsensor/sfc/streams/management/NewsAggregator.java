@@ -27,7 +27,7 @@ public class NewsAggregator {
 	
 	public final Logger logger = Logger.getLogger(NewsAggregator.class);
 	
-	enum AggregatorState{
+	enum NewsAggregatorState{
 		OPEN, CLOSE
 	}
 	
@@ -36,7 +36,7 @@ public class NewsAggregator {
 	private InputConfiguration input_config = null;
 	private StoreManager storeManager;
 	private StreamsMonitor monitor;
-	private AggregatorState aggregatorState = AggregatorState.CLOSE;
+	private NewsAggregatorState newsAggregatorState = NewsAggregatorState.CLOSE;
 	
 	private int numberOfConsumers = 1; //for multi-threaded items' storage
 
@@ -44,7 +44,7 @@ public class NewsAggregator {
 	
 	public NewsAggregator(StreamsManagerConfiguration config,InputConfiguration input_config) throws StreamException{
 		if (config == null || input_config == null) {
-			throw new StreamException("Aggregator's configuration must be specified");
+			throw new StreamException("News Aggregator's configuration must be specified");
 		}
 		
 		//Set the configuration files
@@ -67,10 +67,10 @@ public class NewsAggregator {
 	 */
 	public synchronized void open() throws StreamException {
 		
-		if (aggregatorState == AggregatorState.OPEN) {
+		if (newsAggregatorState == NewsAggregatorState.OPEN) {
 			return;
 		}
-		aggregatorState = AggregatorState.OPEN;
+		newsAggregatorState = NewsAggregatorState.OPEN;
 		logger.info("Streams are now open");
 		
 		try {
@@ -81,7 +81,7 @@ public class NewsAggregator {
 
 			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.TXT_FILE,input_config);
 			Map<String,List<Feed>> results = feedsCreator.getQueryPerStream();
-			logger.info("Input feeds : "+results.size());
+			
 			//Start the Streams
 			for (String streamId : streams.keySet()) {
 				logger.info("Stream Manager - Start Stream : "+streamId);
@@ -140,7 +140,7 @@ public class NewsAggregator {
 	 */
 	public synchronized void close() throws StreamException {
 		
-		if (aggregatorState == AggregatorState.CLOSE) {
+		if (newsAggregatorState == NewsAggregatorState.CLOSE) {
 			return;
 		}
 		
@@ -153,9 +153,35 @@ public class NewsAggregator {
 				storeManager.stop();
 			}
 			
-			aggregatorState = AggregatorState.CLOSE;
+			newsAggregatorState = NewsAggregatorState.CLOSE;
 		}catch(Exception e) {
 			throw new StreamException("Error during streams close", e);
+		}
+	}
+	
+
+	private class Eliminator extends Thread {
+		private NewsAggregator aggregator = null;
+		private long checkTime = 60000 * 60 * 24; //1-day 
+		private long lastCheck = System.currentTimeMillis();
+		private long currentTime = System.currentTimeMillis();
+		private long dateThreshold = 60000 * 60 * 24 * 7; //1-week
+		
+		public Eliminator(NewsAggregator aggregator) {
+			this.aggregator = aggregator;
+		}
+
+		public void run() {
+			while(aggregator.newsAggregatorState.equals(NewsAggregatorState.OPEN)){
+				
+				while(Math.abs(currentTime - lastCheck) > checkTime){
+					currentTime = System.currentTimeMillis();
+				}
+				storeManager.deleteItemsOlderThan(dateThreshold);
+				lastCheck = System.currentTimeMillis();
+			}
+			
+			
 		}
 	}
 	

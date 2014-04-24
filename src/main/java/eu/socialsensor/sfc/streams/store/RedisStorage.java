@@ -137,6 +137,12 @@ public class RedisStorage implements StreamUpdateStorage {
 	}
 	
 	@Override
+	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
+	
+		return true;
+	}
+	
+	@Override
 	public String getStorageName(){
 		return this.storageName;
 	}

@@ -194,5 +194,11 @@ public class MediaUrlStorage implements StreamUpdateStorage {
 	public String getStorageName(){
 		return this.storageName;
 	}
+	
+	@Override
+	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
+		return true;
+	}
+	
 
 }

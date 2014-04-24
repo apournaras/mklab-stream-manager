@@ -44,6 +44,12 @@ public class StdoutStorage implements StreamUpdateStorage {
 	@Override
 	public void updateTimeslot() {
 	}
+	
+	@Override
+	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
+	
+		return true;
+	}
 
 	
 	@Override

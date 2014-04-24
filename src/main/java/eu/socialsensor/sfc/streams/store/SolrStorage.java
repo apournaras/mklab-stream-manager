@@ -56,6 +56,7 @@ public class SolrStorage implements StreamUpdateStorage {
 		this.newsFeedCollection = config.getParameter(SolrStorage.NEWSFEED_COLLECTION);
 		this.facebookItemsCollection = config.getParameter(SolrStorage.FACEBOOK_ITEMS_COLLECTION);
 		this.twitterItemsCollection = config.getParameter(SolrStorage.TWITTER_ITEMS_COLLECTION);
+		
 	}
 	
 	public SolrItemHandler getItemHandler() {
@@ -80,7 +81,7 @@ public class SolrStorage implements StreamUpdateStorage {
 	
 	@Override
 	public boolean open(){
-
+		
 		try {
 			if(itemsCollection != null) {
 				solrItemHandler = SolrItemHandler.getInstance(hostname+"/"+service+"/"+itemsCollection);
@@ -91,6 +92,7 @@ public class SolrStorage implements StreamUpdateStorage {
 			}
 			if(newsFeedCollection != null) {	
 				solrNewsFeedHandler = SolrNewsFeedHandler.getInstance(hostname+"/"+service+"/"+newsFeedCollection);
+				
 			}
 			if(facebookItemsCollection != null) {
 				solrFacebookItemHandler = SolrItemHandler.getInstance(hostname+"/"+service+"/"+facebookItemsCollection);
@@ -102,7 +104,7 @@ public class SolrStorage implements StreamUpdateStorage {
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			
+			e.printStackTrace();
 			return false;
 		}
 		return true;
@@ -159,6 +161,28 @@ public class SolrStorage implements StreamUpdateStorage {
 	public boolean delete(String itemId) throws IOException {
 		//logger.info("Delete item with id " + itemId + " from Solr.");
 		solrItemHandler.deleteItem(itemId);
+		return true;
+	}
+	
+	@Override
+	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
+		if(itemsCollection != null){
+			Item latestItem = solrItemHandler.findLatestItem();
+			long latestDateTime = latestItem.getPublicationTime();
+			long dateTimeToDeleteFrom = latestDateTime - dateThreshold;
+			
+			return solrItemHandler.deleteItemsOlderThan(dateTimeToDeleteFrom);
+		}
+		if(mediaItemsCollection != null){
+			
+		}
+		if(newsFeedCollection != null){
+			Item latestItem = solrNewsFeedHandler.findLatestItem();
+			long latestDateTime = latestItem.getPublicationTime();
+			long dateTimeToDeleteFrom = latestDateTime - dateThreshold;
+			
+			return solrNewsFeedHandler.deleteItemsOlderThan(dateTimeToDeleteFrom);
+		}
 		return true;
 	}
 	

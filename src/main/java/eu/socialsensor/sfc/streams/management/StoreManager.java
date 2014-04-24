@@ -169,6 +169,15 @@ public class StoreManager implements StreamHandler {
 	}
 	
 	
+	public void deleteItemsOlderThan(long dateThreshold){
+		try {
+			store.deleteItemsOlderThan(dateThreshold);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * Initializes the databases that are going to be used in the service
 	 * @param config
