@@ -93,7 +93,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private Integer items = 0;
 	private long t;
 	
-	private HashMap<String, Integer> usersMentionsMap, usersItemsMap, usersSharesMap;
+	private HashMap<String, Integer> usersMentionsMap, usersItemsMap, usersSharesMap, webpagesSharesMap;
 	private UpdaterThread updaterThread;
 
 	
@@ -120,6 +120,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.usersMentionsMap = new HashMap<String, Integer>();
 		this.usersItemsMap = new HashMap<String, Integer>();
 		this.usersSharesMap = new HashMap<String, Integer>();
+		this.webpagesSharesMap = new HashMap<String, Integer>();
 		
 		this.items = 0;
 	}
@@ -145,6 +146,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.usersMentionsMap = new HashMap<String, Integer>();
 		this.usersItemsMap = new HashMap<String, Integer>();
 		this.usersSharesMap = new HashMap<String, Integer>();
+		this.webpagesSharesMap = new HashMap<String, Integer>();
 		
 		this.items = 0;
 	}
@@ -163,6 +165,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.usersMentionsMap = new HashMap<String, Integer>();
 		this.usersItemsMap = new HashMap<String, Integer>();
 		this.usersSharesMap = new HashMap<String, Integer>();
+		this.webpagesSharesMap = new HashMap<String, Integer>();
 		
 		this.items = 0;
 	}
@@ -329,7 +332,13 @@ public class MongoDbStorage implements StreamUpdateStorage {
 							webPageDAO.addWebPage(webPage);
 						}
 						else {
-							webPageDAO.updateWebPageShares(webPageURL);
+							//webPageDAO.updateWebPageShares(webPageURL);
+							synchronized(webpagesSharesMap) {
+								Integer shares = webpagesSharesMap.get(webPageURL);
+								if(shares == null)
+									shares = 0;
+								webpagesSharesMap.put(user.getId(), ++shares);
+							}
 						}
 					}
 				}
@@ -409,6 +418,13 @@ public class MongoDbStorage implements StreamUpdateStorage {
 						usersItemsMap.clear();
 					}
 
+					synchronized(webpagesSharesMap) {
+						for(Entry<String, Integer> e : webpagesSharesMap.entrySet()) {
+							webPageDAO.updateWebPageShares(e.getKey(), e.getValue());
+						}
+						webpagesSharesMap.clear();
+					}
+					
 					Thread.sleep(10*60*1000);
 				} catch (InterruptedException e) {
 					continue;
