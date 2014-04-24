@@ -179,8 +179,7 @@ public class SolrStorage implements StreamUpdateStorage {
 		if(newsFeedCollection != null){
 			Item latestItem = solrNewsFeedHandler.findLatestItem();
 			long latestDateTime = latestItem.getPublicationTime();
-			long dateTimeToDeleteFrom = latestDateTime - dateThreshold;
-			
+			long dateTimeToDeleteFrom = latestDateTime - Math.abs(dateThreshold);
 			return solrNewsFeedHandler.deleteItemsOlderThan(dateTimeToDeleteFrom);
 		}
 		return true;

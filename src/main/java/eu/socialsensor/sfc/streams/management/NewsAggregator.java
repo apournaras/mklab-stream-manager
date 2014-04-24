@@ -38,6 +38,8 @@ public class NewsAggregator {
 	private StreamsMonitor monitor;
 	private NewsAggregatorState newsAggregatorState = NewsAggregatorState.CLOSE;
 	
+	private Eliminator eliminator;
+	
 	private int numberOfConsumers = 1; //for multi-threaded items' storage
 
 	private List<Feed> feeds = new ArrayList<Feed>();
@@ -106,6 +108,9 @@ public class NewsAggregator {
 			if(monitor != null && monitor.getNumberOfStreamFetchTasks() > 0){
 				monitor.startReInitializer();
 			}
+			
+			eliminator = new Eliminator(this);
+			eliminator.start();
 
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -162,21 +167,23 @@ public class NewsAggregator {
 
 	private class Eliminator extends Thread {
 		private NewsAggregator aggregator = null;
-		private long checkTime = 60000 * 60 * 24; //1-day 
+		private long checkTime = 60000 * 5; //1-day 
 		private long lastCheck = System.currentTimeMillis();
 		private long currentTime = System.currentTimeMillis();
-		private long dateThreshold = 60000 * 60 * 24 * 7; //1-week
+		private long dateThreshold = 60000 * 60 * 24 * 30; //1-week
 		
 		public Eliminator(NewsAggregator aggregator) {
 			this.aggregator = aggregator;
 		}
 
 		public void run() {
+			logger.info("Eliminator started");
 			while(aggregator.newsAggregatorState.equals(NewsAggregatorState.OPEN)){
 				
-				while(Math.abs(currentTime - lastCheck) > checkTime){
+				while(Math.abs(currentTime - lastCheck) < checkTime){
 					currentTime = System.currentTimeMillis();
 				}
+				
 				storeManager.deleteItemsOlderThan(dateThreshold);
 				lastCheck = System.currentTimeMillis();
 			}
