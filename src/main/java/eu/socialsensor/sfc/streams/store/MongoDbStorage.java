@@ -84,19 +84,17 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private String webPageDbName;
 	private String webPageCollectionName;
 	
-	private ItemDAO itemDAO;
-	private MediaItemDAO mediaItemDAO;
-	private MediaSharesDAO mediaSharesDAO;
-	private StreamUserDAO streamUserDAO;
-	private WebPageDAO webPageDAO;
+	private ItemDAO itemDAO = null;
+	private MediaItemDAO mediaItemDAO = null;
+	private MediaSharesDAO mediaSharesDAO = null;
+	private StreamUserDAO streamUserDAO = null;
+	private WebPageDAO webPageDAO = null;
 	
 	private Integer items = 0;
 	private long t;
 	
 	private HashMap<String, Integer> usersMentionsMap, usersItemsMap, usersSharesMap, webpagesSharesMap;
 	private UpdaterThread updaterThread;
-
-	
 	
 	public MongoDbStorage(StorageConfiguration config) {	
 		this.host = config.getParameter(MongoDbStorage.HOST);
@@ -187,7 +185,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 
 		this.t = System.currentTimeMillis();
 		
-		if(database != null){
+		if(database != null) {
 			try {
 				if(itemsCollectionName != null)
 					this.itemDAO = new ItemDAOImpl(host, database, itemsCollectionName);
@@ -204,38 +202,38 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				if(webPageCollectionName != null)
 					this.webPageDAO = new WebPageDAOImpl(host, database, webPageCollectionName);
 			} catch (Exception e) {
-				
+				logger.error("MongoDB Storage failed to open!");
+				logger.error(e);
 				return false;
 			}
 		}
-		else{
+		else {
 			try {
-				if(itemsCollectionName != null)
+				if(itemsCollectionName != null && itemsDbName != null)
 					this.itemDAO = new ItemDAOImpl(host, itemsDbName, itemsCollectionName);
 				
-				if(mediaItemsCollectionName != null)
+				if(mediaItemsCollectionName != null && mediaItemsDbName != null)
 					this.mediaItemDAO = new MediaItemDAOImpl(host, mediaItemsDbName, mediaItemsCollectionName);
 				
-				if(mediaSharesCollectionName != null)
+				if(mediaSharesCollectionName != null && mediaSharesDbName != null)
 					this.mediaSharesDAO = new MediaSharesDAOImpl(host, mediaSharesDbName, mediaSharesCollectionName);
 				
-				if(streamUsersCollectionName != null)
+				if(streamUsersCollectionName != null && streamUsersDbName != null)
 					this.streamUserDAO = new StreamUserDAOImpl(host, streamUsersDbName, streamUsersCollectionName);
 				
-				if(webPageCollectionName != null)
+				if(webPageCollectionName != null && webPageDbName != null)
 					this.webPageDAO = new WebPageDAOImpl(host, webPageDbName, webPageCollectionName);
 			} catch (Exception e) {
-				
+				logger.error("MongoDB Storage failed to open!");
+				logger.error(e);
 				return false;
 			}
 		}
-		
 		
 		this.updaterThread = new UpdaterThread();
 		updaterThread.start();
 		
 		return true;
-		
 	}
 
 	
@@ -244,14 +242,15 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		
 		try {
 			
-			if((++items%5000) == 0) {
-				logger.info("Mongo I/O rate: " + 5000000/(System.currentTimeMillis()-t) + " items/sec");
+			if((++items%10000) == 0) {
+				logger.info("Mongo I/O rate: " + 10000/((System.currentTimeMillis()-t)/60000) + " items/min");
 				t = System.currentTimeMillis();
 			}
 			
 			// Handle Items
 			if(!itemDAO.exists(item.getId())) {
-				// save item
+				
+				// Item does not exist in MongoDB. Save it.
 				
 				item.setInsertionTime(System.currentTimeMillis());
 				itemDAO.insertItem(item);
@@ -264,16 +263,13 @@ public class MongoDbStorage implements StreamUpdateStorage {
 						streamUserDAO.insertStreamUser(user);
 					}
 					else {
-						//streamUserDAO.incStreamUserValue(user.getId(), "items");
-						//streamUserDAO.incStreamUserValue(user.getId(), "mentions");
-						
+						// Update statistics of stream user
 						synchronized(usersItemsMap) {
 							Integer items = usersItemsMap.get(user.getId());
 							if(items == null)
 								items = 0;
 							usersItemsMap.put(user.getId(), ++items);
 						}
-						
 						synchronized(usersMentionsMap) {
 							Integer mentions = usersMentionsMap.get(user.getId());
 							if(mentions == null)
@@ -286,7 +282,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				if(item.getMentions() != null) {
 					String[] mentionedUsers = item.getMentions();
 					for(String mentionedUser : mentionedUsers) {
-						//streamUserDAO.incStreamUserValue(mention, "mentions");
 						synchronized(usersMentionsMap) {
 							Integer mentions = usersMentionsMap.get(mentionedUser);
 							if(mentions == null)
@@ -298,7 +293,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 
 				if(item.getReferencedUserId() != null) {
 					String userid = item.getReferencedUserId();
-					//streamUserDAO.incStreamUserValue(userid, "shares");
 					synchronized(usersSharesMap) {
 						Integer shares = usersSharesMap.get(userid);
 						if(shares == null)
@@ -310,10 +304,11 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				// Handle Media Items
 				for(MediaItem mediaItem : item.getMediaItems()) {
 					if(!mediaItemDAO.exists(mediaItem.getId())) {
-						// save media item
+						// MediaItem does not exist. Save it.
 						mediaItemDAO.addMediaItem(mediaItem);
 					}
 					else {
+						//Update media item
 						//mediaItemDAO.updateMediaItemPopularity(mediaItem);
 					}
 					
@@ -332,7 +327,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 							webPageDAO.addWebPage(webPage);
 						}
 						else {
-							//webPageDAO.updateWebPageShares(webPageURL);
 							synchronized(webpagesSharesMap) {
 								Integer shares = webpagesSharesMap.get(webPageURL);
 								if(shares == null)
@@ -345,11 +339,11 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			}
 			else {
 				itemDAO.updateItem(item);
-				
 			}
 		}
-		catch(MongoException e){
-			System.out.println("Storing item "+item.getId()+" failed - Mongo is not responding");
+		catch(MongoException e) {
+			e.printStackTrace();
+			System.out.println("Storing item "+item.getId()+" failed.");
 		}
 	
 	}
@@ -368,7 +362,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	public boolean checkStatus(StreamUpdateStorage storage) 
 	{
 		try {
-			String testDB = (database!=null)?database:itemsDbName;
+			String testDB = (database != null) ? database : itemsDbName;
 			MongoHandler handler = new MongoHandler(host, testDB);
 			return handler.checkConnection(host);
 		} catch (Exception e) {
