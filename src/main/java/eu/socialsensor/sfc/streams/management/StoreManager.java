@@ -307,10 +307,10 @@ public class StoreManager implements StreamHandler {
 				try {
 					Thread.sleep(5 * 60000);
 					logger.info("Queue size: " + queue.size());
-					logger.info("Handle rate: " + (items-p)/5 + " items/sec");
+					logger.info("Handle rate: " + (items-p)/5 + " items/min");
 					
 					t +=5;
-					logger.info("Mean handle rate: " + (items)/t + " items/sec");
+					logger.info("Mean handle rate: " + (items)/t + " items/min");
 					p = items;
 					
 				} catch (InterruptedException e) { }
