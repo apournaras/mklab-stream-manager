@@ -35,8 +35,11 @@
 			<Parameter name="date">
 		        <![CDATA[2014-01-03 00:00:00.000]]>
 		    </Parameter>
-	       <Parameter name="path">
+	       	<Parameter name="path">
 	        	<![CDATA[./conf/RSSFeeds/ALLRSSFeeds.txt]]>
+			</Parameter>
+			<Parameter name="feedType">
+	        	<![CDATA[keywords]]>
 			</Parameter>
 		</Stream>
 		
