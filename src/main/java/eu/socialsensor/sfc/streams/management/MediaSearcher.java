@@ -70,7 +70,6 @@ public class MediaSearcher {
 	private DyscoUpdateAgent dyscoUpdateAgent;
 	private TrendingSearchHandler trendingSearchHandler;
 	private CustomSearchHandler customSearchHandler;
-	private SystemAgent systemAgent;
 	private SolrQueryBuilder queryBuilder;
 	
 	private String redisHost;
@@ -115,9 +114,6 @@ public class MediaSearcher {
 			return;
 		}
 		state = MediaSearcherState.OPEN;
-		
-		this.systemAgent = new SystemAgent(storeManager,this);
-		systemAgent.start();
 		
 		storeManager.start();	
 		logger.info("Store Manager is ready to store.");
@@ -710,31 +706,7 @@ public class MediaSearcher {
 		}
 	}
 	
-	private class SystemAgent extends Thread {
-		
-		private StoreManager manager;
-		private MediaSearcher searcher;
-		
-		public SystemAgent(StoreManager manager,MediaSearcher searcher){
-			this.manager = manager;
-			this.searcher = searcher;
-		}
-		
-		public void run(){
-			while(state.equals(MediaSearcherState.OPEN)){
-				if(!storeManager.getWorkingDataBases().get("Solr")){
-					System.out.println("Apache solr is not working - Close Media Searcher");
 
-					storeManager.stop();
-					Shutdown shut = new Shutdown(searcher);
-					shut.run();
-					break;
-				}
-			}
-		}
-		
-	}
-	
 	/**
 	 * @param args
 	 */
