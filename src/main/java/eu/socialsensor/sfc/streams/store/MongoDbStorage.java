@@ -331,7 +331,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 								Integer shares = webpagesSharesMap.get(webPageURL);
 								if(shares == null)
 									shares = 0;
-								webpagesSharesMap.put(user.getId(), ++shares);
+								webpagesSharesMap.put(webPageURL, ++shares);
 							}
 						}
 					}
@@ -391,6 +391,9 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		public void run() {
 			while(!stop) {
 				try {
+					Thread.sleep(10 * 60 * 1000);
+					
+					logger.info("Update mentions/shares.");
 					synchronized(usersMentionsMap) {
 						for(Entry<String, Integer> e : usersMentionsMap.entrySet()) {
 							streamUserDAO.incStreamUserValue(e.getKey(), "mentions", e.getValue());
@@ -419,7 +422,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 						webpagesSharesMap.clear();
 					}
 					
-					Thread.sleep(10*60*1000);
 				} catch (InterruptedException e) {
 					continue;
 				}

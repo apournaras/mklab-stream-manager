@@ -276,13 +276,14 @@ public class StoreManager implements StreamHandler {
 					String storageId = storage.getStorageName();
 					Boolean status = store.checkStatus(storage);
 					
-					logger.info(storageId + " is working: " + status);
 					
 					if(!status && storeManager.getWorkingDataBases().get(storageId)){     //was working and now is not responding
+						logger.info(storageId + " was working and now is not responding");
 						storeManager.updateDataBasesStatus(storageId, status);
 						storeManager.eliminateStorage(storage);
 					}
 					else if(status && !storeManager.getWorkingDataBases().get(storageId)){//was not working and now is working
+						logger.info(storageId + " was not working and now is working");
 						storeManager.updateDataBasesStatus(storageId, status);
 						storeManager.restoreStorage(storage);
 					}
