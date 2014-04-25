@@ -5,26 +5,38 @@
                     <![CDATA[3600]]>
             </Parameter>
     </RequestPeriod>
+    
     <Storages>
             <!-- Mongodb storage configuaration  -->
             <Storage id="Mongodb">
                     <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.MongoDbStorage]]></Parameter>
-                    <Parameter name="mongodb.host"><![CDATA[your.ip]]></Parameter>
+                    <Parameter name="mongodb.host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
                     <Parameter name="mongodb.private.host"><![CDATA[your.ip]]></Parameter>
-                    <Parameter name="mongodb.database"><![CDATA[name.of.your.database]]></Parameter>
+                    <Parameter name="mongodb.database"><![CDATA[Katerina]]></Parameter>
                    
-                   <!-- In case you want to create separate databases for each collection - comment the database field above -->
-<!--                <Parameter name="mongodb.items.database"><![CDATA[name.of.your.database]]></Parameter>
+                   	<!-- In case you want to create separate databases for each collection - comment the database field above -->
+					<!--                
+					<Parameter name="mongodb.items.database"><![CDATA[name.of.your.database]]></Parameter>
           			<Parameter name="mongodb.mediaitems.database"><![CDATA[name.of.your.database]]></Parameter>
                     <Parameter name="mongodb.streamusers.database"><![CDATA[name.of.your.database]]></Parameter>
-                     <Parameter name="mongodb.webpages.database"><![CDATA[name.of.your.database]]></Parameter> -->
+                   	<Parameter name="mongodb.webpages.database"><![CDATA[name.of.your.database]]></Parameter> 
+                   	-->
                     
-                    <Parameter name="mongodb.items.collection"><![CDATA[collection.three]]></Parameter>
-                    <Parameter name="mongodb.mediaitems.collection"><![CDATA[collection.four]]></Parameter>
-                    <Parameter name="mongodb.streamusers.collection"><![CDATA[collection.five]]></Parameter>
-                    <Parameter name="mongodb.webpages.collection"><![CDATA[collection.six]]></Parameter>
+                    <Parameter name="mongodb.items.collection"><![CDATA[Items]]></Parameter>
+                    <Parameter name="mongodb.mediaitems.collection"><![CDATA[MediaItems]]></Parameter>
+                    <Parameter name="mongodb.mediashares.collection"><![CDATA[MediaShares]]></Parameter>
+                    <Parameter name="mongodb.streamusers.collection"><![CDATA[StreamUsers]]></Parameter>
+                    <Parameter name="mongodb.webpages.collection"><![CDATA[WebPages]]></Parameter>
                     
             </Storage>
+            
+        	<!--  Redia storage configuaration  -->
+           	<Storage id="Redis">
+                    <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.RedisStorage]]></Parameter>
+                    <Parameter name="redis.host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
+                    <Parameter name="redis.webpages.channel"><![CDATA[webpagesLocal]]></Parameter>
+                    <Parameter name="redis.media.channel"><![CDATA[mediaLocal]]></Parameter>
+            </Storage> 
             
             
             <!--  Stdout storage configuaration  
@@ -33,7 +45,7 @@
             </Storage> 
             -->
             
-            <!--Solr storage configuaration  -->
+            <!--Solr storage configuaration  
             <Storage id="Solr">
                     <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.SolrStorage]]></Parameter>
                     <Parameter name="solr.hostname"><![CDATA[your.ip]]></Parameter>
@@ -41,43 +53,80 @@
                     <Parameter name="solr.items.collection"><![CDATA[collection.two]]></Parameter>
                     <Parameter name="solr.mediaitems.collection"><![CDATA[collection.two]]></Parameter>
             </Storage>
+   			-->
    
             <!--  Lucene storage configuaration 
             <Storage id="Lucene">
                     <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.LuceneStorage]]></Parameter>
-                    
             </Storage>
             -->
             
     </Storages>
+    
+   	<Filters>
+            <!-- Filter that discards Items with short text -->
+            <Filter id="LengthFilter">
+                    <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.filters.LengthItemFilter]]></Parameter>
+                    <Parameter name="length"><![CDATA[10]]></Parameter>
+            </Filter>
+             
+             
+          	<!-- Filter that discards Items that mention users of a list  -->
+            <Filter id="MentionsFilter">
+                    <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.filters.MentionsItemFilter]]></Parameter>
+                    <Parameter name="listId"><![CDATA[2]]></Parameter>
+                   	<Parameter name="host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
+	   				<Parameter name="database"><![CDATA[Prototype]]></Parameter>
+	   				<Parameter name="collection"><![CDATA[Sources]]></Parameter>
+            </Filter>
+           
+  	</Filters>
+            
+       <!--   -->
+	<Subscribers>
+		<Subscriber id ="Twitter">
+			<Parameter name="Classpath">
+				<![CDATA[eu.socialsensor.framework.streams.socialmedia.twitter.TwitterStream]]>
+			</Parameter>
+            <Parameter name="Key">
+				<![CDATA[]]>
+			</Parameter>
+	        <Parameter name="Secret">
+	        	<![CDATA[]]>
+	       	</Parameter>
+        	<Parameter name="AccessToken">
+	        	<![CDATA[]]>
+	       	</Parameter>
+        	<Parameter name="AccessTokenSecret">
+	        	<![CDATA[]]>
+	       	</Parameter>
+		</Subscriber>
+	</Subscribers>
+              
+                
+	<Streams>
         
-        <Streams>
-        
-                <!--  Facebook Stream Handler  
+   		<!--  Facebook Stream Handler   
         <Stream id="Facebook">
-                        <Parameter name="Classpath">
-                                <![CDATA[eu.socialsensor.framework.streams.socialmedia.facebook.FacebookStream]]>
-                        </Parameter>
-                        <Parameter name="AccessToken">
-                                <![CDATA[your.accesstoken]]>
-                        </Parameter>
-                <Parameter name="since">
-                        <![CDATA[2013-10-31 00:00:00.000]]>
-                      </Parameter>
+        	<Parameter name="Classpath">
+           		<![CDATA[eu.socialsensor.framework.streams.socialmedia.facebook.FacebookStream]]>
+          	</Parameter>
+        	<Parameter name="AccessToken">
+             	<![CDATA[]]>
+        	</Parameter>
+     		<Parameter name="since">
+            	<![CDATA[2013-10-31 00:00:00.000]]>
+         	</Parameter>
                       <Parameter name="maxResults">
-                                <![CDATA[10]]>
+                                <![CDATA[10000]]>
                         </Parameter>
                         <Parameter name="maxRequests">
-                                <![CDATA[5]]>
+                                <![CDATA[300]]>
                         </Parameter>
-                        <Parameter name="feedsSeedlist">
-                        <![CDATA[./conf/facebook_feeds.txt]]>
-                </Parameter>
-               
                 </Stream>
-                -->
+               -->
                 
-                <!-- Twitter Stream Handler -->
+                <!-- Twitter Stream Handler 
                 <Stream id="Twitter">
                         <Parameter name="Classpath">
                                 <![CDATA[eu.socialsensor.framework.streams.socialmedia.twitter.TwitterStream]]>
@@ -101,6 +150,7 @@
                                 <![CDATA[1]]>
                         </Parameter>
                 </Stream>
+        		-->
         
                 <!-- YouTube Handler 
                 <Stream id="YouTube">
@@ -229,5 +279,7 @@
                         
                 </Stream> 
         -->
+        
         </Streams>
+        
 </Configuration>

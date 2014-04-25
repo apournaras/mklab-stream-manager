@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
+		<!--  -->
 	   <StorageInput>
 	   		<Storage id = "Mongodb">
-	   			<Parameter name="host"><![CDATA[your.ip]]></Parameter>
-	   			<Parameter name="database"><![CDATA[your.database]]></Parameter>
-	   			<Parameter name="collection"><![CDATA[your.collection]]></Parameter>
+	   			<Parameter name="host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
+	   			<Parameter name="database"><![CDATA[Prototype]]></Parameter>
+	   			<Parameter name="collection"><![CDATA[Sources]]></Parameter>
 	   		</Storage>
 	   </StorageInput>
 	   
-	   <!-- <StreamInput>
+	   
+	   <StreamInput>
+	   		<!-- 
 	   		<Stream id="Facebook">
 		        <Parameter name="since">
 		        	<![CDATA[2013-10-31 00:00:00.000]]>
 		      	</Parameter>
 		        <Parameter name="keywords">
-		        	<![CDATA[rihanna]]>
+		        	<![CDATA[]]>
 		      	</Parameter>
 		      	<Parameter name="follows">
 	        		<![CDATA[]]>
@@ -23,13 +26,15 @@
 	        		<![CDATA[]]>
 	        	</Parameter>
 			</Stream>
+			-->
 			
+			<!--  
 			<Stream id="Twitter">
 				<Parameter name="since">
 		        	<![CDATA[2013-10-31 00:00:00.000]]>
 		      	</Parameter>
 		       	<Parameter name="keywords">
-		        	<![CDATA[rihanna]]>
+		        	<![CDATA[]]>
 		        </Parameter>
 	            <Parameter name="follows">
 		        	<![CDATA[]]>
@@ -38,7 +43,9 @@
 		        	<![CDATA[]]>
 		        </Parameter>
 			</Stream>
+			-->
 				
+			<!--
 			<Stream id="YouTube">
 				<Parameter name="since">
 		        	<![CDATA[2013-10-31 00:00:00.000]]>
@@ -113,9 +120,10 @@
 		        	<![CDATA[]]>
 		        </Parameter>
 			</Stream> 
+	   		-->
 	   		
 	   </StreamInput>
-   		 -->
+   		 
    	
 </Configuration>
 
