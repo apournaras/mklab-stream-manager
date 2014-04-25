@@ -2,10 +2,11 @@ package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
+
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.MediaItem;
 import eu.socialsensor.framework.common.domain.WebPage;
@@ -24,12 +25,16 @@ public class RedisStorage implements StreamUpdateStorage {
 	private static String MEDIA_CHANNEL = "redis.media.channel";
 	private static String ITEMS_CHANNEL = "redis.items.channel";
 	
+	private Logger  logger = Logger.getLogger(MongoDbStorage.class);
+	
 	private Jedis publisherJedis;
 	private String host;
 	
 	private String itemsChannel = null;
 	private String webPagesChannel = null;
 	private String mediaItemsChannel = null;
+	
+	private long items = 0, mItems = 0, wPages = 0;
 	
 	private String storageName = "Redis";
 	
@@ -61,20 +66,23 @@ public class RedisStorage implements StreamUpdateStorage {
 		
 		if(item.isOriginal()) { 	
 			if(itemsChannel != null) {
+				items++;
 				publisherJedis.publish(itemsChannel, item.toJSONString());
 			}
 		
 			if(mediaItemsChannel != null) {
 				for(MediaItem mediaItem : item.getMediaItems()) {
+					mItems++;
 					publisherJedis.publish(mediaItemsChannel, mediaItem.toJSONString());
 				}
 			}
 		
 			if(webPagesChannel != null) {
 				for(WebPage webPage : item.getWebPages()) {
+					wPages++;
 					publisherJedis.publish(webPagesChannel, webPage.toJSONString());
 				}
-			}	
+			}
 		}
 	}
 	
@@ -103,6 +111,8 @@ public class RedisStorage implements StreamUpdateStorage {
 	@Override
 	public boolean checkStatus(StreamUpdateStorage storage) {
 		try {
+			logger.info("Redis sent " + items + " items, " + mItems + " media items and " + wPages + " web pages!");
+			
 			publisherJedis.info();
 			boolean connected = publisherJedis.isConnected();
 			if(!connected) {
