@@ -174,17 +174,7 @@ public class MediaSearcher {
         }).start();
 		
 		state = MediaSearcherState.OPEN;
-		
-		//Code to be removed
-		
-		String dyscoId = "efa3bb3c-9247-4bd9-be49-440615c754df";
-    	Action action = Action.NEW;
-    	SolrDyscoHandler testSolrdyscoHandler = SolrDyscoHandler.getInstance(solrHost+"/"+solrService+"/"+dyscoCollection);;
-    	Dysco dysco = testSolrdyscoHandler.findDyscoLight(dyscoId);
-    	
-    	requests.add(dysco);
-    	
-    	//Code to be removed
+	
     	
 		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
 		
@@ -674,6 +664,7 @@ public class MediaSearcher {
 	    }
 	    
 	    public void close(){
+	    	logger.info("Closing redis..");
 	    	subscriberJedis.quit();
 	    }
 	}
