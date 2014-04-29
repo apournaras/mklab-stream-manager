@@ -32,22 +32,26 @@ import eu.socialsensor.framework.streams.StreamError;
 public class StoreManager implements StreamHandler {
 	
 	private MultipleStorages store = null;
+	
 	private Queue<Item> queue = new ArrayDeque<Item>();
 	private StreamsManagerConfiguration config;
-	private Integer numberOfConsumers = 1;
+	private Integer numberOfConsumers = 8;
+	
 	private List<Consumer> consumers;
+	
 	private List<StreamUpdateStorage> workingStorages = new ArrayList<StreamUpdateStorage>();
 	
 	private Map<String, ItemFilter> filtersMap = new HashMap<String, ItemFilter>();
 	
 	private StorageStatusAgent statusAgent;
 	
-	private Map<String,Boolean> workingStatus = new HashMap<String,Boolean>();
+	private Map<String,Boolean> workingStatus = new HashMap<String, Boolean>();
 	private int items = 0;
 	
 	enum StoreManagerState {
 		OPEN, CLOSE
 	}
+	
 	private StoreManagerState state = StoreManagerState.CLOSE;
 	
 	public StoreManager(StreamsManagerConfiguration config) {
@@ -211,7 +215,7 @@ public class StoreManager implements StreamHandler {
 	}
 	
 	private void createFilters() throws StreamException {
-		try{
+		try {
 			for (String filterId : config.getFilterIds()) {
 				
 				FilterConfiguration fconfig = config.getFilterConfig(filterId);
@@ -273,6 +277,12 @@ public class StoreManager implements StreamHandler {
 			
 			while(storeManager.getState().equals(StoreManagerState.OPEN)) {
 				
+				try {
+					Thread.sleep(minuteThreshold);
+				} catch (InterruptedException e) { 
+					logger.error("Exception in StorageStatusAgent. ", e);
+				}
+				
 				for(StreamUpdateStorage storage : workingStorages) {
 					String storageId = storage.getStorageName();
 					Boolean status = store.checkStatus(storage);
@@ -294,17 +304,10 @@ public class StoreManager implements StreamHandler {
 				// Print handle rates
 				long T1 = System.currentTimeMillis();
 				logger.info("Queue size: " + queue.size());
-				logger.info("Handle rate: " + (items-p)/(T1-T) + " items/min");
-				logger.info("Mean handle rate: " + (items)/(T1-T0) + " items/min");
+				logger.info("Handle rate: " + (items-p)/((T1-T)/60000) + " items/min");
+				logger.info("Mean handle rate: " + (items)/((T1-T0)/60000) + " items/min");
 				T = System.currentTimeMillis();
 				p = items;
-				
-				try {
-					Thread.sleep(minuteThreshold);
-				} catch (InterruptedException e) { 
-					logger.error("Exception in StorageStatusAgent. ", e);
-				}
-				
 			}
 		
 		}
