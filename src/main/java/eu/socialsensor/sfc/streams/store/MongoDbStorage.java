@@ -95,6 +95,8 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private long t;
 	
 	private HashMap<String, Integer> usersMentionsMap, usersItemsMap, usersSharesMap, webpagesSharesMap;
+	private HashMap<String, Item> itemsMap;
+	
 	private UpdaterThread updaterThread;
 	
 	public MongoDbStorage(StorageConfiguration config) {	
@@ -116,6 +118,8 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.webPageDbName = config.getParameter(MongoDbStorage.WEBPAGES_DATABASE);
 		this.webPageCollectionName = config.getParameter(MongoDbStorage.WEBPAGES_COLLECTION);
 	
+		this.itemsMap = new HashMap<String, Item>();
+		
 		this.usersMentionsMap = new HashMap<String, Integer>();
 		this.usersItemsMap = new HashMap<String, Integer>();
 		this.usersSharesMap = new HashMap<String, Integer>();
@@ -252,7 +256,10 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		
 		try {
 			// Handle Items
-			if(!itemDAO.exists(item.getId())) {
+			String itemId = item.getId();
+			
+			if(!itemDAO.exists(itemId)) {
+				
 				// Item does not exist in MongoDB. Save it.
 				items++;
 				
@@ -274,6 +281,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 								items = 0;
 							usersItemsMap.put(user.getId(), ++items);
 						}
+						
 						synchronized(usersMentionsMap) {
 							Integer mentions = usersMentionsMap.get(user.getId());
 							if(mentions == null)
@@ -346,7 +354,9 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				}
 			}
 			else {
-				itemDAO.updateItem(item);
+				synchronized(itemsMap) {
+					itemsMap.put(item.getId(), item);
+				}
 			}
 		}
 		catch(MongoException e) {
@@ -405,6 +415,14 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					
 					logger.info("Update mentions/shares.");
 					long t = System.currentTimeMillis();
+					
+					synchronized(itemsMap) {
+						for(Item item : itemsMap.values()) {
+							itemDAO.updateItem(item);
+						}
+						itemsMap.clear();
+					}
+					
 					synchronized(usersMentionsMap) {
 						for(Entry<String, Integer> e : usersMentionsMap.entrySet()) {
 							streamUserDAO.incStreamUserValue(e.getKey(), "mentions", e.getValue());
@@ -432,6 +450,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 						}
 						webpagesSharesMap.clear();
 					}
+					
 					t = System.currentTimeMillis() - t;
 					logger.info("Mongo Updates took " + t + " milliseconds");
 					

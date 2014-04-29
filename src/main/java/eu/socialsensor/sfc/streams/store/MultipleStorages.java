@@ -12,13 +12,13 @@ import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 /**
  * Class for handling store actions for different types of storages
  * (mongoDB, solr, flatfile, redis, lucene ect)
+ * 
  * @author manosetro
  * @email  manosetro@iti.gr
  */
 public class MultipleStorages implements StreamUpdateStorage {
 	
-	List<StreamUpdateStorage> storages = new ArrayList<StreamUpdateStorage>();
-	
+	private List<StreamUpdateStorage> storages = new ArrayList<StreamUpdateStorage>();
 	
 	public MultipleStorages() {
 		
@@ -51,13 +51,14 @@ public class MultipleStorages implements StreamUpdateStorage {
 				}
 				catch(Exception e) {
 					// TODO: remove storages failed to open
+					
 				}
 			}
 		}
 		return true;
 	}
 	
-	public boolean open(StreamUpdateStorage storage){
+	public boolean open(StreamUpdateStorage storage) {
 		return storage.open();
 	}
 	
@@ -90,7 +91,7 @@ public class MultipleStorages implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
+	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException {
 		for(StreamUpdateStorage storage : storages) {
 			if(!storage.deleteItemsOlderThan(dateThreshold)){
 				return false;
@@ -163,7 +164,7 @@ public class MultipleStorages implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public String getStorageName(){
+	public String getStorageName() {
 		return null;
 	}
 }
