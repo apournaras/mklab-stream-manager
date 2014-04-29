@@ -160,13 +160,13 @@ public class MediaSearcher {
 		JedisPoolConfig poolConfig = new JedisPoolConfig();
         JedisPool jedisPool = new JedisPool(poolConfig, redisHost, 6379, 0);
         this.subscriberJedis = jedisPool.getResource();
-        
+     
 		new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                 	logger.info("Try to subscribe to redis");
-                    subscriberJedis.subscribe(dyscoRequestReceiver,CHANNEL);
+                    subscriberJedis.subscribe(dyscoRequestReceiver,config.getParameter(MediaSearcher.CHANNEL));
                    
                 } catch (Exception e) {
                 }
@@ -420,7 +420,7 @@ public class MediaSearcher {
 					long start = System.currentTimeMillis();
 					logger.info("Media Searcher handling #"+dyscoId);
 					List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
-					retrievalDate = feeds.get(0).getDateToRetrieve();
+					retrievalDate = new Date(System.currentTimeMillis());
 					inputFeedsPerDysco.remove(dyscoId);
 					retrievedItems = searcher.search(feeds,primaryStreamsToSearch);
 					List<Query> queries = queryBuilder.getFurtherProcessedSolrQueries(retrievedItems,5);
@@ -500,9 +500,10 @@ public class MediaSearcher {
 					continue;
 				}
 				else{
+					System.out.println("Try to create feeds for dysco : "+ receivedDysco.getId());
 					feedsCreator = new FeedsCreator(DataInputType.DYSCO,receivedDysco);
 					feeds = feedsCreator.getQuery();
-					
+					System.out.println("Feeds for dysco : "+ feeds.size());
 					if(receivedDysco.getDyscoType().equals(DyscoType.TRENDING)){
 						trendingSearchHandler.addTrendingDysco(receivedDysco.getId(), feeds);
 					}
