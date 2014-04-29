@@ -124,7 +124,7 @@ public class StoreManager implements StreamHandler {
 	public void start() {
 		
 		for(int i=0;i<numberOfConsumers;i++)
-			consumers.add(new Consumer(queue, store));
+			consumers.add(new Consumer(queue, store, filtersMap.values()));
 		
 		for(Consumer consumer : consumers)
 			consumer.start();
@@ -141,17 +141,10 @@ public class StoreManager implements StreamHandler {
 	
 	@Override
 	public void update(Item item) {
-		
-		for(ItemFilter filter : filtersMap.values()) {
-			if(!filter.accept(item))
-				return;
-		}
-		
 		synchronized(queue) {
 			items++;
 			queue.add(item);
 		}	
-	
 	}
 
 	@Override
@@ -260,7 +253,8 @@ public class StoreManager implements StreamHandler {
 	}
 	
 	public class StorageStatusAgent extends Thread {
-		private long minuteThreshold = 60000;
+		// Runs every two minutes by default
+		private long minuteThreshold = 2 * 60000;
 		
 		private StoreManager storeManager;
 		
@@ -306,6 +300,7 @@ public class StoreManager implements StreamHandler {
 				logger.info("Queue size: " + queue.size());
 				logger.info("Handle rate: " + (items-p)/((T1-T)/60000) + " items/min");
 				logger.info("Mean handle rate: " + (items)/((T1-T0)/60000) + " items/min");
+				logger.info("============================================================");
 				T = System.currentTimeMillis();
 				p = items;
 			}

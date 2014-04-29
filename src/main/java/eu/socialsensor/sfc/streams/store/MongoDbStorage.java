@@ -91,7 +91,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private StreamUserDAO streamUserDAO = null;
 	private WebPageDAO webPageDAO = null;
 	
-	private Integer items = 0, pItems = 0, mediaItems = 0, wPages = 0;
+	private Integer items = 0, pItems = 0, mediaItems = 0, wPages = 0, users = 0;
 	private long t;
 	
 	private HashMap<String, Integer> usersMentionsMap, usersItemsMap, usersSharesMap, webpagesSharesMap;
@@ -258,7 +258,12 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			// Handle Items
 			String itemId = item.getId();
 			
-			if(!itemDAO.exists(itemId)) {
+			boolean itemExists = false;
+			synchronized(itemsMap) {
+				itemExists = itemsMap.containsKey(itemId) || itemDAO.exists(itemId);
+			}
+			
+			if(!itemExists) {
 				
 				// Item does not exist in MongoDB. Save it.
 				items++;
@@ -269,8 +274,14 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				// Handle Stream Users
 				StreamUser user = item.getStreamUser();
 				if(user != null) {
-					if(!streamUserDAO.exists(user.getId())) {
+					String userId = user.getId();
+					boolean userExists = false;
+					synchronized(usersItemsMap) {
+						userExists = usersItemsMap.containsKey(userId) || streamUserDAO.exists(userId);
+					}
+					if(!userExists) {
 						// save stream user
+						users++;
 						streamUserDAO.insertStreamUser(user);
 					}
 					else {
@@ -379,7 +390,8 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	@Override
 	public boolean checkStatus(StreamUpdateStorage storage) {
 		try {
-			logger.info(items + " items, " + mediaItems + " media items and " + wPages + " web pages stored in mongodb");
+			logger.info(items + " items, " + mediaItems + " media items " + users + " stream users and " 
+					+ wPages + " web pages stored in mongodb");
 			logger.info("Mongo I/O rate: " + (items-pItems)/((System.currentTimeMillis()-t)/60000) + " items/min");
 			pItems = items;
 			t = System.currentTimeMillis();
@@ -394,7 +406,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
+	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException {
 		return true;
 	}
 	
@@ -413,10 +425,11 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				try {
 					Thread.sleep(10 * 60 * 1000);
 					
-					logger.info("Update mentions/shares.");
+					logger.info("Update: ");
 					long t = System.currentTimeMillis();
 					
 					synchronized(itemsMap) {
+						logger.info(itemsMap.size() + " items");
 						for(Item item : itemsMap.values()) {
 							itemDAO.updateItem(item);
 						}
@@ -424,6 +437,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					}
 					
 					synchronized(usersMentionsMap) {
+						logger.info(usersMentionsMap.size() + " mentioned user");
 						for(Entry<String, Integer> e : usersMentionsMap.entrySet()) {
 							streamUserDAO.incStreamUserValue(e.getKey(), "mentions", e.getValue());
 						}
@@ -431,6 +445,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					}
 					
 					synchronized(usersSharesMap) {
+						logger.info(usersSharesMap.size() + " user shares");
 						for(Entry<String, Integer> e : usersSharesMap.entrySet()) {
 							streamUserDAO.incStreamUserValue(e.getKey(), "shares", e.getValue());
 						}
@@ -438,6 +453,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					}
 
 					synchronized(usersItemsMap) {
+						logger.info(usersItemsMap.size() + " user");
 						for(Entry<String, Integer> e : usersItemsMap.entrySet()) {
 							streamUserDAO.incStreamUserValue(e.getKey(), "items", e.getValue());
 						}
@@ -445,6 +461,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					}
 
 					synchronized(webpagesSharesMap) {
+						logger.info(webpagesSharesMap.size() + " web pages");
 						for(Entry<String, Integer> e : webpagesSharesMap.entrySet()) {
 							webPageDAO.updateWebPageShares(e.getKey(), e.getValue());
 						}

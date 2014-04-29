@@ -36,6 +36,7 @@ public class TagsItemFilter extends ItemFilter {
 		}
 		
 		if(tags.length > maxTags) {
+			System.out.println("Item " + item.getId() + " is possible spam due to hastags number (" + tags.length + ")");
 			return false;
 		}
 		

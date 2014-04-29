@@ -14,14 +14,14 @@ import eu.socialsensor.sfc.streams.FilterConfiguration;
  */
 public class UrlItemFilter extends ItemFilter {
 
-	private int maxUrl = 4;
+	private int maxUrls = 4;
 
 	public UrlItemFilter(FilterConfiguration configuration) {
 		super(configuration);
-		String lenStr =configuration.getParameter("maxUrl", "4");
-		this.maxUrl  = Integer.parseInt(lenStr);
+		String lenStr =configuration.getParameter("maxUrls", "4");
+		this.maxUrls  = Integer.parseInt(lenStr);
 		
-		System.out.println("Max Number of URLs: " + maxUrl);
+		System.out.println("Max Number of URLs: " + maxUrls);
 	}
 	
 	@Override
@@ -35,7 +35,8 @@ public class UrlItemFilter extends ItemFilter {
 			return true;
 		}
 		
-		if(urls.length > maxUrl) {
+		if(urls.length > maxUrls) {
+			System.out.println("Item " + item.getId() + " is possible spam due to URLs number (" + urls.length + ")");
 			return false;
 		}
 		

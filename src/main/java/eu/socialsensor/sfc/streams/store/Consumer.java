@@ -1,10 +1,12 @@
 package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Queue;
 
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.Item.Operation;
+import eu.socialsensor.sfc.streams.filters.ItemFilter;
 
 /**
  * Class for storing items to databases
@@ -21,9 +23,12 @@ public class Consumer extends Thread {
 	private StreamUpdateStorage store = null;
 	private Queue<Item> queue;
 	
-	public Consumer(Queue<Item> queue,StreamUpdateStorage store){
+	private Collection<ItemFilter> filters;
+	
+	public Consumer(Queue<Item> queue, StreamUpdateStorage store, Collection<ItemFilter> filters){
 		this.store = store;
 		this.queue = queue;
+		this.filters = filters;
 	}
 	
 	/**
@@ -39,7 +44,7 @@ public class Consumer extends Thread {
 						Thread.sleep(100);
 					} catch (InterruptedException e) { }
 					continue;
-				}else {
+				} else {
 					dump(item);
 				}
 
@@ -68,10 +73,13 @@ public class Consumer extends Thread {
 	private void dump(Item item) throws IOException {
 		//dump update to store
 		if (store != null) {
+			for(ItemFilter filter : filters) {
+				if(!filter.accept(item))
+					return;
+			}
+			
 			if (item.getOperation() == Operation.NEW) {
-				
 				store.store(item);
-				
 			} 
 			else if (item.getOperation() == Operation.UPDATE) {
 				store.update(item);
@@ -93,16 +101,6 @@ public class Consumer extends Thread {
 		synchronized (queue) {					
 			Item item = queue.poll();	
 			return item;
-		}
-	}
-	
-	/**
-	 * Adds an item to the queue in order to be stored
-	 * @param item
-	 */
-	public synchronized void update(Item item) {
-		synchronized(queue) {
-			queue.add(item);
 		}
 	}
 	
