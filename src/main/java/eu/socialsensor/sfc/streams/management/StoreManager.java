@@ -119,9 +119,6 @@ public class StoreManager implements StreamHandler {
 	 */
 	public void start() {
 		
-		Thread thread = new Thread(new Statistics());
-		thread.start();
-		
 		for(int i=0;i<numberOfConsumers;i++)
 			consumers.add(new Consumer(queue, store));
 		
@@ -270,37 +267,52 @@ public class StoreManager implements StreamHandler {
 		}
 		
 		public void run() {
-			while(storeManager.getState().equals(StoreManagerState.OPEN)){
+			int p = items;
+			long T0 = System.currentTimeMillis();
+			long T = System.currentTimeMillis();
+			
+			while(storeManager.getState().equals(StoreManagerState.OPEN)) {
 				
 				for(StreamUpdateStorage storage : workingStorages) {
 					String storageId = storage.getStorageName();
 					Boolean status = store.checkStatus(storage);
 					
-					
-					if(!status && storeManager.getWorkingDataBases().get(storageId)){     //was working and now is not responding
+					if(!status && storeManager.getWorkingDataBases().get(storageId)){     
+						//was working and now is not responding
 						logger.info(storageId + " was working and now is not responding");
 						storeManager.updateDataBasesStatus(storageId, status);
 						storeManager.eliminateStorage(storage);
 					}
-					else if(status && !storeManager.getWorkingDataBases().get(storageId)){//was not working and now is working
+					else if(status && !storeManager.getWorkingDataBases().get(storageId)){
+						//was not working and now is working
 						logger.info(storageId + " was not working and now is working");
 						storeManager.updateDataBasesStatus(storageId, status);
 						storeManager.restoreStorage(storage);
 					}
 				}
+				
+				// Print handle rates
+				long T1 = System.currentTimeMillis();
+				logger.info("Queue size: " + queue.size());
+				logger.info("Handle rate: " + (items-p)/(T1-T) + " items/min");
+				logger.info("Mean handle rate: " + (items)/(T1-T0) + " items/min");
+				T = System.currentTimeMillis();
+				p = items;
+				
 				try {
 					Thread.sleep(minuteThreshold);
-				} catch (InterruptedException e) {
-					
+				} catch (InterruptedException e) { 
+					logger.error("Exception in StorageStatusAgent. ", e);
 				}
+				
 			}
 		
 		}
 		
 	}
 	
+	/*
 	private class Statistics implements Runnable {
-		
 		@Override
 		public void run() {
 			int p = items, t = 0;
@@ -320,4 +332,6 @@ public class StoreManager implements StreamHandler {
 		}
 		
 	}
+	*/
+	
 }
