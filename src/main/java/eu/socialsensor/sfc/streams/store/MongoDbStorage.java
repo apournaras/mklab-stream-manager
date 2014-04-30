@@ -479,6 +479,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		}
 		
 		public void stopThread() {
+			logger.info("Stop UpdaterThread.");
 			this.stop = true;
 			this.interrupt();
 		}

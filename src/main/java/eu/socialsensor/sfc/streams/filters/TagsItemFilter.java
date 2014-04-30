@@ -1,6 +1,6 @@
 package eu.socialsensor.sfc.streams.filters;
 
-import java.net.URL;
+import org.apache.commons.lang.StringUtils;
 
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.sfc.streams.FilterConfiguration;
@@ -36,7 +36,6 @@ public class TagsItemFilter extends ItemFilter {
 		}
 		
 		if(tags.length > maxTags) {
-			System.out.println("Item " + item.getId() + " is possible spam due to hastags number (" + tags.length + ")");
 			return false;
 		}
 		
