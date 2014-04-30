@@ -55,7 +55,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private static String WEBPAGES_DATABASE = "mongodb.webpages.database";
 	private static String WEBPAGES_COLLECTION = "mongodb.webpages.collection";
 	
-	private Logger  logger = Logger.getLogger(MongoDbStorage.class);
+	private Logger logger = Logger.getLogger(MongoDbStorage.class);
 	
 	/**
 	 * @param args
@@ -401,6 +401,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			return handler.checkConnection(host);
 		} catch (Exception e) {
 			e.printStackTrace();
+			logger.error(e);
 			return false;
 		}
 	}
@@ -470,18 +471,28 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					
 					t = System.currentTimeMillis() - t;
 					logger.info("Mongo Updates took " + t + " milliseconds");
+					logger.info("======================================");
 					
 				} catch (Exception e) {
-					logger.error("Exception in mongo updater thread. ", e);
+					if(stop) {
+						logger.info("Mongo updater thread interrupted from sleep to stop");
+					}
+					else {
+						logger.error("Exception in mongo updater thread. ", e);
+					}
 					continue;
 				}
 			}
 		}
 		
 		public void stopThread() {
-			logger.info("Stop UpdaterThread.");
 			this.stop = true;
-			this.interrupt();
+			try {
+				this.interrupt();
+			}
+			catch(Exception e) {
+				logger.error(e);
+			}
 		}
 	}
 }

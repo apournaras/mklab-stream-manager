@@ -5,6 +5,8 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
@@ -19,6 +21,7 @@ import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 public class MultipleStorages implements StreamUpdateStorage {
 	
 	private List<StreamUpdateStorage> storages = new ArrayList<StreamUpdateStorage>();
+	private Logger logger = Logger.getLogger(MultipleStorages.class);
 	
 	public MultipleStorages() {
 		
@@ -35,6 +38,7 @@ public class MultipleStorages implements StreamUpdateStorage {
 				storage_instance = (StreamUpdateStorage) constructor.newInstance(storage_config);
 				
 			} catch (Exception e) {
+				logger.error(e);
 				return;
 			}
 			
@@ -51,7 +55,7 @@ public class MultipleStorages implements StreamUpdateStorage {
 				}
 				catch(Exception e) {
 					// TODO: remove storages failed to open
-					
+					logger.error("Error during opening " + storage.getStorageName(), e);
 				}
 			}
 		}
@@ -124,7 +128,8 @@ public class MultipleStorages implements StreamUpdateStorage {
 			try {
 				storage.close();
 			}
-			catch(Exception e){
+			catch(Exception e) {
+				logger.error(e);
 				continue;
 			}
 		}
@@ -132,14 +137,14 @@ public class MultipleStorages implements StreamUpdateStorage {
 	}
 
 	public void register(StreamUpdateStorage storage) {
-		System.out.println("Register storage "+storage.getStorageName());
+		logger.info("Register storage "+storage.getStorageName());
 		synchronized(storages) {
 			storages.add(storage);
 		}
 	}
 	
 	public void remove(StreamUpdateStorage storage){
-		System.out.println("Remove storage "+storage.getStorageName());
+		logger.info("Remove storage "+storage.getStorageName());
 		synchronized(storages) {
 			storages.remove(storage);
 		}

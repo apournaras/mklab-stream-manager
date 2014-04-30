@@ -55,6 +55,8 @@ public class RedisStorage implements StreamUpdateStorage {
 			return true;
 		}
 		catch(Exception e) {
+			logger.error("Error during opening.", e);
+			
 			return false;
 		}
 	}
@@ -93,6 +95,7 @@ public class RedisStorage implements StreamUpdateStorage {
 	
 	@Override
 	public boolean delete(String id) throws IOException {
+		// Not supported.
 		return false;
 	}
 	
@@ -121,6 +124,7 @@ public class RedisStorage implements StreamUpdateStorage {
 			return connected;
 		}
 		catch(Exception e) {
+			logger.error(e);
 			return reconnect();
 		}
 	}
@@ -131,7 +135,9 @@ public class RedisStorage implements StreamUpdateStorage {
 				publisherJedis.disconnect();
 			}
 		}
-		catch(Exception e) { }
+		catch(Exception e) { 
+			logger.error(e);
+		}
 		try {
 			JedisPoolConfig poolConfig = new JedisPoolConfig();
         	JedisPool jedisPool = new JedisPool(poolConfig, host, 6379, 0);
@@ -141,6 +147,7 @@ public class RedisStorage implements StreamUpdateStorage {
         	return publisherJedis.isConnected();
 		}
 		catch(Exception e) {
+			logger.error(e);
 			return false;
 		}
 
@@ -148,7 +155,7 @@ public class RedisStorage implements StreamUpdateStorage {
 	
 	@Override
 	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
-	
+		// Not supported
 		return true;
 	}
 	
