@@ -8,8 +8,8 @@ import java.net.ServerSocket;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.xml.sax.SAXException;
-
 
 import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.sfc.builder.InputConfiguration;
@@ -25,13 +25,16 @@ import eu.socialsensor.sfc.streams.management.StreamsManager;
  */
 public class StreamCollector {
 
-	public static void main(String[] args) {
 	
+	
+	public static void main(String[] args) {
+		
+		if(new File("log4j.properties").exists()) 
+			PropertyConfigurator.configure("log4j.properties");
+
 		Logger logger = Logger.getLogger(StreamCollector.class);
 		
-		File streamConfigFile;
-		File inputConfigFile;
-		
+		File streamConfigFile, inputConfigFile;
 		if(args.length != 2 ) {
 			streamConfigFile = new File("./conf/streams.conf.xml");
 			inputConfigFile = new File("./conf/input.conf.xml");
@@ -41,40 +44,50 @@ public class StreamCollector {
 			inputConfigFile = new File(args[1]);
 		}
 		
+		StreamsManager manager = null;
 		try {
 			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(streamConfigFile);		
 			InputConfiguration input_config = InputConfiguration.readFromFile(inputConfigFile);		
 	        
-			StreamsManager manager = new StreamsManager(config,input_config);
+			manager = new StreamsManager(config, input_config);
 			manager.open();
 			
 			waiting();
 			
+		} catch (ParserConfigurationException e) {
+			logger.error(e);
+		} catch (SAXException e) {
+			logger.error(e);
+		} catch (IOException e) {
+			logger.error(e);
+		} catch (StreamException e) {
+			logger.error(e);
+		} catch (Exception e) {
+			logger.error(e);
+		}
+		finally {
 			//close manager
 			logger.info("Close Stream manager.");
-			manager.close();
-			
-		} catch (ParserConfigurationException e) {
-			logger.error(e.getMessage());
-		} catch (SAXException e) {
-			logger.error(e.getMessage());
-		} catch (IOException e) {
-			logger.error(e.getMessage());
-		} catch (StreamException e) {
-			logger.error(e.getMessage());
+			if(manager != null)
+				try {
+					manager.close();
+				} catch (StreamException e) {
+					logger.error(e);
+				}
 		}
 		
 	}
 	
-	private static void waiting() {
+	private static void waiting() throws Exception {
 		try {
 			InetAddress inet = InetAddress.getByName(null);
 			ServerSocket shutdownSocket = new ServerSocket(11111, 0, inet);
 			shutdownSocket.accept();
 			
 			shutdownSocket.close();
-		} catch (IOException e1) {
-			System.out.println("Problems connecting to shutdown port");
-		}
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new Exception(e);
+		} 
 	}
 }
