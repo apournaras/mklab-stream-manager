@@ -3,6 +3,8 @@ package eu.socialsensor.sfc.streams.filters;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import eu.socialsensor.framework.client.dao.SourceDAO;
 import eu.socialsensor.framework.client.dao.impl.SourceDAOImpl;
 import eu.socialsensor.framework.common.domain.Item;
@@ -29,8 +31,9 @@ public class MentionsItemFilter extends ItemFilter {
 		for(Source source : sources) {
 			ids.add(source.getStreamId() + "#" + source.getId());
 		}
-		System.out.println(ids.size() + " ids from list " + listId 
-				+ " to be used in mentions filter");
+		
+		Logger.getLogger(MentionsItemFilter.class).info("Initialized. " + 
+				ids.size() + " ids from list " + listId + " to be used in mentions filter");
 		}
 		catch(Exception e) {
 			e.printStackTrace();

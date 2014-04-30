@@ -1,5 +1,7 @@
 package eu.socialsensor.sfc.streams.filters;
 
+import org.apache.log4j.Logger;
+
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.sfc.streams.FilterConfiguration;
 
@@ -12,7 +14,7 @@ public class LengthItemFilter extends ItemFilter {
 		String lenStr =configuration.getParameter("length", "10");
 		this.minTextLenth  = Integer.parseInt(lenStr);
 		
-		System.out.println("Min Text Lenth: " + minTextLenth);
+		Logger.getLogger(LengthItemFilter.class).info("Initialized. Min Text Lenth: " + minTextLenth);
 	}
 	
 	@Override

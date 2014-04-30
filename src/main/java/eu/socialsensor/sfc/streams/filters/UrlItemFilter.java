@@ -2,6 +2,8 @@ package eu.socialsensor.sfc.streams.filters;
 
 import java.net.URL;
 
+import org.apache.log4j.Logger;
+
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.sfc.streams.FilterConfiguration;
 
@@ -21,7 +23,7 @@ public class UrlItemFilter extends ItemFilter {
 		String lenStr =configuration.getParameter("maxUrls", "4");
 		this.maxUrls  = Integer.parseInt(lenStr);
 		
-		System.out.println("Max Number of URLs: " + maxUrls);
+		Logger.getLogger(UrlItemFilter.class).info("Initialized. Max Number of URLs: " + maxUrls);
 	}
 	
 	@Override
