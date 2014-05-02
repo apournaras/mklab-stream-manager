@@ -77,7 +77,7 @@ public class NewsAggregator {
 		
 		try {
 			//Start store Manager 
-			storeManager = new StoreManager(config, numberOfConsumers);
+			storeManager = new StoreManager(config);
 			storeManager.start();	
 			logger.info("Store Manager is ready to store.");
 

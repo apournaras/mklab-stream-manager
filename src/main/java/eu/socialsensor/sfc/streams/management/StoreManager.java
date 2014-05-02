@@ -2,12 +2,12 @@ package eu.socialsensor.sfc.streams.management;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.streams.StreamException;
@@ -33,9 +33,10 @@ public class StoreManager implements StreamHandler {
 	
 	private MultipleStorages store = null;
 	
-	private Queue<Item> queue = new ArrayDeque<Item>();
+	private BlockingQueue<Item> queue = new LinkedBlockingDeque<Item>(500);
+	
 	private StreamsManagerConfiguration config;
-	private Integer numberOfConsumers = 8;
+	private Integer numberOfConsumers = 4;
 	
 	private List<Consumer> consumers;
 	
@@ -72,25 +73,6 @@ public class StoreManager implements StreamHandler {
 		this.statusAgent = new StorageStatusAgent(this);
 		this.statusAgent.start();
 		
-	}
-	
-	public StoreManager(StreamsManagerConfiguration config, Integer numberOfConsumers) throws IOException {
-	
-		this.config = config;
-		state = StoreManagerState.OPEN;
-		this.numberOfConsumers = numberOfConsumers;
-		consumers = new ArrayList<Consumer>(numberOfConsumers);
-		try {
-			createFilters();
-			logger.info(filtersMap.size() + " filters initialized!");
-			store = initStorage(config);
-		} catch (StreamException e) {
-			e.printStackTrace();
-			return;
-		}
-		
-		this.statusAgent = new StorageStatusAgent(this);
-		this.statusAgent.start();
 	}
 	
 	public Map<String,Boolean> getWorkingDataBases() {
@@ -131,20 +113,19 @@ public class StoreManager implements StreamHandler {
 	}
 	
 	//StreamHandler methods
-	
 	@Override
 	public void error(StreamError error) {
-		System.err.println(error.getMessage());
+		logger.error(error.getException());
 		error.getException().printStackTrace();
 	}
 
 	
 	@Override
 	public void update(Item item) {
-		synchronized(queue) {
+		//synchronized(queue) {
 			items++;
 			queue.add(item);
-		}	
+		//}	
 	}
 
 	@Override
@@ -157,9 +138,9 @@ public class StoreManager implements StreamHandler {
 	
 	@Override
 	public void delete(Item item) {
-		synchronized(queue) {
+		//synchronized(queue) {
 			queue.add(item);
-		}		
+		//}		
 	}
 	
 	
@@ -167,8 +148,7 @@ public class StoreManager implements StreamHandler {
 		try {
 			store.deleteItemsOlderThan(dateThreshold);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e);
 		}
 	}
 	
@@ -195,7 +175,7 @@ public class StoreManager implements StreamHandler {
 				throw new StreamException("Error during storage initialization", e);
 			}
 			
-			if(storage.open(storageInstance)){
+			if(storage.open(storageInstance)) {
 				workingStatus.put(storageId, true);
 				storage.register(storageInstance);
 			}
@@ -220,7 +200,7 @@ public class StoreManager implements StreamHandler {
 			}
 		}catch(Exception e) {
 			e.printStackTrace();
-			throw new StreamException("Error during streams initialization",e);
+			throw new StreamException("Error during streams initialization", e);
 		}
 	}
 	
@@ -235,20 +215,24 @@ public class StoreManager implements StreamHandler {
 		store.close();
 		
 		state = StoreManagerState.CLOSE;
+		
+		do {
+			statusAgent.interrupt();
+		}
+		while(statusAgent.isAlive());
 	}
 	
 	/**
 	 * Re-initializes all databases in case of error response
 	 * @throws StreamException
 	 */
-	public void reset() throws StreamException{
+	public void reset() throws StreamException {
 		System.out.println("Try to connect to server again - Reinitialization.... ");
 		if (this != null) {
 			this.stop();
 		}
 		
 		this.store = initStorage(config);
-		
 		logger.info("Dumper has started - I can store items again!");
 	}
 	
@@ -258,10 +242,9 @@ public class StoreManager implements StreamHandler {
 		
 		private StoreManager storeManager;
 		
-		public StorageStatusAgent(StoreManager storeManager){
+		public StorageStatusAgent(StoreManager storeManager) {
 			this.storeManager = storeManager;
 			logger.info("Status Check Thread initialized");
-			
 		}
 		
 		public void run() {
@@ -273,8 +256,14 @@ public class StoreManager implements StreamHandler {
 				
 				try {
 					Thread.sleep(minuteThreshold);
-				} catch (InterruptedException e) { 
-					logger.error("Exception in StorageStatusAgent. ", e);
+				} catch (InterruptedException e) {
+					if(storeManager.getState().equals(StoreManagerState.CLOSE)) {
+						logger.info("StorageStatusAgent interrupted from sleep to stop.");
+						break;
+					}
+					else {
+						logger.error("Exception in StorageStatusAgent. ", e);
+					}
 				}
 				
 				for(StreamUpdateStorage storage : workingStorages) {
@@ -303,33 +292,16 @@ public class StoreManager implements StreamHandler {
 				logger.info("============================================================");
 				T = System.currentTimeMillis();
 				p = items;
+				
+				// This should never happen
+				if(queue.size() > 500) {
+					//synchronized(queue) {
+						logger.info("Queue size > 500. Clear queue to prevent heap overflow.");
+						queue.clear();
+					//}
+				}
 			}
 		
-		}
-		
+		}	
 	}
-	
-	/*
-	private class Statistics implements Runnable {
-		@Override
-		public void run() {
-			int p = items, t = 0;
-			while(true) {
-				try {
-					Thread.sleep(5 * 60000);
-					logger.info("Queue size: " + queue.size());
-					logger.info("Handle rate: " + (items-p)/5 + " items/min");
-					
-					t +=5;
-					logger.info("Mean handle rate: " + (items)/t + " items/min");
-					p = items;
-					
-				} catch (InterruptedException e) { }
-			}
-			
-		}
-		
-	}
-	*/
-	
 }

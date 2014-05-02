@@ -1,16 +1,11 @@
 package eu.socialsensor.sfc.streams.management;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.log4j.Logger;
-import org.xml.sax.SAXException;
 
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.streams.Stream;
@@ -21,7 +16,6 @@ import eu.socialsensor.sfc.builder.InputConfiguration;
 import eu.socialsensor.sfc.builder.input.DataInputType;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
-
 
 /**
  * Thread-safe class for retrieving content according to 
@@ -48,8 +42,6 @@ public class StreamsManager {
 	private StoreManager storeManager;
 	private StreamsMonitor monitor;
 	private ManagerState state = ManagerState.CLOSE;
-	
-	private int numberOfConsumers = 8; //for multi-threaded items' storage
 
 	private List<Feed> feeds = new ArrayList<Feed>();
 
@@ -72,9 +64,8 @@ public class StreamsManager {
 		if(streams != null && !streams.isEmpty()){
 			monitor = new StreamsMonitor(streams.size());
 		}
-
-		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
 	}
+	
 	/**
 	 * Opens Manager by starting the auxiliary modules and setting up
 	 * the database for reading/storing
@@ -90,7 +81,7 @@ public class StreamsManager {
 		
 		try {
 			//Start store Manager 
-			storeManager = new StoreManager(config, numberOfConsumers);
+			storeManager = new StoreManager(config);
 			storeManager.start();	
 			logger.info("Store Manager is ready to store.");
 			
@@ -150,11 +141,13 @@ public class StreamsManager {
 	public synchronized void close() throws StreamException {
 		
 		if (state == ManagerState.CLOSE) {
+			logger.info("StreamManager is already closed.");
 			return;
 		}
 		
-		try{
+		try {
 			for (Stream stream : streams.values()) {
+				logger.info("Close " + stream);
 				stream.close();
 			}
 			
@@ -163,7 +156,8 @@ public class StreamsManager {
 			}
 			
 			state = ManagerState.CLOSE;
-		}catch(Exception e) {
+		}
+		catch(Exception e) {
 			throw new StreamException("Error during streams close", e);
 		}
 	}
@@ -171,6 +165,7 @@ public class StreamsManager {
 	/**
 	 * Initializes the streams that correspond to the wrappers 
 	 * that are used for multimedia retrieval
+	 * 
 	 * @throws StreamException
 	 */
 	private void initStreams() throws StreamException {
@@ -182,7 +177,7 @@ public class StreamsManager {
 			}
 		}catch(Exception e) {
 			e.printStackTrace();
-			throw new StreamException("Error during streams initialization",e);
+			throw new StreamException("Error during streams initialization", e);
 		}
 	}
 	
@@ -195,69 +190,7 @@ public class StreamsManager {
 			}
 		}catch(Exception e) {
 			e.printStackTrace();
-			throw new StreamException("Error during streams initialization",e);
+			throw new StreamException("Error during Subscribers initialization", e);
 		}
 	}
-	
-	/**
-	 * Class in case system is shutdown 
-	 * Responsible to close all services 
-	 * that are running at the time being
-	 * @author ailiakop
-	 *
-	 */
-	
-	private class Shutdown extends Thread {
-		StreamsManager manager = null;
-
-		public Shutdown(StreamsManager manager) {
-			this.manager = manager;
-		}
-
-		public void run() {
-			System.out.println("Shutting down stream manager...");
-			if (manager != null) {
-				try {
-					manager.close();
-				} catch (StreamException e) {
-					e.printStackTrace();
-				}
-			}
-			System.out.println("Done...");
-		}
-	}
-	
-	public static void main(String[] args) {
-		try {
-			
-			File streamConfigFile;
-			File inputConfigFile;
-			
-			if(args.length != 2 ) {
-				streamConfigFile = new File("./conf/streams.conf.xml");
-				inputConfigFile = new File("./conf/input.conf.xml");
-				
-			}
-			else {
-				streamConfigFile = new File(args[0]);
-				inputConfigFile = new File(args[1]);
-			}
-			
-			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(streamConfigFile);		
-			InputConfiguration input_config = InputConfiguration.readFromFile(inputConfigFile);		
-	        
-			StreamsManager streamsManager = new StreamsManager(config,input_config);
-			streamsManager.open();
-		
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (StreamException e) {
-			e.printStackTrace();
-		}
-	}
-	
 }
