@@ -25,7 +25,7 @@ public class RedisStorage implements StreamUpdateStorage {
 	private static String MEDIA_CHANNEL = "redis.media.channel";
 	private static String ITEMS_CHANNEL = "redis.items.channel";
 	
-	private Logger  logger = Logger.getLogger(MongoDbStorage.class);
+	private Logger  logger = Logger.getLogger(RedisStorage.class);
 	
 	private Jedis publisherJedis;
 	private String host;
@@ -90,7 +90,7 @@ public class RedisStorage implements StreamUpdateStorage {
 	
 	@Override
 	public void update(Item update) throws IOException {
-		
+		// Not supported.
 	}
 	
 	@Override
@@ -103,7 +103,7 @@ public class RedisStorage implements StreamUpdateStorage {
 
 	@Override
 	public void updateTimeslot() {
-		
+		// Not supported.
 	}
 
 	@Override
@@ -115,7 +115,7 @@ public class RedisStorage implements StreamUpdateStorage {
 	public boolean checkStatus(StreamUpdateStorage storage) {
 		try {
 			logger.info("Redis sent " + items + " items, " + mItems + " media items and " + wPages + " web pages!");
-			
+
 			publisherJedis.info();
 			boolean connected = publisherJedis.isConnected();
 			if(!connected) {
