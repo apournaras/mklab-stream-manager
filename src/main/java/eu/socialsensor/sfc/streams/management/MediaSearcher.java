@@ -417,21 +417,7 @@ public class MediaSearcher {
 					continue;
 				}
 				else{
-					long start = System.currentTimeMillis();
-					logger.info("Media Searcher handling #"+dyscoId);
-					List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
-					retrievalDate = new Date(System.currentTimeMillis());
-					inputFeedsPerDysco.remove(dyscoId);
-					retrievedItems = searcher.search(feeds,primaryStreamsToSearch);
-					List<Query> queries = queryBuilder.getFurtherProcessedSolrQueries(retrievedItems,5);
-					dyscosToQueries.put(dyscoId, queries);
-					dyscosToUpdate.add(dyscoId);
-					List<Feed> newFeeds = translateQueriesToKeywordsFeeds(queries,retrievalDate);
-					long end = System.currentTimeMillis();
-					System.out.println("Media Searcher Time : "+(end-start)/1000+" sec ");
-					searcher.search(newFeeds,streams.keySet());
-					long afterEnd = System.currentTimeMillis();
-					System.out.println("Total Time : "+(afterEnd-start)/1000+" sec ");
+					searchForDysco(dyscoId);
 				}
 					
 			}
@@ -447,7 +433,7 @@ public class MediaSearcher {
 					return request;
 				}
 				try {
-					trendingDyscoQueue.wait(1000);
+					trendingDyscoQueue.wait(3000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -455,6 +441,47 @@ public class MediaSearcher {
 				return null;
 			}
 		}
+		
+		private synchronized void searchForDysco(String dyscoId){
+			long start = System.currentTimeMillis();
+			
+			logger.info("Media Searcher handling #"+dyscoId);
+			
+			//first search
+			List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
+			retrievalDate = new Date(System.currentTimeMillis());
+			inputFeedsPerDysco.remove(dyscoId);
+			retrievedItems = searcher.search(feeds,primaryStreamsToSearch);
+			
+			long t1 = System.currentTimeMillis();
+			
+			System.out.println("Time for First Search for dysco:+ "+dyscoId+" is "+(t1-start)/1000+" sec ");
+			
+			long t2 = System.currentTimeMillis();
+			
+			//second search
+			List<Query> queries = queryBuilder.getFurtherProcessedSolrQueries(retrievedItems,5);
+			
+			long t3 = System.currentTimeMillis();
+			
+			System.out.println("Time for computing queries for dysco:+ "+dyscoId+" is "+(t3-t2)/1000+" sec ");
+			
+			dyscosToQueries.put(dyscoId, queries);
+			dyscosToUpdate.add(dyscoId);
+			
+			List<Feed> newFeeds = translateQueriesToKeywordsFeeds(queries,retrievalDate);
+			
+			searcher.search(newFeeds,streams.keySet());
+			
+			long t4 = System.currentTimeMillis();
+			
+			System.out.println("Time for Second Search for dysco:+ "+dyscoId+" is "+(t4-t3)/1000+" sec ");
+			
+			long end = System.currentTimeMillis();
+			
+			System.out.println("Total Time searching for dysco:+ "+dyscoId+" is "+(end-start)/1000+" sec ");
+		}
+		
 		/**
 		 * Stops TrendingSearchHandler
 		 */
@@ -500,10 +527,10 @@ public class MediaSearcher {
 					continue;
 				}
 				else{
-					System.out.println("Try to create feeds for dysco : "+ receivedDysco.getId());
+					
 					feedsCreator = new FeedsCreator(DataInputType.DYSCO,receivedDysco);
 					feeds = feedsCreator.getQuery();
-					System.out.println("Feeds for dysco : "+ feeds.size());
+					
 					if(receivedDysco.getDyscoType().equals(DyscoType.TRENDING)){
 						trendingSearchHandler.addTrendingDysco(receivedDysco.getId(), feeds);
 					}
@@ -564,6 +591,8 @@ public class MediaSearcher {
 					updatedDysco.setSolrQueries(solrQueries);
 					solrdyscoHandler.insertDysco(updatedDysco);
 					dyscosToQueries.remove(dyscoToUpdate);
+					
+					logger.info("Dysco : "+updatedDysco.getId()+" is updated");
 				}
 			}
 		}
