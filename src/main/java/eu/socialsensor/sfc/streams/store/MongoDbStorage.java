@@ -24,6 +24,7 @@ import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.MediaItem;
 import eu.socialsensor.framework.common.domain.StreamUser;
 import eu.socialsensor.framework.common.domain.WebPage;
+import eu.socialsensor.framework.common.domain.StreamUser.Operation;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
 /**
  * Class for storing items in mongo db
@@ -94,10 +95,12 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	private Integer items = 0, pItems = 0, mediaItems = 0, wPages = 0, users = 0;
 	private long t;
 	
-	private HashMap<String, Integer> usersMentionsMap, usersItemsMap, usersSharesMap, webpagesSharesMap;
+	//private HashMap<String, Integer> usersMentionsMap, usersItemsMap, usersSharesMap;
+	private HashMap<String, Integer> webpagesSharesMap;
 	private HashMap<String, Item> itemsMap;
+	private HashMap<String, StreamUser> usersMap;
 	
-	private UpdaterThread updaterThread;
+	private UpdaterTask updaterTask;
 	
 	public MongoDbStorage(StorageConfiguration config) {	
 		this.host = config.getParameter(MongoDbStorage.HOST);
@@ -119,10 +122,10 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.webPageCollectionName = config.getParameter(MongoDbStorage.WEBPAGES_COLLECTION);
 	
 		this.itemsMap = new HashMap<String, Item>();
-		
-		this.usersMentionsMap = new HashMap<String, Integer>();
-		this.usersItemsMap = new HashMap<String, Integer>();
-		this.usersSharesMap = new HashMap<String, Integer>();
+		this.usersMap = new HashMap<String, StreamUser>();
+		//this.usersMentionsMap = new HashMap<String, Integer>();
+		//this.usersItemsMap = new HashMap<String, Integer>();
+		//this.usersSharesMap = new HashMap<String, Integer>();
 		this.webpagesSharesMap = new HashMap<String, Integer>();
 		
 		this.pItems = 0;
@@ -149,9 +152,11 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.webPageDbName = webPageDbName; 
 		this.webPageCollectionName = webPageCollectionName; 
 		
-		this.usersMentionsMap = new HashMap<String, Integer>();
-		this.usersItemsMap = new HashMap<String, Integer>();
-		this.usersSharesMap = new HashMap<String, Integer>();
+		this.itemsMap = new HashMap<String, Item>();
+		this.usersMap = new HashMap<String, StreamUser>();
+		//this.usersMentionsMap = new HashMap<String, Integer>();
+		//this.usersItemsMap = new HashMap<String, Integer>();
+		//this.usersSharesMap = new HashMap<String, Integer>();
 		this.webpagesSharesMap = new HashMap<String, Integer>();
 		
 		this.pItems = 0;
@@ -171,9 +176,11 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		this.streamUsersCollectionName = streamUsersCollectionName;
 		this.webPageCollectionName = webPageCollectionName; 
 		
-		this.usersMentionsMap = new HashMap<String, Integer>();
-		this.usersItemsMap = new HashMap<String, Integer>();
-		this.usersSharesMap = new HashMap<String, Integer>();
+		this.itemsMap = new HashMap<String, Item>();
+		this.usersMap = new HashMap<String, StreamUser>();
+		//this.usersMentionsMap = new HashMap<String, Integer>();
+		//this.usersItemsMap = new HashMap<String, Integer>();
+		//this.usersSharesMap = new HashMap<String, Integer>();
 		this.webpagesSharesMap = new HashMap<String, Integer>();
 		
 		this.pItems = 0;
@@ -184,7 +191,10 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	@Override
 	public void close() {
-		updaterThread.stopThread();
+		do {
+			updaterTask.stopTask();
+		}
+		while(!updaterTask.isAlive());
 	}
 
 	@Override
@@ -244,8 +254,8 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			}
 		}
 		
-		this.updaterThread = new UpdaterThread();
-		updaterThread.start();
+		updaterTask = new UpdaterTask();
+		updaterTask.start();
 		
 		return true;
 	}
@@ -276,8 +286,8 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				if(user != null) {
 					String userId = user.getId();
 					boolean userExists = false;
-					synchronized(usersItemsMap) {
-						userExists = usersItemsMap.containsKey(userId) || streamUserDAO.exists(userId);
+					synchronized(usersMap) {
+						userExists = usersMap.containsKey(userId) || streamUserDAO.exists(userId);
 					}
 					if(!userExists) {
 						// save stream user
@@ -286,6 +296,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					}
 					else {
 						// Update statistics of stream user
+						/*
 						synchronized(usersItemsMap) {
 							Integer items = usersItemsMap.get(user.getId());
 							if(items == null)
@@ -299,28 +310,63 @@ public class MongoDbStorage implements StreamUpdateStorage {
 								mentions = 0;
 							usersMentionsMap.put(user.getId(), ++mentions);
 						}
+						*/
+						synchronized(usersMap) {
+							StreamUser tempUser = usersMap.get(user.getId());
+							if(tempUser == null) {
+								tempUser = new StreamUser(null, Operation.UPDATE);
+								tempUser.setId(user.getId());
+								usersMap.put(user.getId(), tempUser);
+							}
+							tempUser.incItems(1);
+							tempUser.incMentions(1L);
+						}
 					}
 				}
 				
 				if(item.getMentions() != null) {
 					String[] mentionedUsers = item.getMentions();
 					for(String mentionedUser : mentionedUsers) {
+						/*
 						synchronized(usersMentionsMap) {
 							Integer mentions = usersMentionsMap.get(mentionedUser);
 							if(mentions == null)
 								mentions = 0;
 							usersMentionsMap.put(mentionedUser, ++mentions);
 						}
+						*/
+						synchronized(usersMap) {
+							StreamUser tempUser = usersMap.get(mentionedUser);
+							if(tempUser == null) {
+								tempUser = new StreamUser(null, Operation.UPDATE);
+								tempUser.setId(mentionedUser);
+								usersMap.put(mentionedUser, tempUser);
+							}
+							tempUser.incMentions(1L);
+						}
 					}
 				}
 
 				if(item.getReferencedUserId() != null) {
 					String userid = item.getReferencedUserId();
+					
+					/*
 					synchronized(usersSharesMap) {
 						Integer shares = usersSharesMap.get(userid);
 						if(shares == null)
 							shares = 0;
 						usersSharesMap.put(userid, ++shares);
+					}
+					*/
+					
+					synchronized(usersMap) {
+						StreamUser tempUser = usersMap.get(userid);
+						if(tempUser == null) {
+							tempUser = new StreamUser(null, Operation.UPDATE);
+							tempUser.setId(userid);
+							usersMap.put(userid, tempUser);
+						}
+						tempUser.incShares(1L);
 					}
 				}
 				
@@ -395,7 +441,11 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			logger.info("Mongo I/O rate: " + (items-pItems)/((System.currentTimeMillis()-t)/60000) + " items/min");
 			pItems = items;
 			t = System.currentTimeMillis();
-			
+		}
+		catch(Exception e) {
+			logger.error("Exception on logging", e);
+		}
+		try {	
 			String testDB = (database != null) ? database : itemsDbName;
 			MongoHandler handler = new MongoHandler(host, testDB);
 			return handler.checkConnection(host);
@@ -412,19 +462,23 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	}
 	
 	@Override
-	public String getStorageName(){
+	public String getStorageName() {
 		return this.storageName;
 	}
 	
-	private class UpdaterThread extends Thread {
+	private class UpdaterTask extends Thread {
 
-		private boolean stop = false;
-
+		private long timeout = 10 * 60 * 1000;
+		private boolean stop = true;
+		
 		@Override
 		public void run() {
+			stop = false;
 			while(!stop) {
 				try {
-					Thread.sleep(10 * 60 * 1000);
+					
+					Thread.sleep(timeout);
+					//this.wait(timeout);
 					
 					logger.info("Update: ");
 					long t = System.currentTimeMillis();
@@ -437,6 +491,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 						itemsMap.clear();
 					}
 					
+					/*
 					synchronized(usersMentionsMap) {
 						logger.info(usersMentionsMap.size() + " mentioned user");
 						for(Entry<String, Integer> e : usersMentionsMap.entrySet()) {
@@ -460,7 +515,17 @@ public class MongoDbStorage implements StreamUpdateStorage {
 						}
 						usersItemsMap.clear();
 					}
-
+					*/
+					
+					synchronized(usersMap) {
+						logger.info(usersMap.size() + " users to update");
+						for(Entry<String, StreamUser> user : usersMap.entrySet()) {
+							streamUserDAO.updateStreamUserStatistics(user.getValue());
+							//streamUserDAO.incStreamUserValue(e.getKey(), "items", e.getValue());
+						}
+						usersMap.clear();
+					}
+					
 					synchronized(webpagesSharesMap) {
 						logger.info(webpagesSharesMap.size() + " web pages");
 						for(Entry<String, Integer> e : webpagesSharesMap.entrySet()) {
@@ -485,13 +550,15 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			}
 		}
 		
-		public void stopThread() {
-			this.stop = true;
+		public void stopTask() {
+			logger.info("Stop updater task");
 			try {
+				this.stop = true;
+				//this.notify();
 				this.interrupt();
 			}
 			catch(Exception e) {
-				logger.error(e);
+				logger.error("Fail to stop update task in MongoDBStorage", e);
 			}
 		}
 	}

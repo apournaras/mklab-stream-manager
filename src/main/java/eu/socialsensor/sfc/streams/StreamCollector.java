@@ -24,14 +24,13 @@ import eu.socialsensor.sfc.streams.management.StreamsManager;
  *
  */
 public class StreamCollector {
-
-	
 	
 	public static void main(String[] args) {
 		
-		if(new File("log4j.properties").exists()) 
+		if(new File("log4j.properties").exists()) {
 			PropertyConfigurator.configure("log4j.properties");
-
+		}
+		
 		Logger logger = Logger.getLogger(StreamCollector.class);
 		
 		File streamConfigFile, inputConfigFile;
@@ -52,7 +51,7 @@ public class StreamCollector {
 			manager = new StreamsManager(config, input_config);
 			manager.open();
 			
-			waiting();
+			Runtime.getRuntime().addShutdownHook(new Shutdown(manager));
 			
 		} catch (ParserConfigurationException e) {
 			logger.error(e);
@@ -64,21 +63,10 @@ public class StreamCollector {
 			logger.error(e);
 		} catch (Exception e) {
 			logger.error(e);
-		}
-		finally {
-			//close manager
-			logger.info("Close Stream manager.");
-			if(manager != null)
-				try {
-					manager.close();
-				} catch (StreamException e) {
-					logger.error(e);
-				}
-		}
-		
+		}	
 	}
 	
-	private static void waiting() throws Exception {
+	public static void waiting() throws Exception {
 		try {
 			InetAddress inet = InetAddress.getByName(null);
 			ServerSocket shutdownSocket = new ServerSocket(11111, 0, inet);
@@ -90,4 +78,34 @@ public class StreamCollector {
 			throw new Exception(e);
 		} 
 	}
+	
+	
+	/**
+	 * Class in case system is shutdown. 
+	 * Responsible to close all services that are running at the time being
+	 * @author ailiakop
+	 *
+	 */
+	private static class Shutdown extends Thread {
+		private StreamsManager _manager = null;
+		private Logger _logger = Logger.getLogger(Shutdown.class);
+		
+		public Shutdown(StreamsManager manager) {
+			this._manager = manager;
+		}
+
+		public void run() {
+			_logger.info("Shutting down stream manager...");
+			if (_manager != null) {
+				try {
+					_manager.close();
+				} catch (StreamException e) {
+					_logger.error(e);
+					e.printStackTrace();
+				}
+			}
+			_logger.info("Done...");
+		}
+	}
+	
 }

@@ -2,7 +2,9 @@ package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+
+import org.apache.log4j.Logger;
 
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.Item.Operation;
@@ -14,18 +16,23 @@ import eu.socialsensor.sfc.streams.filters.ItemFilter;
  * 
  * @author manosetro
  * @email  manosetro@iti.gr
+ * 
  * @author ailiakop
  * @email  ailiakop@iti.gr
  *
  */
 public class Consumer extends Thread {
+	
+	private Logger _logger = Logger.getLogger(Consumer.class);
+	
 	private boolean isAlive = true;
 	private StreamUpdateStorage store = null;
-	private Queue<Item> queue;
+	
+	private BlockingQueue<Item> queue;
 	
 	private Collection<ItemFilter> filters;
 	
-	public Consumer(Queue<Item> queue, StreamUpdateStorage store, Collection<ItemFilter> filters){
+	public Consumer(BlockingQueue<Item> queue, StreamUpdateStorage store, Collection<ItemFilter> filters) {
 		this.store = store;
 		this.queue = queue;
 		this.filters = filters;
@@ -38,29 +45,26 @@ public class Consumer extends Thread {
 		Item item = null;
 		while (isAlive) {
 			try {
-				item = poll();
+				item = take();
 				if (item == null) {
-					try {
-						Thread.sleep(100);
-					} catch (InterruptedException e) { }
-					continue;
+					_logger.error("Item is null.");
 				} else {
-					dump(item);
+					process(item);
 				}
 
 			} catch(IOException e) {
 				e.printStackTrace();
-				
+				_logger.error(e);
 			}
 		}
 		
 		//empty queue
 		while ((item = poll()) != null) {
 			try {
-				dump(item);
+				process(item);
 			} catch (IOException e) {
 				e.printStackTrace();
-				
+				_logger.error(e);
 			}
 		}
 	}
@@ -70,8 +74,7 @@ public class Consumer extends Thread {
 	 * @param item
 	 * @throws IOException
 	 */
-	private void dump(Item item) throws IOException {
-		//dump update to store
+	private void process(Item item) throws IOException {
 		if (store != null) {
 			for(ItemFilter filter : filters) {
 				if(!filter.accept(item))
@@ -99,7 +102,23 @@ public class Consumer extends Thread {
 	 */
 	private Item poll() {
 		synchronized (queue) {					
-			Item item = queue.poll();	
+			Item item = queue.poll();		
+			return item;
+		}
+	}
+	
+	/**
+	 * Polls an item from the queue. Waits if the queue is empty. 
+	 * @return
+	 */
+	private Item take() {
+		synchronized (queue) {					
+			Item item = null;
+			try {
+				item = queue.take();
+			} catch (InterruptedException e) {
+				_logger.error(e);
+			}	
 			return item;
 		}
 	}
@@ -112,7 +131,7 @@ public class Consumer extends Thread {
 	public synchronized void die() {
 		isAlive = false;
 		
-		if(store != null){
+		if(store != null) {
 			store.close();
 		}
 	}
