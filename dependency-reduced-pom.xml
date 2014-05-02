@@ -1,11 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>oss-parent</artifactId>
+    <groupId>org.sonatype.oss</groupId>
+    <version>7</version>
+    <relativePath>../pom.xml/pom.xml</relativePath>
+  </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>eu.socialsensor</groupId>
-  <artifactId>StreamManagerMaven</artifactId>
-  <name>StreamManagerMaven</name>
-  <version>1.0-SNAPSHOT</version>
-  <url>http://maven.apache.org</url>
+  <artifactId>socialsensor-stream-manager</artifactId>
+  <name>socialsensor-stream-manager</name>
+  <version>0.1-SNAPSHOT</version>
+  <description>Monitors a set of social streams (e.g. Twitter status updates) and collects the incoming content.</description>
+  <url>https://github.com/socialsensor/socialsensor-stream-manager</url>
+  <developers>
+    <developer>
+      <id>manosetro</id>
+      <name>Manos Schinas</name>
+      <email>manosetro@iti.gr</email>
+    </developer>
+    <developer>
+      <id>matzika</id>
+      <name>Katerina Iliakopoulou</name>
+      <email>ailiakop@iti.gr</email>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <connection>scm:git:git@github.com:socialsensor/socialsensor-stream-manager.git</connection>
+    <developerConnection>scm:git:git@github.com:socialsensor/socialsensor-stream-manager.git</developerConnection>
+    <url>git@github.com:socialsensor/socialsensor-stream-manager.git</url>
+  </scm>
   <build>
     <plugins>
       <plugin>
@@ -15,6 +46,28 @@
           <source>1.6</source>
           <target>1.6</target>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
@@ -50,60 +103,6 @@
       </plugin>
     </plugins>
   </build>
-  <repositories>
-    <repository>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>central</id>
-      <name>Maven Repository Switchboard</name>
-      <url>http://repo1.maven.org/maven2</url>
-    </repository>
-    <repository>
-      <id>central-staging</id>
-      <url>https://oss.sonatype.org/content/groups/central-staging/</url>
-    </repository>
-    <repository>
-      <id>mandubian-mvn</id>
-      <url>http://mandubian-mvn.googlecode.com/svn/trunk/mandubian-mvn/repository</url>
-    </repository>
-    <repository>
-      <releases>
-        <updatePolicy>always</updatePolicy>
-      </releases>
-      <id>prometheus-atc-releases</id>
-      <name>prometheus-atc-releases</name>
-      <url>http://prometheus.atc.gr:8080/nexus/content/repositories/releases/</url>
-    </repository>
-    <repository>
-      <snapshots>
-        <updatePolicy>always</updatePolicy>
-      </snapshots>
-      <id>prometheus-atc-snapshots</id>
-      <name>prometheus-atc-snapshots</name>
-      <url>http://prometheus.atc.gr:8080/nexus/content/repositories/snapshots/</url>
-    </repository>
-  </repositories>
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-  <distributionManagement>
-    <repository>
-      <id>prometheus-atc</id>
-      <name>prometheus-atc-releases</name>
-      <url>http://prometheus.atc.gr:8080/nexus/content/repositories/releases/</url>
-    </repository>
-    <snapshotRepository>
-      <id>prometheus-atc</id>
-      <name>prometheus-atc-snapshots</name>
-      <url>http://prometheus.atc.gr:8080/nexus/content/repositories/snapshots/</url>
-    </snapshotRepository>
-  </distributionManagement>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
