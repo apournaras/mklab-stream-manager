@@ -33,7 +33,7 @@ public class StoreManager implements StreamHandler {
 	
 	private MultipleStorages store = null;
 	
-	private BlockingQueue<Item> queue = new LinkedBlockingDeque<Item>(500);
+	private BlockingQueue<Item> queue = new LinkedBlockingDeque<Item>();
 	
 	private StreamsManagerConfiguration config;
 	private Integer numberOfConsumers = 4;
@@ -123,8 +123,14 @@ public class StoreManager implements StreamHandler {
 	@Override
 	public void update(Item item) {
 		//synchronized(queue) {
-			items++;
-			queue.add(item);
+			try {
+				items++;
+				queue.add(item);
+			}
+			catch(Exception e) {
+				logger.error(e);
+			}
+			
 		//}	
 	}
 
@@ -238,7 +244,7 @@ public class StoreManager implements StreamHandler {
 	
 	public class StorageStatusAgent extends Thread {
 		// Runs every two minutes by default
-		private long minuteThreshold = 2 * 60000;
+		private long minuteThreshold = 1 * 60000;
 		
 		private StoreManager storeManager;
 		
