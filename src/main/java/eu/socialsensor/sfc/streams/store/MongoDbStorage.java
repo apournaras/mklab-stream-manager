@@ -469,7 +469,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	private class UpdaterTask extends Thread {
 
-		private long timeout = 10 * 60 * 1000;
+		private long timeout = 15 * 60 * 1000;
 		private boolean stop = true;
 		
 		@Override

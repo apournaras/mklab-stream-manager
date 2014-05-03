@@ -36,7 +36,7 @@ public class StoreManager implements StreamHandler {
 	private BlockingQueue<Item> queue = new LinkedBlockingDeque<Item>();
 	
 	private StreamsManagerConfiguration config;
-	private Integer numberOfConsumers = 4;
+	private Integer numberOfConsumers = 8;
 	
 	private List<Consumer> consumers;
 	
@@ -83,19 +83,19 @@ public class StoreManager implements StreamHandler {
 		workingStatus.put(storageId, status);
 	}
 	
-	public StoreManagerState getState(){
+	public StoreManagerState getState() {
 		return state;
 	}
 	
-	public MultipleStorages getStorages(){
+	public MultipleStorages getStorages() {
 		return store;
 	}
 	
-	public void eliminateStorage(StreamUpdateStorage storage){
+	public void eliminateStorage(StreamUpdateStorage storage) {
 		store.remove(storage);
 	}
 	
-	public void restoreStorage(StreamUpdateStorage storage){
+	public void restoreStorage(StreamUpdateStorage storage) {
 		store.register(storage);
 	}
 	
@@ -105,7 +105,7 @@ public class StoreManager implements StreamHandler {
 	 */
 	public void start() {
 		
-		for(int i=0;i<numberOfConsumers;i++)
+		for(int i=0; i<numberOfConsumers; i++)
 			consumers.add(new Consumer(queue, store, filtersMap.values()));
 		
 		for(Consumer consumer : consumers)
@@ -213,7 +213,7 @@ public class StoreManager implements StreamHandler {
 	/**
 	 * Stops all consumer threads and all the databases used
 	 */
-	public void stop(){
+	public void stop() {
 		for(Consumer consumer : consumers){
 			consumer.die();
 		}
@@ -244,7 +244,7 @@ public class StoreManager implements StreamHandler {
 	
 	public class StorageStatusAgent extends Thread {
 		// Runs every two minutes by default
-		private long minuteThreshold = 1 * 60000;
+		private long minuteThreshold = 2 * 60000;
 		
 		private StoreManager storeManager;
 		

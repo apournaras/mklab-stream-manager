@@ -69,6 +69,7 @@ public class StreamsManager {
 	/**
 	 * Opens Manager by starting the auxiliary modules and setting up
 	 * the database for reading/storing
+	 * 
 	 * @throws StreamException
 	 */
 	public synchronized void open() throws StreamException {
@@ -105,7 +106,7 @@ public class StreamsManager {
 			
 			//Start the Streams
 			for (String streamId : streams.keySet()) {
-				logger.info("Stream Manager - Start Stream : "+streamId);
+				logger.info("Stream Manager - Start Stream : " + streamId);
 				StreamConfiguration sconfig = config.getStreamConfig(streamId);
 				Stream stream = streams.get(streamId);
 				stream.setHandler(storeManager);
