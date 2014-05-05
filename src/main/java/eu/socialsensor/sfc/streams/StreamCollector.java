@@ -27,10 +27,6 @@ public class StreamCollector {
 	
 	public static void main(String[] args) {
 		
-		if(new File("log4j.properties").exists()) {
-			PropertyConfigurator.configure("log4j.properties");
-		}
-		
 		Logger logger = Logger.getLogger(StreamCollector.class);
 		
 		File streamConfigFile, inputConfigFile;
