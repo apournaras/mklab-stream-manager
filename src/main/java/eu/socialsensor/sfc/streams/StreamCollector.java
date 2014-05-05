@@ -53,6 +53,8 @@ public class StreamCollector {
 			
 			Runtime.getRuntime().addShutdownHook(new Shutdown(manager));
 			
+			Thread.sleep(10000);
+			
 		} catch (ParserConfigurationException e) {
 			logger.error(e);
 		} catch (SAXException e) {

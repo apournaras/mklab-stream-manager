@@ -214,14 +214,12 @@ public class StoreManager implements StreamHandler {
 	 * Stops all consumer threads and all the databases used
 	 */
 	public void stop() {
-		for(Consumer consumer : consumers){
+		for(Consumer consumer : consumers) {
 			consumer.die();
 		}
-		
 		store.close();
 		
 		state = StoreManagerState.CLOSE;
-		
 		do {
 			statusAgent.interrupt();
 		}

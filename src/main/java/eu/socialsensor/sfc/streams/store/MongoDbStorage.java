@@ -181,10 +181,14 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	@Override
 	public void close() {
-		do {
+		while(updaterTask.isAlive()) {
 			updaterTask.stopTask();
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				logger.error(e);
+			}
 		}
-		while(!updaterTask.isAlive());
 	}
 
 	@Override
@@ -554,7 +558,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			logger.info("Stop updater task");
 			try {
 				this.stop = true;
-				//this.notify();
 				this.interrupt();
 			}
 			catch(Exception e) {
