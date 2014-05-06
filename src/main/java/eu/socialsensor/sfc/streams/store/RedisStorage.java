@@ -51,6 +51,7 @@ public class RedisStorage implements StreamUpdateStorage {
 			JedisPoolConfig poolConfig = new JedisPoolConfig();
 			JedisPool jedisPool = new JedisPool(poolConfig, host, 6379, 0);
 		
+			
 			this.publisherJedis = jedisPool.getResource();
 			return true;
 		}
@@ -69,20 +70,26 @@ public class RedisStorage implements StreamUpdateStorage {
 		if(item.isOriginal()) { 	
 			if(itemsChannel != null) {
 				items++;
-				publisherJedis.publish(itemsChannel, item.toJSONString());
+				synchronized(publisherJedis) {
+					publisherJedis.publish(itemsChannel, item.toJSONString());
+				}
 			}
 		
 			if(mediaItemsChannel != null) {
 				for(MediaItem mediaItem : item.getMediaItems()) {
 					mItems++;
-					publisherJedis.publish(mediaItemsChannel, mediaItem.toJSONString());
+					synchronized(publisherJedis) {
+						publisherJedis.publish(mediaItemsChannel, mediaItem.toJSONString());
+					}
 				}
 			}
 		
 			if(webPagesChannel != null) {
 				for(WebPage webPage : item.getWebPages()) {
 					wPages++;
-					publisherJedis.publish(webPagesChannel, webPage.toJSONString());
+					synchronized(publisherJedis) {
+						publisherJedis.publish(webPagesChannel, webPage.toJSONString());
+					}
 				}
 			}
 		}
@@ -114,37 +121,46 @@ public class RedisStorage implements StreamUpdateStorage {
 	@Override
 	public boolean checkStatus(StreamUpdateStorage storage) {
 		try {
-			logger.info("Redis sent " + items + " items, " + mItems + " media items and " + wPages + " web pages!");
+			logger.info("Redis sent " + items + " items, " + mItems + " media items and " 
+					+ wPages + " web pages!");
 
-			publisherJedis.info();
-			boolean connected = publisherJedis.isConnected();
+			boolean connected;
+			synchronized(publisherJedis) {
+				publisherJedis.info();
+				connected = publisherJedis.isConnected();
+			}
 			if(!connected) {
 				connected = reconnect();
 			}
 			return connected;
 		}
 		catch(Exception e) {
+			e.printStackTrace();
 			logger.error(e);
 			return reconnect();
 		}
 	}
 	
 	private boolean reconnect() {
-		try {
-			if(publisherJedis != null) {
-				publisherJedis.disconnect();
+		synchronized(publisherJedis) {
+			try {
+				if(publisherJedis != null) {
+					publisherJedis.disconnect();
+				}
+			}
+			catch(Exception e) { 
+				logger.error(e);
 			}
 		}
-		catch(Exception e) { 
-			logger.error(e);
-		}
 		try {
-			JedisPoolConfig poolConfig = new JedisPoolConfig();
-        	JedisPool jedisPool = new JedisPool(poolConfig, host, 6379, 0);
-		
-        	this.publisherJedis = jedisPool.getResource();
-        	publisherJedis.info();
-        	return publisherJedis.isConnected();
+			synchronized(publisherJedis) {
+				JedisPoolConfig poolConfig = new JedisPoolConfig();
+        		JedisPool jedisPool = new JedisPool(poolConfig, host, 6379, 0);
+        	
+        		this.publisherJedis = jedisPool.getResource();
+        		publisherJedis.info();
+        		return publisherJedis.isConnected();
+			}
 		}
 		catch(Exception e) {
 			logger.error(e);
@@ -164,4 +180,18 @@ public class RedisStorage implements StreamUpdateStorage {
 		return this.storageName;
 	}
 
+	public static void main(String...args) {
+		System.out.println("Check Redis Storage");
+		
+		StorageConfiguration config = new StorageConfiguration();
+		config.setParameter(RedisStorage.HOST, "160.40.51.18");
+		config.setParameter(RedisStorage.ITEMS_CHANNEL, "items");
+		config.setParameter(RedisStorage.WEBPAGES_CHANNEL, "webpages");
+		config.setParameter(RedisStorage.MEDIA_CHANNEL, "media");
+		RedisStorage redis = new RedisStorage(config);
+		redis.open();
+		
+		redis.checkStatus(redis);
+		
+	}
 }
