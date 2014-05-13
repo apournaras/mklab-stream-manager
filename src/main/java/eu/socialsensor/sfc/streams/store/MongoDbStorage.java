@@ -102,6 +102,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	//private HashMap<String, Integer> usersMentionsMap, usersItemsMap, usersSharesMap;
 	private HashMap<String, Integer> webpagesSharesMap;
+	private HashMap<String, Integer> mediaItemsSharesMap;
 	private HashMap<String, Item> itemsMap;
 	private HashMap<String, StreamUser> usersMap;
 	
@@ -132,6 +133,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		//this.usersItemsMap = new HashMap<String, Integer>();
 		//this.usersSharesMap = new HashMap<String, Integer>();
 		this.webpagesSharesMap = new HashMap<String, Integer>();
+		this.mediaItemsSharesMap = new HashMap<String, Integer>();
 	}
 	
 	public MongoDbStorage(String hostname, String itemsDbName, String itemsCollectionName, String mediaItemsDbName, 
@@ -158,6 +160,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		//this.usersItemsMap = new HashMap<String, Integer>();
 		//this.usersSharesMap = new HashMap<String, Integer>();
 		this.webpagesSharesMap = new HashMap<String, Integer>();
+		this.mediaItemsSharesMap = new HashMap<String, Integer>();
 	}
 	
 	public MongoDbStorage(String hostname, String database, String itemsCollectionName,
@@ -177,6 +180,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		//this.usersItemsMap = new HashMap<String, Integer>();
 		//this.usersSharesMap = new HashMap<String, Integer>();
 		this.webpagesSharesMap = new HashMap<String, Integer>();
+		this.mediaItemsSharesMap = new HashMap<String, Integer>();
 	}
 	
 	@Override
@@ -379,7 +383,10 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					}
 					else {
 						//Update media item
-						//mediaItemDAO.updateMediaItemPopularity(mediaItem);
+						Integer shares = mediaItemsSharesMap.get(mediaItem.getId());
+						if(shares == null)
+							shares = 0;
+						mediaItemsSharesMap.put(mediaItem.getId(), ++shares);
 					}
 					
 					if(mediaSharesDAO != null) {
@@ -536,6 +543,14 @@ public class MongoDbStorage implements StreamUpdateStorage {
 							webPageDAO.updateWebPageShares(e.getKey(), e.getValue());
 						}
 						webpagesSharesMap.clear();
+					}
+					
+					synchronized(mediaItemsSharesMap) {
+						logger.info(mediaItemsSharesMap.size() + " media Items");
+						for(Entry<String, Integer> entry : mediaItemsSharesMap.entrySet()) {
+							mediaItemDAO.updateMediaItemShares(entry.getKey(), entry.getValue());
+						}
+						mediaItemsSharesMap.clear();
 					}
 					
 					t = System.currentTimeMillis() - t;
