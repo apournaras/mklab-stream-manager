@@ -70,12 +70,6 @@
         	<groupId>eu.socialsensor</groupId>
 			<artifactId>socialsensor-query-builder</artifactId>
 			<version>0.1-SNAPSHOT</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>google-collections</artifactId>
-					<groupId>com.google.collections</groupId>
-				</exclusion>
-			</exclusions>
         </dependency>
         <!--  
         <dependency>
