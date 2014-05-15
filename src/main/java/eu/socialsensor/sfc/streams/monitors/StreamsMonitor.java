@@ -223,7 +223,11 @@ public class StreamsMonitor {
 				}	
 			}
 		
+		for(StreamFetchTask streamTask : finishedTasks)
+			streamTask = null;
+		
 		streamsFetchTasks.clear();
+		finishedTasks.clear();
 		
 		return true;
 	}

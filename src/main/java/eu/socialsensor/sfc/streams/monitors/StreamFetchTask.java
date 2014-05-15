@@ -81,7 +81,8 @@ public class StreamFetchTask implements Runnable{
 			totalRetrievedItems.addAll(stream.getTotalRetrievedItems());
 			
 		} catch (StreamException e) {
-			// TODO Auto-generated catch block
+			completed = true;
+			System.err.println("---------------------ERROR IN STREAM FETCH TASK----------------");
 			e.printStackTrace();
 		}
 		
