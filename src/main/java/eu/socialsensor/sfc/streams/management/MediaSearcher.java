@@ -31,6 +31,7 @@ import eu.socialsensor.framework.common.domain.Keyword;
 import eu.socialsensor.framework.common.domain.Query;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Dysco.DyscoType;
+import eu.socialsensor.framework.common.domain.dysco.Entity;
 import eu.socialsensor.framework.common.domain.dysco.Message;
 import eu.socialsensor.framework.common.domain.dysco.Message.Action;
 import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
@@ -166,6 +167,7 @@ public class MediaSearcher {
             public void run() {
                 try {
                 	logger.info("Try to subscribe to redis");
+                
                     subscriberJedis.subscribe(dyscoRequestReceiver,config.getParameter(MediaSearcher.CHANNEL));
                    
                 } catch (Exception e) {
@@ -178,6 +180,10 @@ public class MediaSearcher {
     	
 		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
 		
+//		SolrDyscoHandler solrDyscoHandler = SolrDyscoHandler.getInstance(solrHost+"/"+solrService+"/"+dyscoCollection);
+//		
+//		Dysco testDysco = solrDyscoHandler.findDyscoLight("bcba5c3f-86a0-4d71-a1d0-dddc2d438fe2");
+//		requests.add(testDysco);
 	}
 	
 	/**
@@ -393,6 +399,7 @@ public class MediaSearcher {
 		private MediaSearcher searcher;
 
 		private boolean isAlive = true;
+		private boolean keyHold = false;
 		
 		private Date retrievalDate; 
 
@@ -417,7 +424,9 @@ public class MediaSearcher {
 					continue;
 				}
 				else{
+					keyHold = true;
 					searchForDysco(dyscoId);
+					keyHold = false;
 				}
 					
 			}
@@ -428,12 +437,12 @@ public class MediaSearcher {
 		 */
 		private String poll(){
 			synchronized (trendingDyscoQueue) {					
-				if (!trendingDyscoQueue.isEmpty()) {
+				if (!trendingDyscoQueue.isEmpty() && !keyHold) {
 					String request = trendingDyscoQueue.poll();
 					return request;
 				}
 				try {
-					trendingDyscoQueue.wait(3000);
+					trendingDyscoQueue.wait(1000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -455,16 +464,18 @@ public class MediaSearcher {
 			
 			long t1 = System.currentTimeMillis();
 			
-			System.out.println("Time for First Search for dysco:+ "+dyscoId+" is "+(t1-start)/1000+" sec ");
+			logger.info("Time for First Search for dysco: "+dyscoId+" is "+(t1-start)/1000+" sec ");
 			
 			long t2 = System.currentTimeMillis();
 			
 			//second search
-			List<Query> queries = queryBuilder.getFurtherProcessedSolrQueries(retrievedItems,5);
+			List<Query> queries = queryBuilder.getFurtherProcessedSolrQueries(retrievedItems,5,dyscoId);
+			
+			logger.info("Number of additional queries : "+queries.size());
 			
 			long t3 = System.currentTimeMillis();
 			
-			System.out.println("Time for computing queries for dysco:+ "+dyscoId+" is "+(t3-t2)/1000+" sec ");
+			logger.info("Time for computing queries for dysco:+ "+dyscoId+" is "+(t3-t2)/1000+" sec ");
 			
 			dyscosToQueries.put(dyscoId, queries);
 			dyscosToUpdate.add(dyscoId);
@@ -475,11 +486,11 @@ public class MediaSearcher {
 			
 			long t4 = System.currentTimeMillis();
 			
-			System.out.println("Time for Second Search for dysco:+ "+dyscoId+" is "+(t4-t3)/1000+" sec ");
+			logger.info("Time for Second Search for dysco:+ "+dyscoId+" is "+(t4-t3)/1000+" sec ");
 			
 			long end = System.currentTimeMillis();
 			
-			System.out.println("Total Time searching for dysco:+ "+dyscoId+" is "+(end-start)/1000+" sec ");
+			logger.info("Total Time searching for dysco:+ "+dyscoId+" is "+(end-start)/1000+" sec ");
 		}
 		
 		/**
@@ -552,6 +563,12 @@ public class MediaSearcher {
 			synchronized (requests) {					
 				if (!requests.isEmpty()) {
 					Dysco request = requests.poll();
+					try {
+						requests.wait(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					return request;
 				}
 				try {
@@ -588,6 +605,21 @@ public class MediaSearcher {
 				else{
 					List<Query> solrQueries = dyscosToQueries.get(dyscoToUpdate);
 					Dysco updatedDysco = solrdyscoHandler.findDyscoLight(dyscoToUpdate);
+					
+					if(solrQueries == null || solrQueries.isEmpty()){
+						for(String hash : updatedDysco.getHashtags().keySet()){
+							Query query = new Query(hash,updatedDysco.getHashtags().get(hash));
+							
+							solrQueries.add(query);
+						}
+						
+						for(Entity ent : updatedDysco.getEntities()){
+							Query query = new Query(ent.getName(),ent.getCont());
+							
+							solrQueries.add(query);
+						}
+					}
+					
 					updatedDysco.setSolrQueries(solrQueries);
 					solrdyscoHandler.insertDysco(updatedDysco);
 					dyscosToQueries.remove(dyscoToUpdate);
