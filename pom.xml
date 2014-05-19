@@ -83,9 +83,30 @@
         	<artifactId>titan-hbase</artifactId>
         	<version>0.4.4</version>
         </dependency>
+        <dependency>
+        	<groupId>org.neo4j</groupId>
+        	<artifactId>neo4j</artifactId>
+        	<version>2.0.1</version>
+        </dependency>
+        <dependency>
+        	<groupId>org.neo4j</groupId>
+        	<artifactId>neo4j-cypher-dsl</artifactId>
+        	<version>2.0.0</version>
+        </dependency>
+        <dependency>
+  			<groupId>org.neo4j</groupId>
+  			<artifactId>neo4j-jdbc</artifactId>
+  			<version>2.0.1</version>
+  		</dependency>
     </dependencies>
     
-    <repositories />
+	<repositories>
+		<repository>  
+       		<id>mvn-neo4j</id>  
+       		<url>http://m2.neo4j.org/content/groups/everything</url>  
+     	</repository>
+	</repositories>
+    
     <pluginRepositories />
     
     <build>
