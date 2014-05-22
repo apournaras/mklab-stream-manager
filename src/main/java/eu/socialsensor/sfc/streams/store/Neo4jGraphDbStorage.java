@@ -2,10 +2,12 @@ package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Properties;
 
-import org.neo4j.jdbc.Driver;
-import org.neo4j.jdbc.Neo4jConnection;
+import javax.ws.rs.core.MediaType;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
@@ -35,7 +37,8 @@ public class Neo4jGraphDbStorage implements StreamUpdateStorage {
 	private String relationshipPropertyTimestamp;
 	private String relationshipPropertyTweedId;
 	
-	Neo4jConnection connection;
+	WebResource resource;
+	ClientResponse response;
 	
 	public Neo4jGraphDbStorage(StorageConfiguration config) {
 		
@@ -53,13 +56,9 @@ public class Neo4jGraphDbStorage implements StreamUpdateStorage {
 
 	@Override
 	public boolean open() {
+		resource = Client.create().resource(host + "db/data/cypher");
 		try {
-			Class.forName("org.neo4j.jdbc.Driver");
-			connection = new Driver().connect(host, new Properties());
 			createIndex(nodeUserLabel, nodeUserId);
-		} 
-		catch (ClassNotFoundException e) {
-			e.printStackTrace();
 		} 
 		catch (SQLException e) {
 			e.printStackTrace();
@@ -137,12 +136,7 @@ public class Neo4jGraphDbStorage implements StreamUpdateStorage {
 
 	@Override
 	public void close() {
-		try {
-			connection.close();
-		} 
-		catch (SQLException e) {
-			e.printStackTrace();
-		}
+//		resource.delete();
 	}
 
 	@Override
@@ -151,15 +145,17 @@ public class Neo4jGraphDbStorage implements StreamUpdateStorage {
 	}
 	
 	private void createIndex(String label, String property) throws SQLException {
-		String statement = "CREATE INDEX ON :" + nodeUserLabel 
+		String createIndexQuery = "CREATE INDEX ON :" + nodeUserLabel 
 				+ "(" + nodeUserId + ")";
-		connection.createStatement().executeQuery(statement);
+		sendCypherQuery(createIndexQuery);
+		response.close();
 	}
 	
 	private void getOrCreateVertex(String nodeId, String nodeKey) throws SQLException {
 		String mergeVertex = 
 				"MERGE (n:" + nodeUserLabel + " {" + nodeKey + ":" + nodeId + "}) ";
-		connection.createStatement().executeQuery(mergeVertex);
+		sendCypherQuery(mergeVertex);
+		response.close();
 	}
 	
 	private void getOrCreateEdge(String source, String destination, String label) throws SQLException {
@@ -167,7 +163,8 @@ public class Neo4jGraphDbStorage implements StreamUpdateStorage {
 				"MATCH (n1:" + nodeUserLabel + " {" + nodeUserId + ":" + source + "})" +
 				"MATCH (n2:" + nodeUserLabel + " {" + nodeUserId + ":" + destination + "})" +
 				"CREATE (n1)-[:" + label + "]->(n2)";
-		connection.createStatement().executeQuery(mergeEdge);
+		sendCypherQuery(mergeEdge);
+		response.close();
 	}
 	
 	private void addEdgeProperty(String source, String destination, String propertyName, 
@@ -177,7 +174,16 @@ public class Neo4jGraphDbStorage implements StreamUpdateStorage {
 				"MATCH (n2:" + nodeUserLabel + " {" + nodeUserId + ":" + destination + "})" +
 				"MATCH (n1)-[r]->(n2)" +
 				"SET r." + propertyName + " = " + propertyValue;
-		connection.createStatement().executeQuery(addEdgeProperty);
+		sendCypherQuery(addEdgeProperty);
+		response.close();
+	}
+	
+	private ClientResponse sendCypherQuery(String query) {
+		response = resource.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON)
+				.entity("{\"query\" : \"" + query + "\"}")
+				.post(ClientResponse.class);
+		return response;
 	}
 	
 }
