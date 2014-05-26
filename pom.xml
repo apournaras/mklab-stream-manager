@@ -105,20 +105,10 @@
       		</exclusions> 
         </dependency>
         <dependency>
-        	<groupId>org.neo4j</groupId>
-        	<artifactId>neo4j</artifactId>
-        	<version>2.0.1</version>
+        	<groupId>com.sun.jersey</groupId>
+        	<artifactId>jersey-client</artifactId>
+        	<version>1.9</version>
         </dependency>
-        <dependency>
-        	<groupId>org.neo4j</groupId>
-        	<artifactId>neo4j-cypher-dsl</artifactId>
-        	<version>2.0.0</version>
-        </dependency>
-        <dependency>
-  			<groupId>org.neo4j</groupId>
-  			<artifactId>neo4j-jdbc</artifactId>
-  			<version>2.0.1</version>
-  		</dependency>
     </dependencies>
     
 	<repositories>

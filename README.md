@@ -25,7 +25,7 @@ To start collecting content from all or a subset of the above social networks, r
 
 Inside Stream Manager, each stream is handled as a different thread. Thus, each social network wrapper can be given different input feeds to track. Additionally, each feed is being tracked by a different thread in order to minimize time cost, except Twitter which is a subscriber.
 
-The collected data from the retrieval process are stored as JSON items (representing status update, post etc.), media items (images, videos, albums), users and webpages (embedded in posts/statuses). The above can be stored in a <a href="http://www.mongodb.org/">MongoDB</a>, <a href="http://lucene.apache.org/">Lucene</a> or <a href="http://lucene.apache.org/solr/">Solr</a> database, which are currently supported. The storage process is handled by the `eu.socialsensor.sfc.streams.management.StoreManager` class.
+The collected data from the retrieval process are stored as JSON items (representing status update, post etc.), media items (images, videos, albums), users and webpages (embedded in posts/statuses). The above can be stored in a <a href="http://www.mongodb.org/">MongoDB</a>, <a href="http://lucene.apache.org/">Lucene</a> or <a href="http://lucene.apache.org/solr/">Solr</a> database, which are currently supported. In addition to this, the collected data are used to create graphs, which currently model `user -- retweets -- user` and `user -- mentions -- user` relationship. The graphs are created with <a href="http://thinkaurelius.github.io/titan/">Titan</a> and <a href="http://www.neo4j.org/">Neo4j</a> graph databases. The storage process is handled by the `eu.socialsensor.sfc.streams.management.StoreManager` class.
 
 <h2><u>Learning more</u></h2>
 
