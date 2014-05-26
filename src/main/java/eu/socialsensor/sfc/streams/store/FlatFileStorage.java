@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import eu.socialsensor.framework.common.domain.Item;
+import eu.socialsensor.sfc.streams.StorageConfiguration;
 
 /**
  * Class for storing items to a flat file
@@ -14,19 +15,30 @@ import eu.socialsensor.framework.common.domain.Item;
  * @email  manosetro@iti.gr
  *
  */
-public class FlatFileStorage implements StreamUpdateStorage {
-	
-	public static final String STORE_FILE = "/items.";
+public class FlatFileStorage implements StreamUpdateStorage {	
+	private static String NAME = "name";
+	private static String STORAGE_FILE = "file";
 	
 	private String storageName = "FlatFile";
+	private String fileToStore;
 	
 	private File storageDirectory;
 	private PrintWriter out = null;
 	
 	long items = 0;
 	
+	public FlatFileStorage(StorageConfiguration config) {
+		this.fileToStore = config.getParameter(FlatFileStorage.NAME);
+		
+		String storage = config.getParameter(FlatFileStorage.STORAGE_FILE);
+		this.storageDirectory = new File(storage);
+	}
+	
+	
 	public FlatFileStorage(String storageDirectory) {
 		this.storageDirectory = new File(storageDirectory);
+		
+		this.fileToStore = "/items.";
 	}
 	
 	@Override
@@ -53,7 +65,7 @@ public class FlatFileStorage implements StreamUpdateStorage {
 
 	@Override
 	public boolean open(){
-		File storeFile = new File(storageDirectory, STORE_FILE+System.currentTimeMillis());
+		File storeFile = new File(storageDirectory, fileToStore+System.currentTimeMillis());
 		try {
 			out = new PrintWriter(new BufferedWriter(new FileWriter(storeFile, false)));
 			return true;

@@ -43,6 +43,7 @@ public class RedisStorage implements StreamUpdateStorage {
 		this.itemsChannel = config.getParameter(RedisStorage.ITEMS_CHANNEL);
 		this.webPagesChannel = config.getParameter(RedisStorage.WEBPAGES_CHANNEL);
 		this.mediaItemsChannel = config.getParameter(RedisStorage.MEDIA_CHANNEL);
+		
 	}
 	
 	@Override
