@@ -21,7 +21,7 @@ import eu.socialsensor.framework.streams.Stream;
  * @email  ailiakop@iti.gr
  */
 public class StreamsMonitor {
-	private static final long DEFAULT_REQUEST_TIME = 3600000 ; //1 hour in milliseconds 
+	private static final long DEFAULT_REQUEST_TIME = 30*60000; 
 	
 	public final Logger logger = Logger.getLogger(StreamsMonitor.class);
 
@@ -156,7 +156,7 @@ public class StreamsMonitor {
 		private Map<String,Long> reformedRunningTimes = new HashMap<String,Long>();
 		
 		public ReInitializer(){
-			logger.info("ReInitializer Thread instantiated");
+			//logger.info("ReInitializer Thread instantiated");
 		}
 		
 		public void run(){
