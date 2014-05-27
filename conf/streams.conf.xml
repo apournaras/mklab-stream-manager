@@ -149,6 +149,9 @@
                         <Parameter name="maxRequests">
                                 <![CDATA[1]]>
                         </Parameter>
+                        <Parameter name="maxRunningTime">
+							<![CDATA[10000]]>
+						</Parameter>
                 </Stream>
         		-->
         
@@ -172,7 +175,9 @@
                         <Parameter name="maxRequests">
                                 <![CDATA[2]]>
                         </Parameter>
-                        
+                        <Parameter name="maxRunningTime">
+							<![CDATA[10000]]>
+						</Parameter>
                 </Stream> 
                 -->
                 
@@ -197,7 +202,9 @@
                                 <![CDATA[50]]>
                         </Parameter>
                         </Parameter>
-                        
+                        <Parameter name="maxRunningTime">
+							<![CDATA[10000]]>
+						</Parameter>
                 </Stream>
                 -->
                 <!-- Google+ Stream Handler 
@@ -223,7 +230,9 @@
                         <Parameter name="maxRequests">
                                 <![CDATA[1]]>
                         </Parameter>
-                        </Parameter>
+                        <Parameter name="maxRunningTime">
+								<![CDATA[10000]]>
+						</Parameter>
                         
                 </Stream>
                  --> 
@@ -247,7 +256,9 @@
                         <Parameter name="maxRequests">
                                 <![CDATA[1]]>
                         </Parameter>
-                        </Parameter>
+                       <Parameter name="maxRunningTime">
+								<![CDATA[10000]]>
+						</Parameter>
                         
                 </Stream>
                 
@@ -267,15 +278,17 @@
                                 <![CDATA[your.accesstoken]]>
                         </Parameter>
                         <Parameter name="since">
-                        <![CDATA[2013-10-01 00:00:00.000]]>
-                      </Parameter>
-                      <Parameter name="maxResults">
+                        		<![CDATA[2013-10-01 00:00:00.000]]>
+                      	</Parameter>
+                      	<Parameter name="maxResults">
                                 <![CDATA[50]]>
                         </Parameter>
                         <Parameter name="maxRequests">
                                 <![CDATA[1]]>
                         </Parameter>
-                        </Parameter>
+                        <Parameter name="maxRunningTime">
+								<![CDATA[10000]]>
+						</Parameter>
                         
                 </Stream> 
         -->
