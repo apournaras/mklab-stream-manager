@@ -214,7 +214,7 @@ public class StreamsMonitor {
 		
 		allRunningStreams = streamsFetchTasks.size();
 		
-		while(allStreamsDone < allRunningStreams)
+		while(allStreamsDone < allRunningStreams) {
 			for(StreamFetchTask streamTask : streamsFetchTasks.values()){
 				if(streamTask.completed && !finishedTasks.contains(streamTask)){
 					totalRetrievedItems.addAll(streamTask.getTotalRetrievedItems());
@@ -222,6 +222,7 @@ public class StreamsMonitor {
 					allStreamsDone++;
 				}	
 			}
+		}
 		
 		for(StreamFetchTask streamTask : finishedTasks)
 			streamTask = null;
