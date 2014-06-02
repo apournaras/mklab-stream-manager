@@ -85,7 +85,7 @@ public class MediaSearcher {
 	private Map<String, Stream> streams = null;
 	
 	private Queue<Dysco> requests = new LinkedList<Dysco>();
-	private Queue<String> dyscosToUpdate = new LinkedList<String>();
+	private Queue<Dysco> dyscosToUpdate = new LinkedList<Dysco>();
 	
 	private Map<String,List<Query>> dyscosToQueries = new HashMap<String,List<Query>>();
 	
@@ -183,10 +183,10 @@ public class MediaSearcher {
 	
     	
 		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
-		
+//		
 //		SolrDyscoHandler solrDyscoHandler = SolrDyscoHandler.getInstance(solrHost+"/"+solrService+"/"+dyscoCollection);
 //		
-//		Dysco testDysco = solrDyscoHandler.findDyscoLight("0eb98fee-cb0a-43b0-b542-2b8fc1401855");
+//		Dysco testDysco = solrDyscoHandler.findDyscoLight("efee514c-daed-4fbf-a81d-3e3af2159fa0");
 //		requests.add(testDysco);
 	}
 	
@@ -392,7 +392,7 @@ public class MediaSearcher {
 	 */
 	public class TrendingSearchHandler extends Thread {
 		
-		private BlockingQueue<String> trendingDyscoQueue = new LinkedBlockingDeque<String>(100);
+		private BlockingQueue<Dysco> trendingDyscoQueue = new LinkedBlockingDeque<Dysco>(100);
 		
 		private Map<String,List<Feed>> inputFeedsPerDysco = new HashMap<String,List<Feed>>();
 		
@@ -413,23 +413,25 @@ public class MediaSearcher {
 			//primaryStreamsToSearch.remove("Facebook");
 		}
 		
-		public void addTrendingDysco(String dyscoId,List<Feed> inputFeeds){
-			logger.info("New incoming dysco : "+dyscoId+" with "+inputFeeds.size()+" searchable feeds");
-			trendingDyscoQueue.add(dyscoId);
-			inputFeedsPerDysco.put(dyscoId, inputFeeds);
+		public void addTrendingDysco(Dysco dysco,List<Feed> inputFeeds){
+			logger.info("New incoming dysco : "+dysco.getId()+" with "+inputFeeds.size()+" searchable feeds");
+			synchronized (trendingDyscoQueue) {	
+				trendingDyscoQueue.add(dysco);
+			}
+			inputFeedsPerDysco.put(dysco.getId(), inputFeeds);
 		}
 		
 		public void run(){
-			String dyscoId = null;
+			Dysco dysco = null;
 			while(isAlive){
 				
-				dyscoId = poll();
-				if(dyscoId == null){
+				dysco = poll();
+				if(dysco == null){
 					continue;
 				}
 				else{
 					keyHold = true;
-					searchForDysco(dyscoId);
+					searchForDysco(dysco);
 					keyHold = false;
 				}
 					
@@ -439,51 +441,46 @@ public class MediaSearcher {
 		 * Polls a trending dysco request from the queue
 		 * @return
 		 */
-		private String poll(){
+		private Dysco poll(){
 			synchronized (trendingDyscoQueue) {					
 				if (!trendingDyscoQueue.isEmpty()) {
-					String request = trendingDyscoQueue.poll();
+					Dysco request = trendingDyscoQueue.poll();
 					
 					return request;
-				}
-				try {
-					trendingDyscoQueue.wait(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
 				}
 				
 				return null;
 			}
 		}
 		
-		private synchronized void searchForDysco(String dyscoId){
+		private synchronized void searchForDysco(Dysco dysco){
 			long start = System.currentTimeMillis();
 			
-			logger.info("Media Searcher handling #"+dyscoId);
+			logger.info("Media Searcher handling #"+dysco.getId());
 			
 			//first search
-			List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
+			List<Feed> feeds = inputFeedsPerDysco.get(dysco.getId());
 			retrievalDate = new Date(System.currentTimeMillis());
-			inputFeedsPerDysco.remove(dyscoId);
+			inputFeedsPerDysco.remove(dysco.getId());
 			retrievedItems = searcher.search(feeds,primaryStreamsToSearch);
 			
 			long t1 = System.currentTimeMillis();
 			
-			System.out.println("Time for First Search for dysco: "+dyscoId+" is "+(t1-start)/1000+" sec ");
+			System.out.println("Time for First Search for dysco: "+dysco.getId()+" is "+(t1-start)/1000+" sec ");
 			
 			long t2 = System.currentTimeMillis();
 			
 			//second search
-			List<Query> queries = queryBuilder.getFurtherProcessedSolrQueries(retrievedItems,5,dyscoId);
+			List<Query> queries = queryBuilder.getFurtherProcessedSolrQueries(retrievedItems,5,dysco);
 			
 			System.out.println("Number of additional queries : "+queries.size());
 			
 			long t3 = System.currentTimeMillis();
 			
-			System.out.println("Time for computing queries for dysco:+ "+dyscoId+" is "+(t3-t2)/1000+" sec ");
+			System.out.println("Time for computing queries for dysco:+ "+dysco.getId()+" is "+(t3-t2)/1000+" sec ");
 			
-			dyscosToQueries.put(dyscoId, queries);
-			dyscosToUpdate.add(dyscoId);
+			dyscosToQueries.put(dysco.getId(), queries);
+			dyscosToUpdate.add(dysco);
 			
 			List<Feed> newFeeds = translateQueriesToKeywordsFeeds(queries,retrievalDate);
 			
@@ -491,11 +488,11 @@ public class MediaSearcher {
 			
 			long t4 = System.currentTimeMillis();
 			
-			System.out.println("Time for Second Search for dysco:+ "+dyscoId+" is "+(t4-t3)/1000+" sec ");
+			System.out.println("Time for Second Search for dysco:+ "+dysco.getId()+" is "+(t4-t3)/1000+" sec ");
 			
 			long end = System.currentTimeMillis();
 			
-			System.out.println(new Date(System.currentTimeMillis())+" - Total Time searching for dysco:+ "+dyscoId+" is "+(end-start)/1000+" sec ");
+			System.out.println(new Date(System.currentTimeMillis())+" - Total Time searching for dysco:+ "+dysco.getId()+" is "+(end-start)/1000+" sec ");
 		}
 		
 		/**
@@ -548,7 +545,7 @@ public class MediaSearcher {
 					feeds = feedsCreator.getQuery();
 					
 					if(receivedDysco.getDyscoType().equals(DyscoType.TRENDING)){
-						trendingSearchHandler.addTrendingDysco(receivedDysco.getId(), feeds);
+						trendingSearchHandler.addTrendingDysco(receivedDysco, feeds);
 					}
 					else if(receivedDysco.getDyscoType().equals(DyscoType.CUSTOM)){
 						customSearchHandler.addCustomDysco(receivedDysco.getId(), feeds);
@@ -568,7 +565,7 @@ public class MediaSearcher {
 			synchronized (requests) {					
 				if (!requests.isEmpty() && !keyHold) {
 					Dysco request = requests.poll();
-					
+					System.out.println("Trending Dyscos remain to be served: "+requests.size());
 					try {
 						requests.wait(1000);
 					} catch (InterruptedException e) {
@@ -577,12 +574,7 @@ public class MediaSearcher {
 					}
 					return request;
 				}
-				try {
-					System.out.println("Trending Dyscos remain to be served: "+requests.size());
-					requests.wait(2000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				
 				
 				return null;
 			}
@@ -603,7 +595,7 @@ public class MediaSearcher {
 		}
 		
 		public void run(){
-			String dyscoToUpdate = null;
+			Dysco dyscoToUpdate = null;
 			while(isAlive){
 				dyscoToUpdate = poll();
 				if(dyscoToUpdate == null){
@@ -611,27 +603,30 @@ public class MediaSearcher {
 				}
 				else{
 					List<Query> solrQueries = dyscosToQueries.get(dyscoToUpdate);
-					Dysco updatedDysco = solrdyscoHandler.findDyscoLight(dyscoToUpdate);
+				
+//					System.out.println("---Solr Queries in the updated dysco---");
+//					for(Query query : solrQueries)
+//						System.out.println(query.getName()+":"+query.getScore());
+
+//					if(solrQueries == null || solrQueries.isEmpty()){
+//						for(String hash : dyscoToUpdate.getHashtags().keySet()){
+//							Query query = new Query(hash,updatedDysco.getHashtags().get(hash));
+//							
+//							solrQueries.add(query);
+//						}
+//						
+//						for(Entity ent : updatedDysco.getEntities()){
+//							Query query = new Query(ent.getName(),ent.getCont());
+//							
+//							solrQueries.add(query);
+//						}
+//					}
 					
-					if(solrQueries == null || solrQueries.isEmpty()){
-						for(String hash : updatedDysco.getHashtags().keySet()){
-							Query query = new Query(hash,updatedDysco.getHashtags().get(hash));
-							
-							solrQueries.add(query);
-						}
-						
-						for(Entity ent : updatedDysco.getEntities()){
-							Query query = new Query(ent.getName(),ent.getCont());
-							
-							solrQueries.add(query);
-						}
-					}
-					
-					updatedDysco.setSolrQueries(solrQueries);
-					solrdyscoHandler.insertDysco(updatedDysco);
+					dyscoToUpdate.setSolrQueries(solrQueries);
+					solrdyscoHandler.insertDysco(dyscoToUpdate);
 					dyscosToQueries.remove(dyscoToUpdate);
 					
-					System.out.println("Dysco : "+updatedDysco.getId()+" is updated");
+					System.out.println("Dysco : "+dyscoToUpdate.getId()+" is updated");
 				}
 			}
 		}
@@ -640,16 +635,11 @@ public class MediaSearcher {
 		 * Polls a trending dysco request from the queue
 		 * @return
 		 */
-		private String poll(){
+		private Dysco poll(){
 			synchronized (dyscosToUpdate) {					
 				if (!dyscosToUpdate.isEmpty()) {
-					String dyscoToUpdate = dyscosToUpdate.poll();
-					return dyscoToUpdate;
-				}
-				try {
-					dyscosToUpdate.wait(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+				
+					return dyscosToUpdate.poll();
 				}
 				
 				return null;

@@ -170,7 +170,7 @@ public class NewsAggregator {
 		private long checkTime = 60000 * 60 * 24; //1-day 
 		private long lastCheck = System.currentTimeMillis();
 		private long currentTime = System.currentTimeMillis();
-		private long dateThreshold = 60000 * 60 * 24 * 30; //1-week
+		private long dateThreshold = 60000 * 60 * 24 * 30; //1-month
 		
 		public Eliminator(NewsAggregator aggregator) {
 			this.aggregator = aggregator;
