@@ -29,7 +29,7 @@ public class MentionsItemFilter extends ItemFilter {
 		List<Source> sources = dao.findListSources(listId);
 		ids = new ArrayList<String>();
 		for(Source source : sources) {
-			ids.add(source.getStreamId() + "#" + source.getId());
+			ids.add(source.getNetwork() + "#" + source.getId());
 		}
 		
 		Logger.getLogger(MentionsItemFilter.class).info("Initialized. " + 
