@@ -47,6 +47,10 @@ public class StreamsManagerConfiguration extends Configuration {
 	private Map<String, FilterConfiguration> filterConfigMap = null;
 	
 	@Expose
+	@SerializedName(value = "processors")
+	private Map<String, ProcessorConfiguration> processorsConfigMap = null;
+	
+	@Expose
 	@SerializedName(value = "subscribers")
 	private Map<String, StreamConfiguration> subscriberConfigMap = null;
 	
@@ -55,6 +59,7 @@ public class StreamsManagerConfiguration extends Configuration {
 		streamConfigMap = new HashMap<String, StreamConfiguration>();
 		storageConfigMap = new HashMap<String, StorageConfiguration>();
 		filterConfigMap = new HashMap<String, FilterConfiguration>();
+		processorsConfigMap = new HashMap<String, ProcessorConfiguration>();
 		subscriberConfigMap = new HashMap<String, StreamConfiguration>();
 	}
 	
@@ -84,11 +89,19 @@ public class StreamsManagerConfiguration extends Configuration {
 	}
 	
 	public void setFilterConfig(String filterId, FilterConfiguration config){
-		filterConfigMap.put(filterId,config);
+		filterConfigMap.put(filterId, config);
 	}
 	
 	public FilterConfiguration getFilterConfig(String filterId){
 		return filterConfigMap.get(filterId);
+	}
+	
+	public void setProcessorConfig(String processorId, ProcessorConfiguration config){
+		processorsConfigMap.put(processorId, config);
+	}
+	
+	public ProcessorConfiguration getProcessorConfig(String processorId){
+		return processorsConfigMap.get(processorId);
 	}
 	
 	public void setParameter(String name, String value){
@@ -113,6 +126,10 @@ public class StreamsManagerConfiguration extends Configuration {
 	
 	public Set<String> getFilterIds(){
 		return filterConfigMap.keySet();
+	}
+	
+	public Set<String> getProcessorsIds(){
+		return processorsConfigMap.keySet();
 	}
 	
 	public static StreamsManagerConfiguration readFromMongo(String host, String dbName, String collectionName) 
@@ -172,7 +189,8 @@ public class StreamsManagerConfiguration extends Configuration {
 			IN_CONFIG_STORAGE_PARAM,
 			IN_CONFIG_FILTER,
 			IN_CONFIG_FILTER_PARAM,
-			
+			IN_CONFIG_PROCESSOR,
+			IN_CONFIG_PROCESSOR_PARAM,
 		}
 		
 		private StreamsManagerConfiguration config = new StreamsManagerConfiguration();
@@ -183,7 +201,9 @@ public class StreamsManagerConfiguration extends Configuration {
 	    private StreamConfiguration srconfig = null;
 	    private StorageConfiguration storage_config = null; 
 	    private FilterConfiguration filter_config = null; 
-	    private String streamId = null, storageId = null, subscriberId = null, filterId = null;
+	    private ProcessorConfiguration processor_config = null; 
+	    private String streamId = null, storageId = null, 
+	    		subscriberId = null, filterId = null, processorId = null;
 		
 		public StreamsManagerConfiguration getConfig() {
 			return config;
@@ -213,7 +233,9 @@ public class StreamsManagerConfiguration extends Configuration {
 				else if(state == ParseState.IN_CONFIG_FILTER) {
 					state = ParseState.IN_CONFIG_FILTER_PARAM;
 				}
-			
+				else if(state == ParseState.IN_CONFIG_PROCESSOR) {
+					state = ParseState.IN_CONFIG_PROCESSOR_PARAM;
+				}
 			}
 			
 			else if (name.equalsIgnoreCase("Stream")){
@@ -244,7 +266,13 @@ public class StreamsManagerConfiguration extends Configuration {
 				filter_config = new FilterConfiguration();
 				state = ParseState.IN_CONFIG_FILTER;
 			}
-			
+			else if (name.equalsIgnoreCase("Processor")){
+				processorId = attributes.getValue("id");
+				value = new StringBuilder();
+				if (processorId == null) return;
+				processor_config = new ProcessorConfiguration();
+				state = ParseState.IN_CONFIG_PROCESSOR;
+			}
 		}
 		
 		@Override
@@ -279,6 +307,10 @@ public class StreamsManagerConfiguration extends Configuration {
 				filter_config.setParameter(this.name, value.toString().trim());
 				state = ParseState.IN_CONFIG_FILTER;
 			}
+			else if (name.equalsIgnoreCase("Parameter") && state == ParseState.IN_CONFIG_PROCESSOR_PARAM){
+				processor_config.setParameter(this.name, value.toString().trim());
+				state = ParseState.IN_CONFIG_PROCESSOR;
+			}
 			else if (name.equalsIgnoreCase("Stream")){
 				config.setStreamConfig(streamId, sconfig);
 				state = ParseState.IDLE;
@@ -295,10 +327,10 @@ public class StreamsManagerConfiguration extends Configuration {
 				config.setFilterConfig(filterId, filter_config);
 				state = ParseState.IDLE;
 			}
-				
+			else if (name.equalsIgnoreCase("Processor")){
+				config.setProcessorConfig(processorId, processor_config);
+				state = ParseState.IDLE;
+			}	
 		}
-
-		
-		
 	}
 }

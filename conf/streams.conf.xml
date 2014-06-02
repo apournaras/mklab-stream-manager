@@ -79,10 +79,21 @@
 	   				<Parameter name="database"><![CDATA[Prototype]]></Parameter>
 	   				<Parameter name="collection"><![CDATA[Sources]]></Parameter>
             </Filter>
-           
   	</Filters>
+    
+    <Processors>
+    	<Processor id="GeoProcessor">
+    			<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.processors.GeoProcessor]]></Parameter>
+            	<Parameter name="citiesFile">
+                    <![CDATA[/disk1_data/workspace/git/geo-util/allCountries.txt]]>
+            	</Parameter>
+            	<Parameter name="countryInfoFile">
+                    <![CDATA[/disk1_data/workspace/git/geo-util/countryInfo.txt]]>
+            	</Parameter>
+   		</Processor>
+    </Processors>
             
-       <!--   -->
+    <!--   -->
 	<Subscribers>
 		<Subscriber id ="Twitter">
 			<Parameter name="Classpath">

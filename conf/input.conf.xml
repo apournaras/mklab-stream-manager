@@ -3,7 +3,7 @@
 		<!--  -->
 	   <StorageInput>
 	   		<Storage id = "Mongodb">
-	   			<Parameter name="host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
+	   			<Parameter name="host"><![CDATA[160.40.50.207]]></Parameter>
 	   			<Parameter name="database"><![CDATA[Prototype]]></Parameter>
 	   			<Parameter name="collection"><![CDATA[Sources]]></Parameter>
 	   		</Storage>

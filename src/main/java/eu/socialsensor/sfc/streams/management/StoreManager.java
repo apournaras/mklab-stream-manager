@@ -13,9 +13,11 @@ import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.streams.StreamException;
 import eu.socialsensor.framework.streams.StreamHandler;
 import eu.socialsensor.sfc.streams.FilterConfiguration;
+import eu.socialsensor.sfc.streams.ProcessorConfiguration;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.filters.ItemFilter;
+import eu.socialsensor.sfc.streams.processors.Processor;
 import eu.socialsensor.sfc.streams.store.Consumer;
 import eu.socialsensor.sfc.streams.store.MultipleStorages;
 import eu.socialsensor.sfc.streams.store.StreamUpdateStorage;
@@ -43,6 +45,7 @@ public class StoreManager implements StreamHandler {
 	private List<StreamUpdateStorage> workingStorages = new ArrayList<StreamUpdateStorage>();
 	
 	private Map<String, ItemFilter> filtersMap = new HashMap<String, ItemFilter>();
+	private Map<String, Processor> processorsMap = new HashMap<String, Processor>();
 	
 	private StorageStatusAgent statusAgent;
 	
@@ -65,9 +68,14 @@ public class StoreManager implements StreamHandler {
 		try {
 			createFilters();
 			logger.info(filtersMap.size() + " filters initialized!");
+			
+			createProcessors();
+			logger.info(filtersMap.size() + " processors initialized!");
+			
 			store = initStorage(config);	
 		} catch (StreamException e) {
 			e.printStackTrace();
+			logger.error(e);
 		}
 		
 		this.statusAgent = new StorageStatusAgent(this);
@@ -106,7 +114,7 @@ public class StoreManager implements StreamHandler {
 	public void start() {
 		
 		for(int i=0; i<numberOfConsumers; i++)
-			consumers.add(new Consumer(queue, store, filtersMap.values()));
+			consumers.add(new Consumer(queue, store, filtersMap.values(), processorsMap.values()));
 		
 		for(Consumer consumer : consumers)
 			consumer.start();
@@ -203,6 +211,23 @@ public class StoreManager implements StreamHandler {
 				ItemFilter filterInstance = (ItemFilter) constructor.newInstance(fconfig);
 			
 				filtersMap.put(filterId, filterInstance);
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+			throw new StreamException("Error during streams initialization", e);
+		}
+	}
+	
+	private void createProcessors() throws StreamException {
+		try {
+			for (String processorId : config.getProcessorsIds()) {
+				
+				ProcessorConfiguration pconfig = config.getProcessorConfig(processorId);
+				String className = pconfig.getParameter(ProcessorConfiguration.CLASS_PATH);
+				Constructor<?> constructor = Class.forName(className).getConstructor(ProcessorConfiguration.class);
+				Processor processorInstance = (Processor) constructor.newInstance(pconfig);
+			
+				processorsMap.put(processorId, processorInstance);
 			}
 		}catch(Exception e) {
 			e.printStackTrace();

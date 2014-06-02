@@ -109,6 +109,11 @@
         	<artifactId>jersey-client</artifactId>
         	<version>1.9</version>
         </dependency>
+        <dependency>
+        	<groupId>eu.socialsensor</groupId>
+        	<artifactId>geo-util</artifactId>
+        	<version>0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     
 	<repositories>

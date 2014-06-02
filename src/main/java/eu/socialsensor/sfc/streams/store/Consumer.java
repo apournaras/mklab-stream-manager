@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.Item.Operation;
 import eu.socialsensor.sfc.streams.filters.ItemFilter;
+import eu.socialsensor.sfc.streams.processors.Processor;
 
 /**
  * Class for storing items to databases
@@ -31,11 +32,14 @@ public class Consumer extends Thread {
 	private BlockingQueue<Item> queue;
 	
 	private Collection<ItemFilter> filters;
+	private Collection<Processor> processors;
 	
-	public Consumer(BlockingQueue<Item> queue, StreamUpdateStorage store, Collection<ItemFilter> filters) {
+	public Consumer(BlockingQueue<Item> queue, StreamUpdateStorage store, 
+			Collection<ItemFilter> filters, Collection<Processor> processors) {
 		this.store = store;
 		this.queue = queue;
 		this.filters = filters;
+		this.processors = processors;
 	}
 	
 	/**
@@ -79,6 +83,10 @@ public class Consumer extends Thread {
 			for(ItemFilter filter : filters) {
 				if(!filter.accept(item))
 					return;
+			}
+			
+			for(Processor processor : processors) {
+				processor.process(item);	
 			}
 			
 			if (item.getOperation() == Operation.NEW) {
