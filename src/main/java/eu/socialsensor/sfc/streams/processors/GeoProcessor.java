@@ -60,47 +60,52 @@ public class GeoProcessor extends Processor {
 		String citiesFile = configuration.getParameter("citiesFile");
 		String countryInfoFile = configuration.getParameter("countryInfoFile");
 		
-		if(citiesFile!=null && countryInfoFile!=null) {
+		if(citiesFile != null && countryInfoFile != null) {
 			rgeoService = new ReverseGeocoder(citiesFile, countryInfoFile);
 		}
-		else {
-			Logger.getLogger(GeoProcessor.class).error("GeoProcessor cannot be initialized. "
-					+ "citiesFile or countryInfoFile is null.");
-		}
 		
-		for(int i=0; i<timezones.length; i++) {
-			timezoneToCountry.put(timezones[i], countries[i]);
+		if(timezones.length == countries.length) {
+			for(int i=0; i<timezones.length; i++) {
+				timezoneToCountry.put(timezones[i], countries[i]);
+			}
 		}
 	}
 
 	@Override
 	public void process(Item item) {
-		
-		Location location = item.getLocation();
-		if(rgeoService != null && location != null) {
-			Double lat = location.getLatitude();
-			Double lon = location.getLongitude();
+		try {
+			Location location = item.getLocation();
+			if(rgeoService != null && location != null) {
+				Double lat = location.getLatitude();
+				Double lon = location.getLongitude();
 				
-			if(lat!=null && lon!=null) {
-				if(location.getCountryName()==null || location.getCountryName().equals("")) {
-					String country = rgeoService.getCountryByLatLon(lat, lon);
-					location.setCountryName(country);
+				if(lat!=null && lon!=null) {
+					if(location.getCountryName()==null || location.getCountryName().equals("")) {
+						String country = rgeoService.getCountryByLatLon(lat, lon);
+						location.setCountryName(country);
+					}
+				}
+			}
+			else if(location == null) {
+				// Location is null. Use user's timezone to estimate country.
+				StreamUser streamUser = item.getStreamUser();
+				if(streamUser != null) {
+					String timezone = streamUser.getTimezone();
+				
+					if(timezone == null)
+						return;
+					
+					String country = timezoneToCountry.get(timezone);
+					if(country != null) {
+						Location l = new Location(country);
+						l.setCountryName(country);
+						item.setLocation(l);
+					}
 				}
 			}
 		}
-		else if(location == null) {
-			// Location is null. Use user's timezone to estimate country.
-			StreamUser streamUser = item.getStreamUser();
-			if(streamUser != null) {
-				String timezone = streamUser.getTimezone();
-				
-				String country = timezoneToCountry.get(timezone);
-				if(country != null) {
-					Location l = new Location(country);
-					item.setLocation(l);
-				}
-			}
-			
+		catch(Exception e) {
+			Logger.getLogger(GeoProcessor.class).error(e);
 		}
 	}
 
