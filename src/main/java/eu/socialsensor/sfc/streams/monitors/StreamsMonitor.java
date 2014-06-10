@@ -65,6 +65,7 @@ public class StreamsMonitor {
 		this.streams.put(streamId, stream);
 		this.requestTimePerStream.put(streamId, DEFAULT_REQUEST_TIME);
 	}
+	
 	/**
 	 * Adds a stream to the monitor
 	 * @param stream
@@ -75,11 +76,26 @@ public class StreamsMonitor {
 		this.requestTimePerStream.put(streamId, DEFAULT_REQUEST_TIME);
 	}
 	
+	/**
+	 * Adds a stream to the monitor
+	 * @param stream
+	 */
+	public void addFeeds(String streamId,List<Feed> feeds){
+		StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);
+		if(fetchTask != null) {
+			fetchTask.addFeeds(feeds);
+		}
+	}
+	
+	public Stream getStream(String streamId) {
+		return streams.get(streamId);
+	}
+	
 	public void setStreamRequestTime(String streamId,Long requestTime){
 		this.requestTimePerStream.put(streamId, requestTime);
 	}
 	
-	public void startStream(String streamId){
+	public void startStream(String streamId) {
 		if(!streams.containsKey(streamId)){
 			logger.error("Stream "+streamId+" needs to be added to the monitor first");
 			return;
