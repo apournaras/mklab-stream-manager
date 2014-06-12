@@ -26,9 +26,19 @@ public class LanguageDetector extends Processor {
 		if(lang == null) {
 			// detect lang
 			try {
-				String title = item.getTitle();
 				Detector detector = DetectorFactory.create();
-				detector.append(title);
+				
+				String title = item.getTitle();
+				String description = item.getDescription();
+				if(title != null) {
+					detector.append(title);
+				} 
+				else if (description != null) {
+					detector.append(description);
+				}
+				else {
+					return;
+				}
 				
 				lang = detector.detect();
 				item.setLang(lang);
@@ -36,9 +46,7 @@ public class LanguageDetector extends Processor {
 			} catch (LangDetectException e) {
 				e.printStackTrace();
 			}
-			
 		}
-		
 	}
 
 }
