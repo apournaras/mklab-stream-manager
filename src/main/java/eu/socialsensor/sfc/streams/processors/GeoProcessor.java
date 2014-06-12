@@ -1,12 +1,14 @@
 package eu.socialsensor.sfc.streams.processors;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.Location;
+import eu.socialsensor.framework.common.domain.MediaItem;
 import eu.socialsensor.framework.common.domain.StreamUser;
 import eu.socialsensor.geo.ReverseGeocoder;
 import eu.socialsensor.sfc.streams.ProcessorConfiguration;
@@ -97,9 +99,18 @@ public class GeoProcessor extends Processor {
 					
 					String country = timezoneToCountry.get(timezone);
 					if(country != null) {
-						Location l = new Location(country);
-						l.setCountryName(country);
-						item.setLocation(l);
+						Location loc = new Location(country);
+						loc.setCountryName(country);
+						item.setLocation(loc);
+						
+						List<MediaItem> mItems = item.getMediaItems();
+						if(mItems != null) {
+							for(MediaItem mItem : mItems) {
+								Location miLoc = mItem.getLocation();
+								if(miLoc == null)
+									mItem.setLocation(loc);
+							}
+						}
 					}
 				}
 			}
