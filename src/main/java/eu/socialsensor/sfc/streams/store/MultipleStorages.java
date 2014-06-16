@@ -74,7 +74,7 @@ public class MultipleStorages implements StreamUpdateStorage {
 					storage.store(update);
 				}
 				catch(Exception e) {
-					continue;
+					return;
 				}
 			}
 		}

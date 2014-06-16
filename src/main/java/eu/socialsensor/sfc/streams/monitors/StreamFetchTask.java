@@ -76,8 +76,10 @@ public class StreamFetchTask implements Runnable{
 	@Override
 	public void run(){
 		try {
-			
+			long t1 = System.currentTimeMillis();
 			stream.poll(feeds);
+			long t2 = System.currentTimeMillis();
+			//System.out.println("Running Time for stream: "+stream.getClass().getName()+" is "+(t2-t1)/1000);
 			totalRetrievedItems.addAll(stream.getTotalRetrievedItems());
 			
 		} catch (StreamException e) {
