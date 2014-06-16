@@ -59,10 +59,14 @@ public class MediaSearcherDistributor {
 		
 		@Override
         public void run() {
-			int i = 0;
+			int i = 1;
 			while(true) {
 				try {
-					i = i%_n + 1;
+					if(i==2)
+						i=1;
+					else
+						i=2;
+					
 					String msg = _queue.take();
 					String channel = _channel + "_" + i;
 					logger.info("Send message to " + channel);
