@@ -7,6 +7,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
 
+import eu.socialsensor.framework.common.domain.dysco.Message;
+import eu.socialsensor.framework.common.domain.dysco.Message.Action;
+
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -62,17 +65,32 @@ public class MediaSearcherDistributor {
 			int i = 1;
 			while(true) {
 				try {
+					
+					String msg = _queue.take();
+					
+					Message dyscoMessage = Message.create(msg);
+					
+					if(dyscoMessage.getAction().equals(Action.DELETE)){
+						System.out.println("Send DELETE message to all channels");
+						if(msg != null) {
+							_jedis.publish(_channel+"_1", msg);	
+							_jedis.publish(_channel+"_2", msg);	
+						}
+						continue;
+					}
+					
 					if(i==2)
 						i=1;
 					else
 						i=2;
-					
-					String msg = _queue.take();
+						
 					String channel = _channel + "_" + i;
 					logger.info("Send message to " + channel);
 					if(msg != null) {
 						_jedis.publish(channel, msg);	
 					}
+					
+					
 				} catch (Exception e) {
 					logger.error(e);
 					continue;
