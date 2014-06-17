@@ -79,13 +79,9 @@ public class MediaSearcherDistributor {
 						continue;
 					}
 					
-					if(i==2)
-						i=1;
-					else
-						i=2;
-						
+					i = i%_n + 1;
 					String channel = _channel + "_" + i;
-					logger.info("Send message to " + channel);
+					System.out.println("Send message to " + channel);
 					if(msg != null) {
 						_jedis.publish(channel, msg);	
 					}
