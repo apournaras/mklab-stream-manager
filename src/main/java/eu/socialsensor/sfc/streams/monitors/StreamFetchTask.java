@@ -23,13 +23,18 @@ public class StreamFetchTask implements Runnable{
 	List<Feed> feeds = new ArrayList<Feed>();
 	List<Item> totalRetrievedItems = new ArrayList<Item>();
 	
-	public StreamFetchTask(Stream stream){
+	public StreamFetchTask(Stream stream) throws Exception{
 		this.stream = stream;
+		if(!this.stream.setMonitor())
+			throw new Exception("Feeds monitor for stream: "+this.stream.getClass()+" cannot be initialized");
 	}
 	
-	public StreamFetchTask(Stream stream,List<Feed> feeds){
+	public StreamFetchTask(Stream stream,List<Feed> feeds) throws Exception{
 		this.stream = stream;
 		this.feeds.addAll(feeds);
+		
+		if(!this.stream.setMonitor())
+			throw new Exception("Feeds monitor for stream: "+this.stream.getClass()+" cannot be initialized");
 	}
 	
 	/**

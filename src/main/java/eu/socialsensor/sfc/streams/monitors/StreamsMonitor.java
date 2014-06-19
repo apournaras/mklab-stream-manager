@@ -101,7 +101,13 @@ public class StreamsMonitor {
 			return;
 		}
 		
-		StreamFetchTask streamTask = new StreamFetchTask(streams.get(streamId),feedsPerStream.get(streamId));
+		StreamFetchTask streamTask = null;
+		try {
+			streamTask = new StreamFetchTask(streams.get(streamId),feedsPerStream.get(streamId));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		streamsFetchTasks.put(streamId, streamTask);
 		executor.execute(streamTask);
 		runningTimePerStream.put(streamId, System.currentTimeMillis());
@@ -132,8 +138,9 @@ public class StreamsMonitor {
 	 * Starts the retrieval process for each stream separately 
 	 * as a different thread with the same input feeds
 	 * @param feeds
+	 * @throws Exception 
 	 */
-	public void retrieveFromAllStreams(List<Feed> feeds){
+	public void retrieveFromAllStreams(List<Feed> feeds) throws Exception{
 		totalRetrievedItems.clear();
 		
 		for(Map.Entry<String, Stream> entry : streams.entrySet()){
@@ -157,7 +164,13 @@ public class StreamsMonitor {
 		
 		for(Map.Entry<String, Stream> entry : streams.entrySet()){
 			if(selectedStreams.contains(entry.getKey())){
-				StreamFetchTask streamTask = new StreamFetchTask(entry.getValue(),feeds);
+				StreamFetchTask streamTask = null;
+				try {
+					streamTask = new StreamFetchTask(entry.getValue(),feeds);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				streamsFetchTasks.put(entry.getKey(), streamTask);
 				executor.execute(streamTask);
 				runningTimePerStream.put(entry.getKey(), System.currentTimeMillis());

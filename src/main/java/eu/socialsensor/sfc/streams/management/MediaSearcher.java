@@ -311,11 +311,14 @@ public class MediaSearcher {
 					continue;
 				}
 				else{
+					
 					logger.info("Media Searcher handling #"+dyscoId);
 					List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
 					inputFeedsPerDysco.remove(dyscoId);
-					searcher.search(feeds,streams.keySet());
 					
+					keyHold = true;
+					searcher.search(feeds,streams.keySet());
+					keyHold = false;
 				}
 				
 			}
@@ -329,11 +332,6 @@ public class MediaSearcher {
 				if (!customDyscoQueue.isEmpty()) {
 					String request = customDyscoQueue.poll();
 					return request;
-				}
-				try {
-					customDyscoQueue.wait(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
 				}
 				
 				return null;
@@ -471,7 +469,7 @@ public class MediaSearcher {
 			long t2 = System.currentTimeMillis();
 			
 			//second search
-			List<Query> queries = queryBuilder.getFurtherProcessedSolrQueries(retrievedItems,5,dysco);
+			List<Query> queries = queryBuilder.getExpandedSolrQueries(retrievedItems,dysco,5);
 			
 			List<Query> expandedQueries = new ArrayList<Query>();
 			
@@ -569,7 +567,7 @@ public class MediaSearcher {
 		}
 		
 		/**
-		 * Polls a trending dysco request from the queue
+		 * Polls a  dysco request from the queue
 		 * @return
 		 */
 		private Dysco poll(){
@@ -701,9 +699,11 @@ public class MediaSearcher {
 		    		requests.add(dysco);
 		    		break;
 		    	case UPDATE:
+		    		//to be implemented
 		    		logger.info("Dysco with id : "+dyscoId+" updated");
 		    		break;
 		    	case DELETE:
+		    		//to be implemented
 		    		logger.info("Dysco with id : "+dyscoId+" deleted");
 		    		break;
 	    	}
