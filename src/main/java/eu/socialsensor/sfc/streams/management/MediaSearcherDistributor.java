@@ -15,6 +15,15 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisPubSub;
 
+/**
+ * Class responsible for distributing incoming DySco requests from
+ * redis to several services for further processing. The number of 
+ * services is determined from the arguments in main. The service acts as 
+ * a Redis Client that receives DySco messages and distributes them to 
+ * various other services. 
+ * @author ailiakop
+ * @email ailiakop@iti.gr
+ */
 public class MediaSearcherDistributor {
 
 	public static Logger logger = Logger.getLogger(MediaSearcherDistributor.class);
@@ -46,6 +55,12 @@ public class MediaSearcherDistributor {
         logger.info("Media Searcher Ditributor initialized.");
 	}
 
+	/**
+	 * Class responsible for distributing the requests that receives from Redis
+	 * in a sequential order to all services.
+	 * @author ailiakop
+	 *
+	 */
 	public static class RequestSender implements Runnable {
 		
 		private BlockingQueue<String> _queue;
@@ -96,7 +111,11 @@ public class MediaSearcherDistributor {
 		}
 	}
 	
-	
+	/**
+	 * Class that implements the Redis Client for receiving DySco messages. 
+	 * @author ailiakop
+	 *
+	 */
 	public static class RequestReceiver extends JedisPubSub implements Runnable {
 
 		private BlockingQueue<String> _queue;

@@ -15,13 +15,14 @@ import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.streams.Stream;
 
 /**
- * Class for monitoring the streams that correspond to each social network
+ * Thread-safe class for monitoring the streams that correspond to each social network
+ * Currently 7 social networks are supported
  * (Twitter, Youtube,Flickr,Instagram,Tumblr,Facebook,GooglePlus)
  * @author ailiakop
  * @email  ailiakop@iti.gr
  */
 public class StreamsMonitor {
-	private static final long DEFAULT_REQUEST_TIME = 30*60000; 
+	private static final long DEFAULT_REQUEST_TIME = 5*60*60000; 
 	
 	public final Logger logger = Logger.getLogger(StreamsMonitor.class);
 
@@ -61,30 +62,29 @@ public class StreamsMonitor {
 		}
 	}
 
+	/**
+	 * Add one stream to the monitor mapped to its id
+	 * @param streamId
+	 * @param stream
+	 */
 	public void addStream(String streamId,Stream stream){
 		this.streams.put(streamId, stream);
 		this.requestTimePerStream.put(streamId, DEFAULT_REQUEST_TIME);
 	}
 	
 	/**
-	 * Adds a stream to the monitor
+	 * Adds a stream to the monitor mapped to its id and the feeds that
+	 * will be used to retrieve relevant content from the aforementioned
+	 * stream. Request time refers to the time period the stream will 
+	 * serve search requests. 
+	 * @param streamId
 	 * @param stream
+	 * @param feeds
 	 */
 	public void addStream(String streamId,Stream stream,List<Feed> feeds){
 		this.streams.put(streamId, stream);
 		this.feedsPerStream.put(streamId, feeds);
 		this.requestTimePerStream.put(streamId, DEFAULT_REQUEST_TIME);
-	}
-	
-	/**
-	 * Adds a stream to the monitor
-	 * @param stream
-	 */
-	public void addFeeds(String streamId,List<Feed> feeds){
-		StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);
-		if(fetchTask != null) {
-			fetchTask.addFeeds(feeds);
-		}
 	}
 	
 	public Stream getStream(String streamId) {
@@ -94,7 +94,11 @@ public class StreamsMonitor {
 	public void setStreamRequestTime(String streamId,Long requestTime){
 		this.requestTimePerStream.put(streamId, requestTime);
 	}
-	
+	/**
+	 * Starts searching into the specific stream by assigning its feeds to stream fetch tasks and
+	 * executing them.
+	 * @param streamId
+	 */
 	public void startStream(String streamId) {
 		if(!streams.containsKey(streamId)){
 			logger.error("Stream "+streamId+" needs to be added to the monitor first");
@@ -116,8 +120,8 @@ public class StreamsMonitor {
 	}
 
 	/**
-	 * Starts the retrieval process for each stream separately 
-	 * as a different thread
+	 * Starts the retrieval process for all streams. Each stream is served
+	 * by a different thread->StreamFetchTask
 	 * @param 
 	 */
 	public void startAllStreamsAtOnce(){
@@ -135,8 +139,9 @@ public class StreamsMonitor {
 	}
 	
 	/**
-	 * Starts the retrieval process for each stream separately 
-	 * as a different thread with the same input feeds
+	 *Starts the retrieval process for all the streams added. Each stream is served
+	 * by a different thread->StreamFetchTask. All streams are assigned the
+	 * same input feeds for retrieving relevant content.
 	 * @param feeds
 	 * @throws Exception 
 	 */
@@ -155,8 +160,10 @@ public class StreamsMonitor {
 	}
 	
 	/**
-	 * Starts the retrieval process for each stream separately 
-	 * as a different thread with the same input feeds
+	 * Starts the retrieval process for all the streams specified here with a 
+	 * standard list of input feeds to retrieve relevant content. Each stream is served
+	 * by a different thread->StreamFetchTask.
+	 * @param selectedStreams
 	 * @param feeds
 	 */
 	public void retrieveFromSelectedStreams(Set<String> selectedStreams, List<Feed> feeds){
@@ -180,7 +187,13 @@ public class StreamsMonitor {
 			
 		}
 	}
-	
+	/**
+	 * Restarts a stream to start retrieving again for relevant content to its input feeds. 
+	 * Reinitializer checks the last time the stream was searched and if the specified time 
+	 * period has passed, restarts the stream. 
+	 * @author ailiakop
+	 *
+	 */
 	private class ReInitializer extends Thread{
 		private Map<String,Long> reformedRunningTimes = new HashMap<String,Long>();
 		
@@ -214,25 +227,9 @@ public class StreamsMonitor {
 		
 	}
 	
-	/*public void reinitializePolling(){
-		while(!areAllStreamFinished()){
-			System.out.println("Stream Monitor - Wait for all streams to finish - normally should not happen");
-		}
-		
-		for(StreamFetchTask streamTask : streamsFetchTasks){
-			if(!streamTask.isSubscriber){
-				streamTask.restartTask();
-				executor.execute(streamTask);
-			}
-		}
-		
-		System.out.println("Streams Monitor reinitialized");
-	}*/
-	
-	
 	/**
 	 * Checks if all streams are finished retrieving items
-	 * and if yes sets the stream monitor as finished
+	 * and if so sets returns true
 	 * @return
 	 */
 	public boolean areAllStreamsFinished(){

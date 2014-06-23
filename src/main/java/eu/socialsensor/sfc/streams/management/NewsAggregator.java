@@ -23,6 +23,13 @@ import eu.socialsensor.sfc.builder.input.DataInputType;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 
+
+/**
+ * Class responsible for storing items from news sources, such as 
+ * News Websites (BBC,CNN,CBS,Reuters) - Currently supports only RSS Feeds
+ * @author ailiakop
+ * @email ailiakop@iti.gr
+ */
 public class NewsAggregator {
 	
 	public final Logger logger = Logger.getLogger(NewsAggregator.class);
@@ -40,8 +47,6 @@ public class NewsAggregator {
 	
 	private Eliminator eliminator;
 	
-	private int numberOfConsumers = 1; //for multi-threaded items' storage
-
 	private List<Feed> feeds = new ArrayList<Feed>();
 	
 	public NewsAggregator(StreamsManagerConfiguration config,InputConfiguration input_config) throws StreamException{
@@ -63,7 +68,7 @@ public class NewsAggregator {
 	}
 	
 	/**
-	 * Opens Manager by starting the auxiliary modules and setting up
+	 * Opens NewsAggregator by starting the auxiliary modules and setting up
 	 * the database for reading/storing
 	 * @throws StreamException
 	 */
@@ -86,7 +91,8 @@ public class NewsAggregator {
 			
 			//Start the Streams
 			for (String streamId : streams.keySet()) {
-				logger.info("Stream Manager - Start Stream : "+streamId);
+				logger.info("NewsAggregator - Start Stream : "+streamId);
+				System.out.println("NewsAggregator - Start Stream : "+streamId);
 				StreamConfiguration sconfig = config.getStreamConfig(streamId);
 				Stream stream = streams.get(streamId);
 				stream.setHandler(storeManager);
@@ -120,8 +126,7 @@ public class NewsAggregator {
 	
 	
 	/**
-	 * Initializes the streams that correspond to the news feeds collectors 
-	 * that are used for news feed retrieval
+	 * Initializes the streams for the news feeds collectors 
 	 * @throws StreamException
 	 */
 	private void initStreams() throws StreamException {
@@ -164,7 +169,13 @@ public class NewsAggregator {
 		}
 	}
 	
-
+	/**
+	 * Class responsible for deleting out-dated news feeds from
+	 * storages. Deletion occurs periodically every day and feeds
+	 * are considered out-dated if they date more than 1 month.
+	 * @author ailiakop
+	 *
+	 */
 	private class Eliminator extends Thread {
 		private NewsAggregator aggregator = null;
 		private long checkTime = 60000 * 60 * 24; //1-day 
@@ -178,6 +189,7 @@ public class NewsAggregator {
 
 		public void run() {
 			logger.info("Eliminator started");
+			System.out.println("Eliminator started");
 			while(aggregator.newsAggregatorState.equals(NewsAggregatorState.OPEN)){
 				
 				while(Math.abs(currentTime - lastCheck) < checkTime){
@@ -232,19 +244,16 @@ public class NewsAggregator {
 			
 			if(args.length != 1) {
 				streamConfigFile = new File("./conf/newsfeed.conf.xml");
-				
-				
 			}
 			else {
 				streamConfigFile = new File(args[0]);
-				
 			}
 			
 			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(streamConfigFile);		
 			InputConfiguration input_config = InputConfiguration.readFromFile(streamConfigFile);		
 			
-			NewsAggregator streamsManager = new NewsAggregator(config,input_config);
-			streamsManager.open();
+			NewsAggregator newsAggregator = new NewsAggregator(config,input_config);
+			newsAggregator.open();
 		
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();

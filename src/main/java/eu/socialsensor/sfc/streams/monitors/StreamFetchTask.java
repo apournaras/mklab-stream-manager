@@ -10,7 +10,7 @@ import eu.socialsensor.framework.streams.StreamException;
 
 /**
  * Class for handling a Stream Task that is responsible for retrieving
- * multimedia content for the corresponding stream
+ * content for the stream it is assigned to
  * @author ailiakop
  * @email  ailiakop@iti.gr
  */
@@ -38,8 +38,8 @@ public class StreamFetchTask implements Runnable{
 	}
 	
 	/**
-	 * Adds the input feeds for the wrappers to 
-	 * retrieve relevant multimedia content
+	 * Adds the input feeds to search 
+	 * for relevant content in the stream
 	 * @param feeds
 	 */
 	public void addFeeds(List<Feed> feeds){
@@ -69,23 +69,26 @@ public class StreamFetchTask implements Runnable{
 	public boolean isCompleted(){
 		return completed;
 	}
-	
+	/**
+	 * Sets the task in ready mode to retrieve again 
+	 * from the stream with the same set of feeds
+	 */
 	public void restartTask(){
 		completed = false;
 	}
 	
 	/**
-	 * Retrieves images/videos using the feeds
-	 * as input to the corresponding wrapper to the stream
+	 * Retrieves content using the feeds assigned to the task
+	 * making rest calls to stream's API. 
 	 */
 	@Override
 	public void run(){
 		try {
-			long t1 = System.currentTimeMillis();
+			
 			stream.poll(feeds);
-			long t2 = System.currentTimeMillis();
-			//System.out.println("Running Time for stream: "+stream.getClass().getName()+" is "+(t2-t1)/1000);
+			
 			totalRetrievedItems.addAll(stream.getTotalRetrievedItems());
+			completed = true;
 			
 		} catch (StreamException e) {
 			completed = true;
@@ -93,6 +96,6 @@ public class StreamFetchTask implements Runnable{
 			e.printStackTrace();
 		}
 		
-		completed = true;
+		
 	}
 }

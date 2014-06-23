@@ -38,6 +38,7 @@ public class StoreManager implements StreamHandler {
 	private BlockingQueue<Item> queue = new LinkedBlockingDeque<Item>();
 	
 	private StreamsManagerConfiguration config;
+	
 	private Integer numberOfConsumers = 8;
 	
 	private List<Consumer> consumers;
@@ -87,6 +88,11 @@ public class StoreManager implements StreamHandler {
 		return workingStatus;
 	}
 	
+	/**
+	 * Updates the status of the working storages (working or not)
+	 * @param storageId
+	 * @param status
+	 */
 	public void updateDataBasesStatus(String storageId,boolean status){
 		workingStatus.put(storageId, status);
 	}
@@ -99,17 +105,24 @@ public class StoreManager implements StreamHandler {
 		return store;
 	}
 	
+	/**
+	 * Removes a storage from the working storages list
+	 * @param storage
+	 */
 	public void eliminateStorage(StreamUpdateStorage storage) {
 		store.remove(storage);
 	}
-	
+	/**
+	 * Adds a storage to the working storages list
+	 * @param storage
+	 */
 	public void restoreStorage(StreamUpdateStorage storage) {
 		store.register(storage);
 	}
 	
 	/**
-	 * Initiates the consumer threads that are responsible for storing
-	 * to the database.
+	 * Starts the consumer threads responsible for storing
+	 * items to the database.
 	 */
 	public void start() {
 		
@@ -157,7 +170,10 @@ public class StoreManager implements StreamHandler {
 		//}		
 	}
 	
-	
+	/**
+	 * Deletes items older than a specific date
+	 * @param dateThreshold
+	 */
 	public void deleteItemsOlderThan(long dateThreshold){
 		try {
 			store.deleteItemsOlderThan(dateThreshold);
@@ -264,7 +280,12 @@ public class StoreManager implements StreamHandler {
 		this.store = initStorage(config);
 		logger.info("Dumper has started - I can store items again!");
 	}
-	
+	/**
+	 * Thread for monitoring the process of storing 
+	 * items to multiple databases. 
+	 * @author ailiakop
+	 *
+	 */
 	public class StorageStatusAgent extends Thread {
 		// Runs every two minutes by default
 		private long minuteThreshold = 2 * 60000;

@@ -18,8 +18,9 @@ import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 
 /**
- * Thread-safe class for retrieving content according to 
- * keywords - user - location feeds from social networks
+ * Class for retrieving content according to 
+ * keywords - user - location feeds from social networks - Currently
+ * 7 social networks are supported
  * (Twitter,Youtube,Facebook,Flickr,Instagram,Tumblr,GooglePlus)
  * 
  * @author manosetro
@@ -136,7 +137,7 @@ public class StreamsManager {
 	}
 	
 	/**
-	 * Closes Manager along with its auxiliary modules
+	 * Closes Manager and its auxiliary modules
 	 * @throws StreamException
 	 */
 	public synchronized void close() throws StreamException {
@@ -164,9 +165,8 @@ public class StreamsManager {
 	}
 	
 	/**
-	 * Initializes the streams that correspond to the wrappers 
-	 * that are used for multimedia retrieval
-	 * 
+	 * Initializes the streams apis that are going to be searched for 
+	 * relevant content
 	 * @throws StreamException
 	 */
 	private void initStreams() throws StreamException {
@@ -181,7 +181,11 @@ public class StreamsManager {
 			throw new StreamException("Error during streams initialization", e);
 		}
 	}
-	
+	/**
+	 * Initializes the streams apis, that implement subscriber channels, that are going to be searched for 
+	 * relevant content
+	 * @throws StreamException
+	 */
 	private void initSubscribers() throws StreamException {
 		subscribers = new HashMap<String,Stream>();
 		try{

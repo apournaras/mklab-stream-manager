@@ -1,17 +1,14 @@
 package eu.socialsensor.sfc.streams.management;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -33,7 +30,6 @@ import eu.socialsensor.framework.common.domain.Keyword;
 import eu.socialsensor.framework.common.domain.Query;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Dysco.DyscoType;
-import eu.socialsensor.framework.common.domain.dysco.Entity;
 import eu.socialsensor.framework.common.domain.dysco.Message;
 import eu.socialsensor.framework.common.domain.dysco.Message.Action;
 import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
@@ -46,6 +42,15 @@ import eu.socialsensor.sfc.builder.input.DataInputType;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 
+/**
+ * Class responsible for searching media content in social networks
+ * (Twitter, YouTube, Facebook, Google+, Instagram, Flickr, Tumblr)
+ * give a DySco as input. The retrieval of relevant content is based
+ * on queries embedded to the DySco. DyScos are received as messages 
+ * via Redis service and can be both custom or trending. 
+ * @author ailiakop
+ * @email ailiakop@iti.gr
+ */
 public class MediaSearcher {
 	private static String REDIS_HOST = "redis.host";
 	private static String SOLR_HOST = "solr.hostname";
@@ -84,10 +89,10 @@ public class MediaSearcher {
 	
 	private Map<String, Stream> streams = null;
 	
+	private Map<String,List<Query>> dyscosToQueries = new HashMap<String,List<Query>>();
+	
 	private Queue<Dysco> requests = new LinkedList<Dysco>();
 	private Queue<String> dyscosToUpdate = new LinkedList<String>();
-	
-	private Map<String,List<Query>> dyscosToQueries = new HashMap<String,List<Query>>();
 	
 	public MediaSearcher(StreamsManagerConfiguration config) throws StreamException{
 		if (config == null) {
@@ -111,7 +116,7 @@ public class MediaSearcher {
 	
 	/**
 	 * Opens Manager by starting the auxiliary modules and setting up
-	 * the database for reading/storing
+	 * the databases for reading/storing
 	 * @throws StreamException
 	 */
 	public synchronized void open() throws StreamException {
@@ -170,7 +175,7 @@ public class MediaSearcher {
             @Override
             public void run() {
                 try {
-                	System.out.println("Try to subscribe to redis");
+                	logger.info("Subscribe to redis...");
                 
                     subscriberJedis.subscribe(dyscoRequestReceiver,config.getParameter(MediaSearcher.CHANNEL));
                    
@@ -184,10 +189,6 @@ public class MediaSearcher {
     	
 		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
 		
-//		SolrDyscoHandler solrDyscoHandler = SolrDyscoHandler.getInstance(solrHost+"/"+solrService+"/"+dyscoCollection);
-//		
-//		Dysco testDysco = solrDyscoHandler.findDyscoLight("cb22761d-ab96-4c27-8389-10549952d9a3");
-//		requests.add(testDysco);
 	}
 	
 	/**
@@ -205,50 +206,53 @@ public class MediaSearcher {
 				stream.close();
 			}
 			
-//			if(dyscoRequestReceiver != null){
-//				dyscoRequestReceiver.close();
-//				System.out.println("dyscoRequestReceiver closed");
-//			}
-//			
-//			if(dyscoRequestHandler != null){
-//				dyscoRequestHandler.close();
-//				System.out.println("dyscoRequestHandler closed");
-//			}
+			if(dyscoRequestReceiver != null){
+				dyscoRequestReceiver.close();
+				logger.info("DyscoRequestReceiver is closed");
+			}
+			
+			if(dyscoRequestHandler != null){
+				dyscoRequestHandler.close();
+				logger.info("DyscoRequestHandler is closed.");
+			}
 			state = MediaSearcherState.CLOSE;
-			System.out.println("MediaSearcher closed");
+			logger.info("MediaSearcher closed.");
+			System.out.println("MediaSearcher is closed.");
 		}catch(Exception e) {
 			throw new StreamException("Error during streams close",e);
 		}
 	}
-	
+
 	/**
-	 * Searches for a dysco request depending on its feeds
-	 * @param feeds to search
+	 * Searches in all social media defined in the configuration file
+	 * for the list of feeds that is given as input and returns the retrieved items
+	 * @param feeds
+	 * @param streamsToSearch
+	 * @return the list of the items retrieved
 	 */
-	public synchronized List<Item> search(List<Feed> feeds,Set<String>streamsToSearch){
-		Integer totalItems = 0; 
-		
-		long t1 = System.currentTimeMillis();
-		
+	public synchronized List<Item> search(List<Feed> feeds){
+	
 		if(feeds != null && !feeds.isEmpty()){
 			
-			monitor.retrieveFromSelectedStreams(streamsToSearch, feeds);
-			while(!monitor.areAllStreamsFinished()){
+			try {
+				monitor.retrieveFromAllStreams(feeds);
+				while(!monitor.areAllStreamsFinished()){
+					
+				}
+				
+			} catch (Exception e) {
 				
 			}
-			totalItems = monitor.getTotalRetrievedItems().size();
-		}
 			
-		long t2 = System.currentTimeMillis();
+		}
 		
-		logger.info("Total items fetched : "+totalItems+" in "+(t2-t1)/1000+" seconds");
 		return monitor.getTotalRetrievedItems();
 	}
 	
 	
 	/**
-	 * Initializes the streams that correspond to the wrappers 
-	 * that are used for multimedia retrieval
+	 * Initializes the streams apis that are going to be searched for 
+	 * relevant content
 	 * @throws StreamException
 	 */
 	private void initStreams() throws StreamException {
@@ -265,403 +269,13 @@ public class MediaSearcher {
 	}
 	
 	/**
-	 * Class for searching for custom dysco requests 
+	 * Class that implements the Redis Client. Receives the DySco request to be served
+	 * as a message. The request might entail the creation of a DySco (NEW), the update of
+	 * a DySco (UPDATE) or the deletion of a DySco (DELETE). The service finds the received
+	 * DySco in Solr database by its id and passes on the request to the Search Handler modules.
 	 * @author ailiakop
 	 *
 	 */
-	public class CustomSearchHandler extends Thread {
-		private Queue<String> customDyscoQueue = new LinkedList<String>();
-		
-		private Map<String,List<Feed>> inputFeedsPerDysco = new HashMap<String,List<Feed>>();
-		private Map<String,Long> requestsLifetime = new HashMap<String,Long>();
-		private Map<String,Long> requestsTimestamps = new HashMap<String,Long>();
-		
-		private MediaSearcher searcher;
-
-		private boolean isAlive = true;
-		
-		private static final long frequency = 2 * 300000; //ten minutes
-		private static final long periodOfTime = 48 * 3600000; //two days
-		
-		public CustomSearchHandler(MediaSearcher mediaSearcher){
-			this.searcher = mediaSearcher;
-			
-		}
-		
-		public void addCustomDysco(String dyscoId,List<Feed> inputFeeds){
-			logger.info("New incoming dysco : "+dyscoId+" with "+inputFeeds.size()+" searchable feeds");
-			customDyscoQueue.add(dyscoId);
-			inputFeedsPerDysco.put(dyscoId, inputFeeds);
-			requestsLifetime.put(dyscoId, System.currentTimeMillis());
-			requestsTimestamps.put(dyscoId, System.currentTimeMillis());
-		}
-		
-		public void deleteCustomDysco(String dyscoId){
-			inputFeedsPerDysco.remove(dyscoId);
-			requestsLifetime.remove(dyscoId);
-			requestsTimestamps.remove(dyscoId);
-		}
-		
-		public void run(){
-			String dyscoId = null;
-			while(isAlive){
-				updateCustomQueue();
-				dyscoId = poll();
-				if(dyscoId == null){
-					continue;
-				}
-				else{
-					
-					logger.info("Media Searcher handling #"+dyscoId);
-					List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
-					inputFeedsPerDysco.remove(dyscoId);
-					
-					keyHold = true;
-					searcher.search(feeds,streams.keySet());
-					keyHold = false;
-				}
-				
-			}
-		}
-		/**
-		 * Polls a trending dysco request from the queue
-		 * @return
-		 */
-		private String poll(){
-			synchronized (customDyscoQueue) {					
-				if (!customDyscoQueue.isEmpty()) {
-					String request = customDyscoQueue.poll();
-					return request;
-				}
-				
-				return null;
-			}
-		}
-		/**
-		 * Stops TrendingSearchHandler
-		 */
-		public synchronized void close(){
-			isAlive = false;
-		}
-	
-		/**
-		 * Updates the queue of custom dyscos' requests and re-examines or deletes 
-		 * requests according to their time in the system
-		 */
-		private synchronized void updateCustomQueue(){
-			
-			List<String> requestsToRemove = new ArrayList<String>();
-			long currentTime = System.currentTimeMillis();
-			
-			for(Map.Entry<String, Long> entry : requestsLifetime.entrySet()){
-			//	System.out.println("Checking dysco : "+entry.getKey().getId()+" that has time in system : "+(currentTime - entry.getValue())/1000);
-				
-				if(currentTime - entry.getValue() > frequency){
-					
-					entry.setValue(currentTime);
-					String requestToSearch = entry.getKey();
-					customDyscoQueue.add(requestToSearch);
-					requestsLifetime.put(entry.getKey(), System.currentTimeMillis());
-					if(currentTime - requestsTimestamps.get(entry.getKey())> periodOfTime){
-						
-						requestsToRemove.add(entry.getKey());
-					}
-						
-				}
-				
-			}
-			
-			if(!requestsToRemove.isEmpty()){
-				for(String requestToRemove : requestsToRemove){
-					deleteCustomDysco(requestToRemove);
-				}
-				requestsToRemove.clear();	
-			}
-			
-		}
-		
-		
-	}
-	
-	/**
-	 * Class for searching for trending dysco requests 
-	 * @author ailiakop
-	 *
-	 */
-	public class TrendingSearchHandler extends Thread {
-		
-		private BlockingQueue<Dysco> trendingDyscoQueue = new LinkedBlockingDeque<Dysco>(100);
-		
-		private Map<String,List<Feed>> inputFeedsPerDysco = new HashMap<String,List<Feed>>();
-		
-		private List<Item> retrievedItems = new ArrayList<Item>();
-		
-		private Set<String> primaryStreamsToSearch = new HashSet<String>();
-		
-		private MediaSearcher searcher;
-
-		private boolean isAlive = true;
-		
-		
-		private Date retrievalDate; 
-
-		public TrendingSearchHandler(MediaSearcher mediaSearcher){
-			this.searcher = mediaSearcher;
-			primaryStreamsToSearch.addAll(streams.keySet());
-			//primaryStreamsToSearch.remove("Facebook");
-		}
-		
-		public void addTrendingDysco(Dysco dysco,List<Feed> inputFeeds){
-			logger.info("New incoming dysco : "+dysco.getId()+" with "+inputFeeds.size()+" searchable feeds");
-			synchronized (trendingDyscoQueue) {	
-				trendingDyscoQueue.add(dysco);
-			}
-			inputFeedsPerDysco.put(dysco.getId(), inputFeeds);
-		}
-		
-		public void run(){
-			Dysco dysco = null;
-			while(isAlive){
-				
-				dysco = poll();
-				if(dysco == null){
-					continue;
-				}
-				else{
-					keyHold = true;
-					searchForDysco(dysco);
-					keyHold = false;
-				}
-					
-			}
-		}
-		/**
-		 * Polls a trending dysco request from the queue
-		 * @return
-		 */
-		private Dysco poll(){
-			synchronized (trendingDyscoQueue) {					
-				if (!trendingDyscoQueue.isEmpty()) {
-					Dysco request = trendingDyscoQueue.poll();
-					
-					return request;
-				}
-				
-				return null;
-			}
-		}
-		
-		private synchronized void searchForDysco(Dysco dysco){
-			long start = System.currentTimeMillis();
-			
-			logger.info("Media Searcher handling #"+dysco.getId());
-			
-			//first search
-			List<Feed> feeds = inputFeedsPerDysco.get(dysco.getId());
-			retrievalDate = new Date(System.currentTimeMillis());
-			inputFeedsPerDysco.remove(dysco.getId());
-			retrievedItems = searcher.search(feeds,primaryStreamsToSearch);
-			
-			long t1 = System.currentTimeMillis();
-			
-			System.out.println("Time for First Search for dysco: "+dysco.getId()+" is "+(t1-start)/1000+" sec ");
-			
-			long t2 = System.currentTimeMillis();
-			
-			//second search
-			List<Query> queries = queryBuilder.getExpandedSolrQueries(retrievedItems,dysco,5);
-			
-			List<Query> expandedQueries = new ArrayList<Query>();
-			
-			for(Query q : queries)
-				if(q.getIsFromExpansion())
-					expandedQueries.add(q);
-			
-			System.out.println("["+dysco.getId()+"]Number of additional queries : "+expandedQueries.size());
-			
-			long t3 = System.currentTimeMillis();
-			
-			System.out.println("Time for computing queries for dysco:+ "+dysco.getId()+" is "+(t3-t2)/1000+" sec ");
-			
-			if(!expandedQueries.isEmpty()){
-				List<Feed> newFeeds = translateQueriesToKeywordsFeeds(expandedQueries,retrievalDate);
-				
-				searcher.search(newFeeds,streams.keySet());
-				
-				long t4 = System.currentTimeMillis();
-				
-				System.out.println("Time for Second Search for dysco:+ "+dysco.getId()+" is "+(t4-t3)/1000+" sec ");
-				System.out.println("Queries to update: "+queries.size());
-				dyscosToQueries.put(dysco.getId(), queries);
-				dyscosToUpdate.add(dysco.getId());
-			}
-			else{
-				System.out.println("No queries to update");
-			}
-			
-			long end = System.currentTimeMillis();
-			
-			System.out.println(new Date(System.currentTimeMillis())+" - Total Time searching for dysco:+ "+dysco.getId()+" is "+(end-start)/1000+" sec ");
-		}
-		
-		/**
-		 * Stops TrendingSearchHandler
-		 */
-		public synchronized void close(){
-			isAlive = false;
-		}
-		
-		private List<Feed> translateQueriesToKeywordsFeeds(List<Query> queries,Date dateToRetrieve)
-		{	
-			List<Feed> feeds = new ArrayList<Feed>();
-			
-			for(Query query : queries){
-				UUID UUid = UUID.randomUUID(); 
-				feeds.add(new KeywordsFeed(new Keyword(query.getName(),query.getScore()),dateToRetrieve,UUid.toString()));
-			}
-			
-			return feeds;
-		}
-	}
-	
-	/**
-	 * Class for handling incoming dysco requests that are received with redis
-	 * @author ailiakop
-	 *
-	 */
-	private class DyscoRequestHandler extends Thread {
-
-		private boolean isAlive = true;
-		
-		private FeedsCreator feedsCreator;
-		
-		private List<Feed> feeds;
-		
-		public DyscoRequestHandler(){
-			
-		}
-		
-		public void run(){
-			Dysco receivedDysco = null;
-			while(isAlive){
-				receivedDysco = poll();
-				if(receivedDysco == null){
-					continue;
-				}
-				else{
-					
-					feedsCreator = new FeedsCreator(DataInputType.DYSCO,receivedDysco);
-					feeds = feedsCreator.getQuery();
-					
-					if(receivedDysco.getDyscoType().equals(DyscoType.TRENDING)){
-						trendingSearchHandler.addTrendingDysco(receivedDysco, feeds);
-					}
-					else if(receivedDysco.getDyscoType().equals(DyscoType.CUSTOM)){
-						customSearchHandler.addCustomDysco(receivedDysco.getId(), feeds);
-					}
-					else{
-						logger.error("Unsupported dysco - Cannot be processed from MediaSearcher");
-					}
-				}
-			}
-		}
-		
-		/**
-		 * Polls a  dysco request from the queue
-		 * @return
-		 */
-		private Dysco poll(){
-			synchronized (requests) {					
-				if (!requests.isEmpty() && !keyHold) {
-					Dysco request = requests.poll();
-					System.out.println("Trending Dyscos remain to be served: "+requests.size());
-					try {
-						requests.wait(1000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					return request;
-				}
-				
-				
-				return null;
-			}
-		}
-		
-		public void close(){
-			isAlive = false;
-		}
-	}
-	
-	public class DyscoUpdateAgent extends Thread{
-		private SolrDyscoHandler solrdyscoHandler;
-		private boolean isAlive = true;
-		
-		public DyscoUpdateAgent(){
-			
-			this.solrdyscoHandler = SolrDyscoHandler.getInstance(solrHost+"/"+solrService+"/"+dyscoCollection);
-		}
-		
-		public void run(){
-			String dyscoToUpdate = null;
-			
-			while(isAlive){
-				dyscoToUpdate = poll();
-				if(dyscoToUpdate == null){
-					continue;
-				}
-				else{
-					List<Query> solrQueries = dyscosToQueries.get(dyscoToUpdate);
-					
-//					System.out.println("---Solr Queries in the updated dysco---");
-//					for(Query query : solrQueries)
-//						System.out.println(query.getName()+":"+query.getScore());
-//
-//					if(solrQueries == null || solrQueries.isEmpty()){
-//						for(String hash : dyscoToUpdate.getHashtags().keySet()){
-//							Query query = new Query(hash,dyscoToUpdate.getHashtags().get(hash));
-//							
-//							solrQueries.add(query);
-//						}
-//						
-//						for(Entity ent : dyscoToUpdate.getEntities()){
-//							Query query = new Query(ent.getName(),ent.getCont());
-//							
-//							solrQueries.add(query);
-//						}
-//					}
-					Dysco updatedDysco = solrdyscoHandler.findDyscoLight(dyscoToUpdate);
-					updatedDysco.getSolrQueries().clear();
-					updatedDysco.setSolrQueries(solrQueries);
-					solrdyscoHandler.insertDysco(updatedDysco);
-					dyscosToQueries.remove(dyscoToUpdate);
-					
-					System.out.println("Dysco : "+dyscoToUpdate+" is updated");
-				}
-			}
-		}
-		
-		/**
-		 * Polls a trending dysco request from the queue
-		 * @return
-		 */
-		private String poll(){
-			synchronized (dyscosToUpdate) {					
-				if (!dyscosToUpdate.isEmpty()) {
-				
-					return dyscosToUpdate.poll();
-				}
-				
-				return null;
-			}
-		}
-		
-		public void close(){
-			isAlive = false;
-		}
-	}
-	
 	public class DyscoRequestReceiver extends JedisPubSub{
 
 		private SolrDyscoHandler solrdyscoHandler;
@@ -670,13 +284,7 @@ public class MediaSearcher {
 			
 			this.solrdyscoHandler = SolrDyscoHandler.getInstance(solrHost+"/"+solrService+"/"+dyscoCollection);
 		}
-		/**
-		 * Alerts the system that a new dysco request is received
-		 * New dysco requests are added to a queue to be further
-		 * processed by the DyscoRequestFeedsCreator thread.
-		 * In case the dysco request already exists in mongo db,
-		 * it is deleted from the system and not processed further.
-		 */
+		
 	    @Override
 	    public void onMessage(String channel, String message) {
 	    	
@@ -736,15 +344,146 @@ public class MediaSearcher {
 	    }
 	    
 	    public void close(){
-	    	logger.info("Closing redis..");
+	    	logger.info("Closing redis...");
 	    	subscriberJedis.quit();
 	    }
 	}
 	
+	
+	/**
+	 * Class responsible for setting apart trending from custom DyScos and creating the appropriate
+	 * feeds for searching them. Afterwards, it adds the DySco to the queue for further 
+	 * processing from the suitable search handler. 
+	 * @author ailiakop
+	 *
+	 */
+	private class DyscoRequestHandler extends Thread {
+
+		private boolean isAlive = true;
+		
+		private FeedsCreator feedsCreator;
+		
+		private List<Feed> feeds;
+		
+		public DyscoRequestHandler(){
+			
+		}
+		
+		public void run(){
+			Dysco receivedDysco = null;
+			while(isAlive){
+				receivedDysco = poll();
+				if(receivedDysco == null){
+					continue;
+				}
+				else{
+					
+					feedsCreator = new FeedsCreator(DataInputType.DYSCO,receivedDysco);
+					feeds = feedsCreator.getQuery();
+					
+					if(receivedDysco.getDyscoType().equals(DyscoType.TRENDING)){
+						trendingSearchHandler.addTrendingDysco(receivedDysco, feeds);
+					}
+					else if(receivedDysco.getDyscoType().equals(DyscoType.CUSTOM)){
+						customSearchHandler.addCustomDysco(receivedDysco.getId(), feeds);
+					}
+					else{
+						logger.error("Unsupported dysco - Cannot be processed from MediaSearcher");
+					}
+				}
+			}
+		}
+		
+		/**
+		 * Polls a  dysco request from the queue
+		 * @return
+		 */
+		private Dysco poll(){
+			synchronized (requests) {					
+				if (!requests.isEmpty() && !keyHold) {
+					System.out.println("DyScos remaining to be served: "+requests.size());
+					Dysco request = requests.poll();
+					try {
+						requests.wait(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					return request;
+				}
+				
+				
+				return null;
+			}
+		}
+		
+		public void close(){
+			isAlive = false;
+		}
+	}
+	
+	/**
+	 * Class responsible for updating a DySco's solr queries after they have been computed from the
+	 * query builder (query expansion module)
+	 * @author ailiakop
+	 *
+	 */
+	public class DyscoUpdateAgent extends Thread{
+		private SolrDyscoHandler solrdyscoHandler;
+		private boolean isAlive = true;
+		
+		public DyscoUpdateAgent(){
+			
+			this.solrdyscoHandler = SolrDyscoHandler.getInstance(solrHost+"/"+solrService+"/"+dyscoCollection);
+		}
+		
+		public void run(){
+			String dyscoToUpdate = null;
+			
+			while(isAlive){
+				dyscoToUpdate = poll();
+				if(dyscoToUpdate == null){
+					continue;
+				}
+				else{
+					List<Query> solrQueries = dyscosToQueries.get(dyscoToUpdate);
+
+					Dysco updatedDysco = solrdyscoHandler.findDyscoLight(dyscoToUpdate);
+					updatedDysco.getSolrQueries().clear();
+					updatedDysco.setSolrQueries(solrQueries);
+					solrdyscoHandler.insertDysco(updatedDysco);
+					dyscosToQueries.remove(dyscoToUpdate);
+					
+					logger.info("Dysco : "+dyscoToUpdate+" is updated");
+				}
+			}
+		}
+		
+		/**
+		 * Polls a DySco request from the queue to update
+		 * @return
+		 */
+		private String poll(){
+			synchronized (dyscosToUpdate) {					
+				if (!dyscosToUpdate.isEmpty()) {
+				
+					return dyscosToUpdate.poll();
+				}
+				
+				return null;
+			}
+		}
+		
+		public void close(){
+			isAlive = false;
+		}
+	}
+	
+	
 	/**
 	 * Class in case system is shutdown 
 	 * Responsible to close all services 
-	 * that are running at the time being
+	 * that are running at the time 
 	 * @author ailiakop
 	 *
 	 */
@@ -770,6 +509,282 @@ public class MediaSearcher {
 	}
 	
 
+	/**
+	 * Class responsible for Custom DySco requests 
+	 * Custom DyScos are searched periodically in the system in a two-day period of time. 
+	 * They are deleted in case the user deletes them or the searching period has expired. 
+	 * The frequency Custom DyScos are searched in the system has been set in 10 minutes.
+	 * @author ailiakop
+	 *
+	 */
+	public class CustomSearchHandler extends Thread {
+		private Queue<String> customDyscoQueue = new LinkedList<String>();
+		
+		private Map<String,List<Feed>> inputFeedsPerDysco = new HashMap<String,List<Feed>>();
+		private Map<String,Long> requestsLifetime = new HashMap<String,Long>();
+		private Map<String,Long> requestsTimestamps = new HashMap<String,Long>();
+		
+		private MediaSearcher searcher;
+
+		private boolean isAlive = true;
+		
+		private static final long frequency = 2 * 300000; //ten minutes
+		private static final long periodOfTime = 48 * 3600000; //two days
+		
+		public CustomSearchHandler(MediaSearcher mediaSearcher){
+			this.searcher = mediaSearcher;
+			
+		}
+		
+		public void addCustomDysco(String dyscoId,List<Feed> inputFeeds){
+			System.out.println("New incoming Custom DySco : "+dyscoId+" with "+inputFeeds.size()+" searchable feeds");
+			customDyscoQueue.add(dyscoId);
+			inputFeedsPerDysco.put(dyscoId, inputFeeds);
+			requestsLifetime.put(dyscoId, System.currentTimeMillis());
+			requestsTimestamps.put(dyscoId, System.currentTimeMillis());
+		}
+		
+		public void deleteCustomDysco(String dyscoId){
+			inputFeedsPerDysco.remove(dyscoId);
+			requestsLifetime.remove(dyscoId);
+			requestsTimestamps.remove(dyscoId);
+		}
+		
+		public void run(){
+			String dyscoId = null;
+			while(isAlive){
+				updateCustomQueue();
+				dyscoId = poll();
+				if(dyscoId == null){
+					continue;
+				}
+				else{
+					keyHold = true;
+					logger.info("Media Searcher handling #"+dyscoId);
+					List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
+					inputFeedsPerDysco.remove(dyscoId);
+					List<Item> customItems = searcher.search(feeds);
+					System.out.println("Total Items retrieved for Custom DySco : "+dyscoId+" : "+customItems.size());
+					keyHold = false;
+				}
+				
+			}
+		}
+		/**
+		 * Polls a custom DySco request from the queue to search
+		 * @return
+		 */
+		private String poll(){
+			synchronized (customDyscoQueue) {					
+				if (!customDyscoQueue.isEmpty()) {
+					String request = customDyscoQueue.poll();
+					return request;
+				}
+				
+				return null;
+			}
+		}
+		/**
+		 * Stops Custom Search Handler
+		 */
+		public synchronized void close(){
+			isAlive = false;
+		}
+	
+		/**
+		 * Updates the queue of custom DyScos and re-examines or deletes 
+		 * them according to their time in the system
+		 */
+		private synchronized void updateCustomQueue(){
+			
+			List<String> requestsToRemove = new ArrayList<String>();
+			long currentTime = System.currentTimeMillis();
+			
+			for(Map.Entry<String, Long> entry : requestsLifetime.entrySet()){
+				
+				if(currentTime - entry.getValue() > frequency){
+					
+					entry.setValue(currentTime);
+					String requestToSearch = entry.getKey();
+					customDyscoQueue.add(requestToSearch);
+					requestsLifetime.put(entry.getKey(), System.currentTimeMillis());
+					if(currentTime - requestsTimestamps.get(entry.getKey())> periodOfTime){
+						
+						requestsToRemove.add(entry.getKey());
+					}
+						
+				}
+				
+			}
+			
+			if(!requestsToRemove.isEmpty()){
+				for(String requestToRemove : requestsToRemove){
+					deleteCustomDysco(requestToRemove);
+				}
+				requestsToRemove.clear();	
+			}
+			
+		}
+		
+		
+	}
+	
+	/**
+	 * Class responsible for Trending DySco requests 
+	 * It performs custom search to retrieve an item collection
+	 * based on Dysco's primal queries and afterwards applies query
+	 * expansion via the Query Builder module to extend the search
+	 * and detect more relative content to the DySco. 
+	 * @author ailiakop
+	 *
+	 */
+	public class TrendingSearchHandler extends Thread {
+		
+		private BlockingQueue<Dysco> trendingDyscoQueue = new LinkedBlockingDeque<Dysco>(100);
+		
+		private Map<String,List<Feed>> inputFeedsPerDysco = new HashMap<String,List<Feed>>();
+		
+		private List<Item> retrievedItems = new ArrayList<Item>();
+		
+		private MediaSearcher searcher;
+
+		private boolean isAlive = true;
+		
+		
+		private Date retrievalDate; 
+
+		public TrendingSearchHandler(MediaSearcher mediaSearcher){
+			this.searcher = mediaSearcher;
+		}
+		
+		public void addTrendingDysco(Dysco dysco,List<Feed> inputFeeds){
+			logger.info("New incoming Trending DySco : "+dysco.getId()+" with "+inputFeeds.size()+" searchable feeds");
+			System.out.println("New incoming Trending DySco : "+dysco.getId()+" with "+inputFeeds.size()+" searchable feeds");
+			synchronized (trendingDyscoQueue) {	
+				trendingDyscoQueue.add(dysco);
+			}
+			inputFeedsPerDysco.put(dysco.getId(), inputFeeds);
+		}
+		
+		public void run(){
+			Dysco dysco = null;
+			while(isAlive){
+				
+				dysco = poll();
+				if(dysco == null){
+					continue;
+				}
+				else{
+					keyHold = true;
+					searchForTrendingDysco(dysco);
+					keyHold = false;
+				}
+					
+			}
+		}
+		/**
+		 * Polls a trending DySco request from the queue to search
+		 * @return
+		 */
+		private Dysco poll(){
+			synchronized (trendingDyscoQueue) {					
+				if (!trendingDyscoQueue.isEmpty()) {
+					Dysco request = trendingDyscoQueue.poll();
+					
+					return request;
+				}
+				
+				return null;
+			}
+		}
+		
+		/**
+		 * Searches for a Trending DySco at two stages. At the first stage the algorithm 
+		 * retrieves content from social media using DySco's primal queries, whereas 
+		 * at the second stage it uses the retrieved content to expand the queries.
+		 * The final queries, which are the result of merging the primal and the expanded
+		 * queries are used to search further in social media for additional content. 
+		 * @param dysco
+		 */
+		private synchronized void searchForTrendingDysco(Dysco dysco){
+			long start = System.currentTimeMillis();
+			
+			//first search
+			List<Feed> feeds = inputFeedsPerDysco.get(dysco.getId());
+			retrievalDate = new Date(System.currentTimeMillis());
+			inputFeedsPerDysco.remove(dysco.getId());
+			retrievedItems = searcher.search(feeds);
+			
+			long t1 = System.currentTimeMillis();
+			
+			System.out.println("Time for First Search for Trending DySco: "+dysco.getId()+" is "+(t1-start)/1000+" sec ");
+			
+			long t2 = System.currentTimeMillis();
+			
+			//second search
+			List<Query> queries = queryBuilder.getExpandedSolrQueries(retrievedItems,dysco,5);
+			
+			List<Query> expandedQueries = new ArrayList<Query>();
+			
+			for(Query q : queries)
+				if(q.getIsFromExpansion())
+					expandedQueries.add(q);
+			
+			System.out.println("Number of additional queries for Trending DySco: "+dysco.getId()+" is "+expandedQueries.size());
+			
+			long t3 = System.currentTimeMillis();
+			
+			System.out.println("Time for computing queries for Trending DySco:+ "+dysco.getId()+" is "+(t3-t2)/1000+" sec ");
+			
+			if(!expandedQueries.isEmpty()){
+				List<Feed> newFeeds = transformQueriesToKeywordsFeeds(expandedQueries,retrievalDate);
+				
+				List<Item> secondSearchItems = searcher.search(newFeeds);
+				
+				long t4 = System.currentTimeMillis();
+				System.out.println("Total Items retrieved for Trending DySco : "+dysco.getId()+" : "+secondSearchItems.size());
+				System.out.println("Time for Second Search for Trending DySco:+ "+dysco.getId()+" is "+(t4-t3)/1000+" sec ");
+			
+				dyscosToQueries.put(dysco.getId(), queries);
+				dyscosToUpdate.add(dysco.getId());
+			}
+			else{
+				System.out.println("No queries to update");
+			}
+			
+			long end = System.currentTimeMillis();
+			
+			System.out.println(new Date(System.currentTimeMillis())+" - Total Time searching for Trending DySco:+ "+dysco.getId()+" is "+(end-start)/1000+" sec ");
+		}
+		
+		/**
+		 * Stops TrendingSearchHandler
+		 */
+		public synchronized void close(){
+			isAlive = false;
+		}
+		
+		/**
+		 * Transforms Query instances to KeywordsFeed instances that will be used 
+		 * for searching social media
+		 * @param queries
+		 * @param dateToRetrieve
+		 * @return the list of feeds
+		 */
+		private List<Feed> transformQueriesToKeywordsFeeds(List<Query> queries,Date dateToRetrieve)
+		{	
+			List<Feed> feeds = new ArrayList<Feed>();
+			
+			for(Query query : queries){
+				UUID UUid = UUID.randomUUID(); 
+				feeds.add(new KeywordsFeed(new Keyword(query.getName(),query.getScore()),dateToRetrieve,UUid.toString()));
+			}
+			
+			return feeds;
+		}
+	}
+	
+	
 	/**
 	 * @param args
 	 */
