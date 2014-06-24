@@ -87,6 +87,17 @@ public class StreamsMonitor {
 		this.requestTimePerStream.put(streamId, DEFAULT_REQUEST_TIME);
 	}
 	
+	/**
+	 * Adds a feed to the monitor
+	 * @param stream
+	 */
+	public void addFeeds(String streamId,List<Feed> feeds){
+		StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);
+		if(fetchTask != null) {
+			fetchTask.addFeeds(feeds);
+		}
+	}
+	
 	public Stream getStream(String streamId) {
 		return streams.get(streamId);
 	}
