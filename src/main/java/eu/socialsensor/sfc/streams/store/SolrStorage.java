@@ -1,14 +1,17 @@
 package eu.socialsensor.sfc.streams.store;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
 import eu.socialsensor.framework.client.search.solr.SolrItemHandler;
 import eu.socialsensor.framework.client.search.solr.SolrMediaItemHandler;
 import eu.socialsensor.framework.client.search.solr.SolrNewsFeedHandler;
+import eu.socialsensor.framework.client.search.solr.SolrWebPageHandler;
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.MediaItem;
+import eu.socialsensor.framework.common.domain.WebPage;
 import eu.socialsensor.sfc.streams.StorageConfiguration;
 
 /**
@@ -26,15 +29,19 @@ public class SolrStorage implements StreamUpdateStorage {
 	
 	private static final String ITEMS_COLLECTION = "solr.items.collection";
 	private static final String MEDIAITEMS_COLLECTION = "solr.mediaitems.collection";
+	private static final String WEBPAGES_COLLECTION = "solr.webpages.collection";
 	private static final String NEWSFEED_COLLECTION = "solr.newsfeed.collection";
 	
 	private static final String FACEBOOK_ITEMS_COLLECTION = "solr.facebook.items.collection";
 	private static final String TWITTER_ITEMS_COLLECTION = "solr.twitter.items.collection";
 	
+	private static final String ONLY_ORIGINAL = "solr.onlyOriginal";
+	
 	private String hostname, service;
 	
 	private String itemsCollection = null;
 	private String mediaItemsCollection = null;
+	private String webPagesCollection = null;
 	private String newsFeedCollection = null;
 	
 	private String facebookItemsCollection = null;
@@ -46,17 +53,22 @@ public class SolrStorage implements StreamUpdateStorage {
 	private SolrItemHandler solrFacebookItemHandler = null; 
 	private SolrItemHandler solrTwitterItemHandler = null; 
 	private SolrMediaItemHandler solrMediaHandler = null;
+	private SolrWebPageHandler solrWebpageHandler = null;
 	private SolrNewsFeedHandler solrNewsFeedHandler = null;
+	
+	private Boolean onlyOriginal = true;
 	
 	public SolrStorage(StorageConfiguration config) throws IOException {
 		this.hostname = config.getParameter(SolrStorage.HOSTNAME);
 		this.service = config.getParameter(SolrStorage.SERVICE);
 		this.itemsCollection = config.getParameter(SolrStorage.ITEMS_COLLECTION);
 		this.mediaItemsCollection = config.getParameter(SolrStorage.MEDIAITEMS_COLLECTION);
+		this.webPagesCollection = config.getParameter(SolrStorage.WEBPAGES_COLLECTION);
 		this.newsFeedCollection = config.getParameter(SolrStorage.NEWSFEED_COLLECTION);
 		this.facebookItemsCollection = config.getParameter(SolrStorage.FACEBOOK_ITEMS_COLLECTION);
 		this.twitterItemsCollection = config.getParameter(SolrStorage.TWITTER_ITEMS_COLLECTION);
 		
+		this.onlyOriginal = Boolean.valueOf(config.getParameter(SolrStorage.ONLY_ORIGINAL, "true"));
 	}
 	
 	public SolrItemHandler getItemHandler() {
@@ -88,7 +100,9 @@ public class SolrStorage implements StreamUpdateStorage {
 			}
 			if(mediaItemsCollection != null) {	
 				solrMediaHandler = SolrMediaItemHandler.getInstance(hostname+"/"+service+"/"+mediaItemsCollection);
-				
+			}
+			if(webPagesCollection != null) {	
+				solrWebpageHandler = SolrWebPageHandler.getInstance(hostname+"/"+service+"/"+webPagesCollection);
 			}
 			if(newsFeedCollection != null) {	
 				solrNewsFeedHandler = SolrNewsFeedHandler.getInstance(hostname+"/"+service+"/"+newsFeedCollection);
@@ -100,10 +114,8 @@ public class SolrStorage implements StreamUpdateStorage {
 			}
 			if(twitterItemsCollection != null) {
 				solrTwitterItemHandler = SolrItemHandler.getInstance(hostname+"/"+service+"/"+twitterItemsCollection);
-				
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -115,7 +127,7 @@ public class SolrStorage implements StreamUpdateStorage {
 	public void store(Item item) throws IOException {
 		
 		// Index only original Items and MediaItems come from original Items
-		if(!item.isOriginal())
+		if(!item.isOriginal() && onlyOriginal)
 			return;
 		
 		if(solrItemHandler != null) {
@@ -137,15 +149,18 @@ public class SolrStorage implements StreamUpdateStorage {
 		if(solrMediaHandler != null) {
 			
 			for(MediaItem mediaItem : item.getMediaItems()) {
-				MediaItem mi = solrMediaHandler.getSolrMediaItem(mediaItem.getId());
-				
-				if(mi==null) {
+				if(!solrMediaHandler.isIndexed(mediaItem.getId())) {
 					solrMediaHandler.insertMediaItem(mediaItem);
 				}
-				else {
-					
-					solrMediaHandler.insertMediaItem(mi);
-				}
+				//else {
+				//	solrMediaHandler.insertMediaItem(mi);
+				//}
+			}
+		}
+		if(solrWebpageHandler != null) {
+			List<WebPage> webPages = item.getWebPages();
+			if(webPages != null) {
+				solrWebpageHandler.insertWebPages(webPages);
 			}
 		}
 		
