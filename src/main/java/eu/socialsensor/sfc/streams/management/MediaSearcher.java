@@ -400,7 +400,7 @@ public class MediaSearcher {
 		 */
 		private Dysco poll(){
 			synchronized (requests) {					
-				if (!requests.isEmpty() && !keyHold) {
+				if (!requests.isEmpty()) {
 					System.out.println("DyScos remaining to be served: "+requests.size());
 					Dysco request = requests.poll();
 					try {
@@ -576,7 +576,7 @@ public class MediaSearcher {
 		 */
 		private String poll(){
 			synchronized (customDyscoQueue) {					
-				if (!customDyscoQueue.isEmpty()) {
+				if (!customDyscoQueue.isEmpty() && !keyHold) {
 					String request = customDyscoQueue.poll();
 					return request;
 				}
@@ -688,7 +688,7 @@ public class MediaSearcher {
 		 */
 		private Dysco poll(){
 			synchronized (trendingDyscoQueue) {					
-				if (!trendingDyscoQueue.isEmpty()) {
+				if (!trendingDyscoQueue.isEmpty() && !keyHold) {
 					Dysco request = trendingDyscoQueue.poll();
 					
 					return request;
@@ -708,7 +708,7 @@ public class MediaSearcher {
 		 */
 		private synchronized void searchForTrendingDysco(Dysco dysco){
 			long start = System.currentTimeMillis();
-			
+			logger.info("Media Searcher handling #"+dysco.getId());
 			//first search
 			List<Feed> feeds = inputFeedsPerDysco.get(dysco.getId());
 			retrievalDate = new Date(System.currentTimeMillis());
