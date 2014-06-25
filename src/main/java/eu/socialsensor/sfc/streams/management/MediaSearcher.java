@@ -560,7 +560,7 @@ public class MediaSearcher {
 				}
 				else{
 					keyHold = true;
-					logger.info("Media Searcher handling #"+dyscoId);
+					System.out.println("Media Searcher handling #"+dyscoId);
 					List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
 					inputFeedsPerDysco.remove(dyscoId);
 					List<Item> customItems = searcher.search(feeds);
@@ -603,15 +603,17 @@ public class MediaSearcher {
 			for(Map.Entry<String, Long> entry : requestsLifetime.entrySet()){
 				
 				if(currentTime - entry.getValue() > frequency){
-					
-					entry.setValue(currentTime);
-					String requestToSearch = entry.getKey();
-					customDyscoQueue.add(requestToSearch);
-					requestsLifetime.put(entry.getKey(), System.currentTimeMillis());
 					if(currentTime - requestsTimestamps.get(entry.getKey())> periodOfTime){
 						
 						requestsToRemove.add(entry.getKey());
+						continue;
 					}
+					entry.setValue(currentTime);
+					String requestToSearch = entry.getKey();
+					System.out.println("Add Custom DySco "+requestToSearch+" again in the queue for searching");
+					customDyscoQueue.add(requestToSearch);
+					requestsLifetime.put(entry.getKey(), System.currentTimeMillis());
+					
 						
 				}
 				
