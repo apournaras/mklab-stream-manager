@@ -100,7 +100,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	private long t;
 	
-	//private HashMap<String, Integer> usersMentionsMap, usersItemsMap, usersSharesMap;
 	private HashMap<String, Integer> webpagesSharesMap;
 	private HashMap<String, Integer> mediaItemsSharesMap;
 	private HashMap<String, Item> itemsMap;
@@ -129,9 +128,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 		this.itemsMap = new HashMap<String, Item>();
 		this.usersMap = new HashMap<String, StreamUser>();
-		//this.usersMentionsMap = new HashMap<String, Integer>();
-		//this.usersItemsMap = new HashMap<String, Integer>();
-		//this.usersSharesMap = new HashMap<String, Integer>();
 		this.webpagesSharesMap = new HashMap<String, Integer>();
 		this.mediaItemsSharesMap = new HashMap<String, Integer>();
 	}
@@ -156,9 +152,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		
 		this.itemsMap = new HashMap<String, Item>();
 		this.usersMap = new HashMap<String, StreamUser>();
-		//this.usersMentionsMap = new HashMap<String, Integer>();
-		//this.usersItemsMap = new HashMap<String, Integer>();
-		//this.usersSharesMap = new HashMap<String, Integer>();
 		this.webpagesSharesMap = new HashMap<String, Integer>();
 		this.mediaItemsSharesMap = new HashMap<String, Integer>();
 	}
@@ -176,9 +169,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 		
 		this.itemsMap = new HashMap<String, Item>();
 		this.usersMap = new HashMap<String, StreamUser>();
-		//this.usersMentionsMap = new HashMap<String, Integer>();
-		//this.usersItemsMap = new HashMap<String, Integer>();
-		//this.usersSharesMap = new HashMap<String, Integer>();
 		this.webpagesSharesMap = new HashMap<String, Integer>();
 		this.mediaItemsSharesMap = new HashMap<String, Integer>();
 	}
@@ -298,21 +288,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					}
 					else {
 						// Update statistics of stream user
-						/*
-						synchronized(usersItemsMap) {
-							Integer items = usersItemsMap.get(user.getId());
-							if(items == null)
-								items = 0;
-							usersItemsMap.put(user.getId(), ++items);
-						}
-						
-						synchronized(usersMentionsMap) {
-							Integer mentions = usersMentionsMap.get(user.getId());
-							if(mentions == null)
-								mentions = 0;
-							usersMentionsMap.put(user.getId(), ++mentions);
-						}
-						*/
 						synchronized(usersMap) {
 							StreamUser tempUser = usersMap.get(user.getId());
 							if(tempUser == null) {
@@ -329,14 +304,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 				if(item.getMentions() != null) {
 					String[] mentionedUsers = item.getMentions();
 					for(String mentionedUser : mentionedUsers) {
-						/*
-						synchronized(usersMentionsMap) {
-							Integer mentions = usersMentionsMap.get(mentionedUser);
-							if(mentions == null)
-								mentions = 0;
-							usersMentionsMap.put(mentionedUser, ++mentions);
-						}
-						*/
 						synchronized(usersMap) {
 							StreamUser tempUser = usersMap.get(mentionedUser);
 							if(tempUser == null) {
@@ -351,15 +318,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 
 				if(item.getReferencedUserId() != null) {
 					String userid = item.getReferencedUserId();
-					
-					/*
-					synchronized(usersSharesMap) {
-						Integer shares = usersSharesMap.get(userid);
-						if(shares == null)
-							shares = 0;
-						usersSharesMap.put(userid, ++shares);
-					}
-					*/
 					
 					synchronized(usersMap) {
 						StreamUser tempUser = usersMap.get(userid);
@@ -421,6 +379,35 @@ public class MongoDbStorage implements StreamUpdateStorage {
 			else {
 				synchronized(itemsMap) {
 					itemsMap.put(item.getId(), item);
+				}
+				
+				StreamUser user = item.getStreamUser();
+				if(user != null) {
+					users++;
+					
+					String userId = user.getId();
+					boolean userExists = false;
+					synchronized(usersMap) {
+						userExists = usersMap.containsKey(userId) || streamUserDAO.exists(userId);
+					}
+					if(!userExists) {
+						// save stream user
+						userInsertions++;
+						streamUserDAO.insertStreamUser(user);
+					}
+					else {
+						// Update statistics of stream user
+						synchronized(usersMap) {
+							StreamUser tempUser = usersMap.get(user.getId());
+							if(tempUser == null) {
+								tempUser = new StreamUser(null, Operation.UPDATE);
+								tempUser.setId(user.getId());
+								usersMap.put(user.getId(), tempUser);
+							}
+							tempUser.incItems(1);
+							tempUser.incMentions(1L);
+						}
+					}
 				}
 			}
 		}

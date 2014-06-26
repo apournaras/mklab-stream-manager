@@ -18,7 +18,7 @@
     	<!--Solr storage configuaration  -->
     	<Storage id="Solr">
     		<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.SolrStorage]]></Parameter>
-    		<Parameter name="solr.hostname"><![CDATA[http://your.ip:8080]]></Parameter>
+    		<Parameter name="solr.hostname"><![CDATA[http://socialsensor.atc.gr]]></Parameter>
     		<Parameter name="solr.service"><![CDATA[solr]]></Parameter>
     		<Parameter name="solr.newsfeed.collection"><![CDATA[NewsFeed]]></Parameter>
     	</Storage> 
@@ -39,7 +39,7 @@
 	        	<![CDATA[./conf/RSSFeeds/ALLRSSFeeds.txt]]>
 			</Parameter>
 			<Parameter name="feedType">
-	        	<![CDATA[keywords]]>
+	        	<![CDATA[url]]>
 			</Parameter>
 		</Stream>
 		

@@ -228,7 +228,7 @@ public class StreamsMonitor {
 				}
 				
 				for(String streamId : reformedRunningTimes.keySet()){
-					System.out.println("Reinitializing Stream : "+streamId);
+					logger.info("Reinitializing Stream : "+streamId);
 					runningTimePerStream.put(streamId, reformedRunningTimes.get(streamId));
 				}
 				
