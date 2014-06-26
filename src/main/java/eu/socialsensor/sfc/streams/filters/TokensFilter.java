@@ -12,6 +12,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.util.Version;
 
 import eu.socialsensor.framework.common.domain.Item;
+import eu.socialsensor.framework.common.domain.StreamUser;
 import eu.socialsensor.sfc.streams.FilterConfiguration;
 
 public class TokensFilter  extends ItemFilter {
@@ -33,6 +34,11 @@ public class TokensFilter  extends ItemFilter {
 			return false;
 		
 		try {
+			StreamUser streamUser = item.getStreamUser();
+			if(streamUser == null || streamUser.isVerified()) {
+				return true;
+			}
+			
 			Reader reader = new StringReader(title);
 			TokenStream tokenizer = new StandardTokenizer(Version.LUCENE_40, reader);
 			
