@@ -10,7 +10,7 @@ import eu.socialsensor.sfc.streams.FilterConfiguration;
 
 public class LanguageItemFilter extends ItemFilter {
 
-	private Set<String> _langs = new HashSet<String>();
+	private Set<String> languages = new HashSet<String>();
 
 	public LanguageItemFilter(FilterConfiguration configuration) {
 		super(configuration);
@@ -18,7 +18,7 @@ public class LanguageItemFilter extends ItemFilter {
 		
 		String[] langs = langsStr.split(",");
 		for(String lang : langs)
-			_langs.add(lang);
+			languages.add(lang);
 		
 		Logger.getLogger(LengthItemFilter.class).info("Supported languages: " + langsStr);
 	}
@@ -27,7 +27,10 @@ public class LanguageItemFilter extends ItemFilter {
 	public boolean accept(Item item) {
 		
 		String lang = item.getLang();
-		if(lang == null || !_langs.contains(lang))
+		if(lang == null)
+			return true;
+		
+		if(!languages.contains(lang))
 			return false;
 			
 		return true;

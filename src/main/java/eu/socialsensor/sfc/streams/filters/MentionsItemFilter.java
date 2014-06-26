@@ -42,6 +42,11 @@ public class MentionsItemFilter extends ItemFilter {
 	
 	@Override
 	public boolean accept(Item item) {
+		
+		String[] mentions = item.getMentions();
+		if(mentions != null && mentions.length > 2)
+			return false;
+		
 		String[] lists = item.getList();
 		if(lists == null || lists.length==0 || lists.length>1) {
 			return true;
