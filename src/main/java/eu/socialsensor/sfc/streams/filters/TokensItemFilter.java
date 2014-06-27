@@ -15,16 +15,16 @@ import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.StreamUser;
 import eu.socialsensor.sfc.streams.FilterConfiguration;
 
-public class TokensFilter  extends ItemFilter {
+public class TokensItemFilter  extends ItemFilter {
 
 	private int maxTokens;
 
-	public TokensFilter(FilterConfiguration configuration) {
+	public TokensItemFilter(FilterConfiguration configuration) {
 		super(configuration);
 		String lenStr =configuration.getParameter("maxTokens", "6");
 		this.maxTokens  = Integer.parseInt(lenStr);
 		
-		Logger.getLogger(TokensFilter.class).info("Initialized. Max Number of Tokemns: " + maxTokens);
+		Logger.getLogger(TokensItemFilter.class).info("Initialized. Max Number of Tokemns: " + maxTokens);
 	}
 
 	@Override
@@ -60,7 +60,7 @@ public class TokensFilter  extends ItemFilter {
 			}
 			
 		} catch (Exception e) {
-			Logger.getLogger(TokensFilter.class).error(e);
+			Logger.getLogger(TokensItemFilter.class).error(e);
 			return false;
 		}
 		return true;
