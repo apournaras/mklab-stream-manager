@@ -218,9 +218,8 @@ public class StoreManager implements StreamHandler {
 	}
 	
 	private void createFilters() throws StreamException {
-		try {
-			for (String filterId : config.getFilterIds()) {
-				
+		for (String filterId : config.getFilterIds()) {
+			try {
 				FilterConfiguration fconfig = config.getFilterConfig(filterId);
 				String className = fconfig.getParameter(FilterConfiguration.CLASS_PATH);
 				Constructor<?> constructor = Class.forName(className).getConstructor(FilterConfiguration.class);
@@ -228,16 +227,17 @@ public class StoreManager implements StreamHandler {
 			
 				filtersMap.put(filterId, filterInstance);
 			}
-		}catch(Exception e) {
-			e.printStackTrace();
-			throw new StreamException("Error during streams initialization", e);
+			catch(Exception e) {
+				e.printStackTrace();
+				logger.error("Error during filters initialization", e);
+			}
 		}
 	}
 	
 	private void createProcessors() throws StreamException {
-		try {
-			for (String processorId : config.getProcessorsIds()) {
-				
+		for (String processorId : config.getProcessorsIds()) {
+			try {
+					
 				ProcessorConfiguration pconfig = config.getProcessorConfig(processorId);
 				String className = pconfig.getParameter(ProcessorConfiguration.CLASS_PATH);
 				Constructor<?> constructor = Class.forName(className).getConstructor(ProcessorConfiguration.class);
@@ -245,9 +245,10 @@ public class StoreManager implements StreamHandler {
 			
 				processorsMap.put(processorId, processorInstance);
 			}
-		}catch(Exception e) {
-			e.printStackTrace();
-			throw new StreamException("Error during streams initialization", e);
+			catch(Exception e) {
+				e.printStackTrace();
+				logger.error("Error during processors initialization", e);
+			}
 		}
 	}
 	
