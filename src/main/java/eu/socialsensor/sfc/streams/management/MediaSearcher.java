@@ -528,8 +528,8 @@ public class MediaSearcher {
 
 		private boolean isAlive = true;
 		
-		private static final long frequency = 2 * 300000; //ten minutes
-		private static final long periodOfTime = 48 * 3600000; //two days
+		private static final long frequency = 60000;//2 * 300000; //ten minutes
+		private static final long periodOfTime = 2 * 300000;//2 * 24 * 3600000; //two days
 		
 		public CustomSearchHandler(MediaSearcher mediaSearcher){
 			this.searcher = mediaSearcher;
@@ -562,9 +562,9 @@ public class MediaSearcher {
 					keyHold = true;
 					System.out.println("Media Searcher handling #"+dyscoId);
 					List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
-					inputFeedsPerDysco.remove(dyscoId);
 					List<Item> customItems = searcher.search(feeds);
 					System.out.println("Total Items retrieved for Custom DySco : "+dyscoId+" : "+customItems.size());
+					customItems.clear();
 					keyHold = false;
 				}
 				
@@ -603,18 +603,20 @@ public class MediaSearcher {
 			for(Map.Entry<String, Long> entry : requestsLifetime.entrySet()){
 				
 				if(currentTime - entry.getValue() > frequency){
+					System.out.println("Custom DySco "+entry.getKey()+" test");
+					System.out.println("frequency:"+frequency+" currentTime:"+currentTime+" dysco's last search time:"+entry.getValue());
+					
 					if(currentTime - requestsTimestamps.get(entry.getKey())> periodOfTime){
-						
+						System.out.println("periodOfTime:"+periodOfTime+" currentTime:"+currentTime+" dysco's lifetime:"+requestsTimestamps.get(entry.getKey()));
+						System.out.println("Remove Custom DySco "+entry.getKey()+" from the queue - expired");
 						requestsToRemove.add(entry.getKey());
 						continue;
 					}
-					entry.setValue(currentTime);
+					
 					String requestToSearch = entry.getKey();
 					System.out.println("Add Custom DySco "+requestToSearch+" again in the queue for searching");
 					customDyscoQueue.add(requestToSearch);
-					requestsLifetime.put(entry.getKey(), System.currentTimeMillis());
-					
-						
+					requestsLifetime.put(entry.getKey(), System.currentTimeMillis());	
 				}
 				
 			}
