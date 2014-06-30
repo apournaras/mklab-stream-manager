@@ -92,6 +92,7 @@ public class MediaSearcher {
 	private Map<String,List<Query>> dyscosToQueries = new HashMap<String,List<Query>>();
 	
 	private Queue<Dysco> requests = new LinkedList<Dysco>();
+	private Queue<String> requestsToDelete = new LinkedList<String>();
 	private Queue<String> dyscosToUpdate = new LinkedList<String>();
 	
 	public MediaSearcher(StreamsManagerConfiguration config) throws StreamException{
@@ -294,16 +295,17 @@ public class MediaSearcher {
 	    	String dyscoId = dyscoMessage.getDyscoId();
 	    	Action action = dyscoMessage.getAction();
 	    	
+	    	Dysco dysco = solrdyscoHandler.findDyscoLight(dyscoId);
+    		
+    		if(dysco == null){
+    			logger.error("Invalid dysco request");
+    			return;
+    		}
+	    	
 	    	switch(action){
 		    	case NEW : 
 		    		System.out.println("New dysco with id : "+dyscoId+" created");
-		    		Dysco dysco = solrdyscoHandler.findDyscoLight(dyscoId);
-		    		
-		    		if(dysco == null){
-		    			logger.error("Invalid dysco request");
-		    			return;
-		    		}
-		    		
+		    	
 		    		requests.add(dysco);
 		    		break;
 		    	case UPDATE:
@@ -311,7 +313,10 @@ public class MediaSearcher {
 		    		logger.info("Dysco with id : "+dyscoId+" updated");
 		    		break;
 		    	case DELETE:
-		    		//to be implemented
+		    		if(requests.contains(dysco))
+		    			requests.remove(dysco);
+		    		else
+		    			requestsToDelete.add(dyscoId);
 		    		logger.info("Dysco with id : "+dyscoId+" deleted");
 		    		break;
 	    	}
@@ -528,8 +533,8 @@ public class MediaSearcher {
 
 		private boolean isAlive = true;
 		
-		private static final long frequency = 60000;//2 * 300000; //ten minutes
-		private static final long periodOfTime = 2 * 300000;//2 * 24 * 3600000; //two days
+		private static final long frequency = 2 * 300000; //ten minutes
+		private static final long periodOfTime = 2 * 24 * 3600000; //two days
 		
 		public CustomSearchHandler(MediaSearcher mediaSearcher){
 			this.searcher = mediaSearcher;
@@ -621,11 +626,15 @@ public class MediaSearcher {
 				
 			}
 			
-			if(!requestsToRemove.isEmpty()){
+			if(!requestsToRemove.isEmpty() || !requestsToDelete.isEmpty()){
 				for(String requestToRemove : requestsToRemove){
 					deleteCustomDysco(requestToRemove);
 				}
+				for(String requestToDelete : requestsToDelete){
+					deleteCustomDysco(requestToDelete);
+				}
 				requestsToRemove.clear();	
+				requestsToDelete.clear();
 			}
 			
 		}
