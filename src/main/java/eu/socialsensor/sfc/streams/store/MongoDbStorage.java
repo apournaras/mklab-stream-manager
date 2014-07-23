@@ -341,10 +341,12 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					}
 					else {
 						//Update media item
-						Integer shares = mediaItemsSharesMap.get(mediaItem.getId());
-						if(shares == null)
-							shares = 0;
-						mediaItemsSharesMap.put(mediaItem.getId(), ++shares);
+						synchronized(mediaItemsSharesMap) {
+							Integer shares = mediaItemsSharesMap.get(mediaItem.getId());
+							if(shares == null)
+								shares = 0;
+							mediaItemsSharesMap.put(mediaItem.getId(), ++shares);
+						}
 					}
 					
 					if(mediaSharesDAO != null) {
