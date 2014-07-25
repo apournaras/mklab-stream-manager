@@ -45,8 +45,8 @@ public class StoreManager implements StreamHandler {
 	
 	private List<StreamUpdateStorage> workingStorages = new ArrayList<StreamUpdateStorage>();
 	
-	private Map<String, ItemFilter> filtersMap = new HashMap<String, ItemFilter>();
-	private Map<String, Processor> processorsMap = new HashMap<String, Processor>();
+	private List<ItemFilter> filters = new ArrayList<ItemFilter>();
+	private List<Processor> processors = new ArrayList<Processor>();
 	
 	private StorageStatusAgent statusAgent;
 	
@@ -68,10 +68,10 @@ public class StoreManager implements StreamHandler {
 		
 		try {
 			createFilters();
-			logger.info(filtersMap.size() + " filters initialized!");
+			logger.info(filters.size() + " filters initialized!");
 			
 			createProcessors();
-			logger.info(filtersMap.size() + " processors initialized!");
+			logger.info(processors.size() + " processors initialized!");
 			
 			store = initStorage(config);	
 		} catch (StreamException e) {
@@ -127,7 +127,7 @@ public class StoreManager implements StreamHandler {
 	public void start() {
 		
 		for(int i=0; i<numberOfConsumers; i++)
-			consumers.add(new Consumer(queue, store, filtersMap.values(), processorsMap.values()));
+			consumers.add(new Consumer(queue, store, filters, processors));
 		
 		for(Consumer consumer : consumers)
 			consumer.start();
@@ -225,7 +225,7 @@ public class StoreManager implements StreamHandler {
 				Constructor<?> constructor = Class.forName(className).getConstructor(FilterConfiguration.class);
 				ItemFilter filterInstance = (ItemFilter) constructor.newInstance(fconfig);
 			
-				filtersMap.put(filterId, filterInstance);
+				filters.add(filterInstance);
 			}
 			catch(Exception e) {
 				e.printStackTrace();
@@ -243,7 +243,7 @@ public class StoreManager implements StreamHandler {
 				Constructor<?> constructor = Class.forName(className).getConstructor(ProcessorConfiguration.class);
 				Processor processorInstance = (Processor) constructor.newInstance(pconfig);
 			
-				processorsMap.put(processorId, processorInstance);
+				processors.add(processorInstance);
 			}
 			catch(Exception e) {
 				e.printStackTrace();
@@ -289,7 +289,7 @@ public class StoreManager implements StreamHandler {
 	 */
 	public class StorageStatusAgent extends Thread {
 		// Runs every two minutes by default
-		private long minuteThreshold = 2 * 60000;
+		private long sleepTime = 2 * 60000;
 		
 		private StoreManager storeManager;
 		
@@ -306,7 +306,7 @@ public class StoreManager implements StreamHandler {
 			while(storeManager.getState().equals(StoreManagerState.OPEN)) {
 				
 				try {
-					Thread.sleep(minuteThreshold);
+					Thread.sleep(sleepTime);
 				} catch (InterruptedException e) {
 					if(storeManager.getState().equals(StoreManagerState.CLOSE)) {
 						logger.info("StorageStatusAgent interrupted from sleep to stop.");
@@ -321,13 +321,13 @@ public class StoreManager implements StreamHandler {
 					String storageId = storage.getStorageName();
 					Boolean status = store.checkStatus(storage);
 					
-					if(!status && storeManager.getWorkingDataBases().get(storageId)){     
+					if(!status && storeManager.getWorkingDataBases().get(storageId)) {     
 						//was working and now is not responding
 						logger.info(storageId + " was working and now is not responding");
 						storeManager.updateDataBasesStatus(storageId, status);
 						storeManager.eliminateStorage(storage);
 					}
-					else if(status && !storeManager.getWorkingDataBases().get(storageId)){
+					else if(status && !storeManager.getWorkingDataBases().get(storageId)) {
 						//was not working and now is working
 						logger.info(storageId + " was not working and now is working");
 						storeManager.updateDataBasesStatus(storageId, status);
@@ -340,16 +340,21 @@ public class StoreManager implements StreamHandler {
 				logger.info("Queue size: " + queue.size());
 				logger.info("Handle rate: " + (items-p)/((T1-T)/60000) + " items/min");
 				logger.info("Mean handle rate: " + (items)/((T1-T0)/60000) + " items/min");
+				
+				for(ItemFilter filter : filters) {
+					logger.info(filter.name() + ": " + filter.status());
+				}
+				
 				logger.info("============================================================");
 				T = System.currentTimeMillis();
 				p = items;
 				
 				// This should never happen
 				if(queue.size() > 500) {
-					//synchronized(queue) {
-						logger.info("Queue size > 500. Clear queue to prevent heap overflow.");
+					synchronized(queue) {
+						logger.error("Queue size " + queue.size() + " > 500. Clear queue to prevent heap overflow.");
 						queue.clear();
-					//}
+					}
 				}
 			}
 		
