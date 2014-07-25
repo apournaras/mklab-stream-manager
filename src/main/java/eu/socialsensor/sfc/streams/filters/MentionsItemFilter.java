@@ -44,23 +44,34 @@ public class MentionsItemFilter extends ItemFilter {
 	public boolean accept(Item item) {
 		
 		String[] mentions = item.getMentions();
-		if(mentions != null && mentions.length > 2)
+		if(mentions != null && mentions.length > 2) {
+			incrementDiscarded();
 			return false;
+		}
 		
 		String[] lists = item.getList();
 		if(lists == null || lists.length==0 || lists.length>1) {
+			incrementAccepted();
 			return true;
 		}
 		
-		if(!lists[0].equals(listId))
+		if(!lists[0].equals(listId)) {
+			incrementAccepted();
 			return true;
+		}
 		
 		String uid = item.getUserId();
 		if (!ids.contains(uid)) {
+			incrementDiscarded();
 			return false;
 		}
 		
 		return true;
 	}
 
+	@Override
+	public String name() {
+		return "MentionsItemFilter";
+	}
+	
 }

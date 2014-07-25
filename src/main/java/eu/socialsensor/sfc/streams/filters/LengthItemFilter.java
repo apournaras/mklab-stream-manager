@@ -20,22 +20,27 @@ public class LengthItemFilter extends ItemFilter {
 	@Override
 	public boolean accept(Item item) {
 		if(item == null) {
-			//System.out.println("Null item");
+			incrementDiscarded();
 			return false;
 		}
 		
 		String title = item.getTitle();
 		if(title == null) {
-			//System.out.println(item.getId() + " has null text");
+			incrementDiscarded();
 			return false;
 		}
 		
 		if(title.length() < minTextLenth) {
-			//System.out.println(item.getTitle() + " filtered out due to text length (" + title.length() + ")");
+			incrementDiscarded();
 			return false;
 		}
 		
+		incrementAccepted();
 		return true;
 	}
 
+	@Override
+	public String name() {
+		return "LengthItemFilter";
+	}
 }

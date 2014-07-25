@@ -15,7 +15,7 @@ import eu.socialsensor.sfc.streams.FilterConfiguration;
 public class TagsItemFilter extends ItemFilter {
 
 	private int maxTags = 4;
-
+	
 	public TagsItemFilter(FilterConfiguration configuration) {
 		super(configuration);
 		String lenStr =configuration.getParameter("maxTags", "4");
@@ -27,19 +27,28 @@ public class TagsItemFilter extends ItemFilter {
 	@Override
 	public boolean accept(Item item) {
 		if(item == null) {
+			incrementDiscarded();
 			return false;
 		}
 		
 		String[] tags = item.getTags();
 		if(tags == null) {
+			incrementAccepted();
 			return true;
 		}
 		
 		if(tags.length > maxTags) {
+			incrementDiscarded();
 			return false;
 		}
 		
+		incrementAccepted();
 		return true;
 	}
 
+	@Override
+	public String name() {
+		return "TagsItemFilter";
+	}
+	
 }

@@ -14,11 +14,13 @@ public class LanguageItemFilter extends ItemFilter {
 
 	public LanguageItemFilter(FilterConfiguration configuration) {
 		super(configuration);
-		String langsStr =configuration.getParameter("lang", "en");
+		String langsStr = configuration.getParameter("lang", "en");
 		
 		String[] langs = langsStr.split(",");
-		for(String lang : langs)
-			languages.add(lang);
+		for(String lang : langs) {
+			if(lang != null)
+				languages.add(lang.trim());
+		}
 		
 		Logger.getLogger(LengthItemFilter.class).info("Supported languages: " + langsStr);
 	}
@@ -27,13 +29,23 @@ public class LanguageItemFilter extends ItemFilter {
 	public boolean accept(Item item) {
 		
 		String lang = item.getLang();
-		if(lang == null)
+		if(lang == null) {
+			incrementAccepted();
 			return true;
+		}
 		
-		if(!languages.contains(lang))
+		if(!languages.contains(lang)) {
+			incrementDiscarded();
 			return false;
-			
+		}
+		
+		incrementAccepted();
 		return true;
+	}
+
+	@Override
+	public String name() {
+		return "LanguageItemFilter";
 	}
 
 }

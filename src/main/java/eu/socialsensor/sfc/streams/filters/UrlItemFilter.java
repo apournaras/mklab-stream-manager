@@ -29,20 +29,28 @@ public class UrlItemFilter extends ItemFilter {
 	@Override
 	public boolean accept(Item item) {
 		if(item == null) {
+			incrementDiscarded();
 			return false;
 		}
 		
 		URL[] urls = item.getLinks();
 		if(urls == null) {
+			incrementAccepted();
 			return true;
 		}
 		
 		if(urls.length > maxUrls) {
-			System.out.println("Item " + item.getId() + " is possible spam due to URLs number (" + urls.length + ")");
+			incrementDiscarded();
 			return false;
 		}
 		
+		incrementAccepted();
 		return true;
 	}
 
+	@Override
+	public String name() {
+		return "UrlItemFilter";
+	}
+	
 }
