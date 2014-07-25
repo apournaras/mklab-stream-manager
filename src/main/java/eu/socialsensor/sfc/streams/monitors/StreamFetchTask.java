@@ -3,6 +3,8 @@ package eu.socialsensor.sfc.streams.monitors;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.streams.Stream;
@@ -14,27 +16,29 @@ import eu.socialsensor.framework.streams.StreamException;
  * @author ailiakop
  * @email  ailiakop@iti.gr
  */
-public class StreamFetchTask implements Runnable{
+public class StreamFetchTask implements Runnable {
 	
-	Stream stream;
+	private final Logger logger = Logger.getLogger(StreamFetchTask.class);
 	
-	boolean completed = false;
+	private Stream stream;
 	
-	List<Feed> feeds = new ArrayList<Feed>();
-	List<Item> totalRetrievedItems = new ArrayList<Item>();
+	private boolean completed = false;
 	
-	public StreamFetchTask(Stream stream) throws Exception{
+	private List<Feed> feeds = new ArrayList<Feed>();
+	private List<Item> totalRetrievedItems = new ArrayList<Item>();
+	
+	public StreamFetchTask(Stream stream) throws Exception {
 		this.stream = stream;
 		if(!this.stream.setMonitor())
-			throw new Exception("Feeds monitor for stream: "+this.stream.getClass()+" cannot be initialized");
+			throw new Exception("Feeds monitor for stream: " + this.stream.getClass() + " cannot be initialized");
 	}
 	
-	public StreamFetchTask(Stream stream,List<Feed> feeds) throws Exception{
+	public StreamFetchTask(Stream stream,List<Feed> feeds) throws Exception {
 		this.stream = stream;
 		this.feeds.addAll(feeds);
 		
 		if(!this.stream.setMonitor())
-			throw new Exception("Feeds monitor for stream: "+this.stream.getClass()+" cannot be initialized");
+			throw new Exception("Feeds monitor for stream: " + this.stream.getClass() + " cannot be initialized");
 	}
 	
 	/**
@@ -42,14 +46,14 @@ public class StreamFetchTask implements Runnable{
 	 * for relevant content in the stream
 	 * @param feeds
 	 */
-	public void addFeeds(List<Feed> feeds){
+	public void addFeeds(List<Feed> feeds) {
 		this.feeds.addAll(feeds);
 	}
 	
 	/**
 	 * Clear the input feeds
 	 */
-	public void clear(){
+	public void clear() {
 		feeds.clear();
 	}
 	
@@ -58,7 +62,7 @@ public class StreamFetchTask implements Runnable{
 	 * for the associated stream
 	 * @return
 	 */
-	public List<Item> getTotalRetrievedItems(){
+	public List<Item> getTotalRetrievedItems() {
 		return totalRetrievedItems;
 	}
 	
@@ -66,34 +70,35 @@ public class StreamFetchTask implements Runnable{
 	 * Returns true if the stream task is completed
 	 * @return
 	 */
-	public boolean isCompleted(){
+	public boolean isCompleted() {
 		return completed;
 	}
+	
 	/**
 	 * Sets the task in ready mode to retrieve again 
 	 * from the stream with the same set of feeds
 	 */
-	public void restartTask(){
+	public void restartTask() {
 		completed = false;
 	}
-	
+
 	/**
 	 * Retrieves content using the feeds assigned to the task
 	 * making rest calls to stream's API. 
 	 */
 	@Override
-	public void run(){
+	public void run() {
 		try {
-			
 			stream.poll(feeds);
 			
+			//totalRetrievedItems.clear();
 			totalRetrievedItems.addAll(stream.getTotalRetrievedItems());
 			completed = true;
 			
 		} catch (StreamException e) {
 			completed = true;
-			System.err.println("---------------------ERROR IN STREAM FETCH TASK----------------");
-			e.printStackTrace();
+			logger.error("ERROR IN STREAM FETCH TASK");
+			logger.error(e);
 		}
 		
 		

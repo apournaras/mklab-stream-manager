@@ -16,23 +16,23 @@ import eu.socialsensor.framework.streams.Stream;
 
 /**
  * Thread-safe class for monitoring the streams that correspond to each social network
- * Currently 7 social networks are supported
- * (Twitter, Youtube,Flickr,Instagram,Tumblr,Facebook,GooglePlus)
+ * Currently 7 social networks are supported (Twitter, Youtube,Flickr,Instagram,Tumblr,Facebook,GooglePlus)
  * @author ailiakop
  * @email  ailiakop@iti.gr
  */
 public class StreamsMonitor {
-	private static final long DEFAULT_REQUEST_TIME = 5*60*60000; 
+	
+	private static final long DEFAULT_REQUEST_TIME = 5 * 60 * 60000; 
 	
 	public final Logger logger = Logger.getLogger(StreamsMonitor.class);
 
 	private ExecutorService executor;
 	
-	private Map<String,Stream> streams = new HashMap<String,Stream>();
-	private Map<String,List<Feed>> feedsPerStream = new HashMap<String,List<Feed>>();
-	private Map<String,Long> requestTimePerStream = new HashMap<String,Long>();
-	private Map<String,Long> runningTimePerStream = new HashMap<String,Long>();
-	private Map<String,StreamFetchTask> streamsFetchTasks = new HashMap<String,StreamFetchTask>();
+	private Map<String, Stream> streams = new HashMap<String,Stream>();
+	private Map<String, List<Feed>> feedsPerStream = new HashMap<String,List<Feed>>();
+	private Map<String, Long> requestTimePerStream = new HashMap<String,Long>();
+	private Map<String, Long> runningTimePerStream = new HashMap<String,Long>();
+	private Map<String, StreamFetchTask> streamsFetchTasks = new HashMap<String,StreamFetchTask>();
 	
 	private List<Item> totalRetrievedItems = new ArrayList<Item>();
 	
@@ -40,15 +40,15 @@ public class StreamsMonitor {
 	
 	private ReInitializer reInitializer = new ReInitializer();
 	
-	public StreamsMonitor(int numberOfStreams){
+	public StreamsMonitor(int numberOfStreams) {
 		executor = Executors.newFixedThreadPool(numberOfStreams);
 	}
 	
-	public List<Item> getTotalRetrievedItems(){
+	public List<Item> getTotalRetrievedItems() {
 		return totalRetrievedItems;
 	}
 	
-	public int getNumberOfStreamFetchTasks(){
+	public int getNumberOfStreamFetchTasks() {
 		return streamsFetchTasks.size();
 	}
 	
@@ -56,8 +56,8 @@ public class StreamsMonitor {
 	 * Adds the streams to the monitor
 	 * @param streams
 	 */
-	public void addStreams(Map<String,Stream> streams){
-		for(String streamId : streams.keySet()){
+	public void addStreams(Map<String,Stream> streams) {
+		for(String streamId : streams.keySet()) {
 			addStream(streamId,streams.get(streamId));
 		}
 	}
@@ -67,7 +67,7 @@ public class StreamsMonitor {
 	 * @param streamId
 	 * @param stream
 	 */
-	public void addStream(String streamId,Stream stream){
+	public void addStream(String streamId,Stream stream) {
 		this.streams.put(streamId, stream);
 		this.requestTimePerStream.put(streamId, DEFAULT_REQUEST_TIME);
 	}
@@ -81,7 +81,7 @@ public class StreamsMonitor {
 	 * @param stream
 	 * @param feeds
 	 */
-	public void addStream(String streamId,Stream stream,List<Feed> feeds){
+	public void addStream(String streamId,Stream stream,List<Feed> feeds) {
 		this.streams.put(streamId, stream);
 		this.feedsPerStream.put(streamId, feeds);
 		this.requestTimePerStream.put(streamId, DEFAULT_REQUEST_TIME);
@@ -91,7 +91,7 @@ public class StreamsMonitor {
 	 * Adds a feed to the monitor
 	 * @param stream
 	 */
-	public void addFeeds(String streamId,List<Feed> feeds){
+	public void addFeeds(String streamId, List<Feed> feeds) {
 		StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);
 		if(fetchTask != null) {
 			fetchTask.addFeeds(feeds);
@@ -102,7 +102,7 @@ public class StreamsMonitor {
 		return streams.get(streamId);
 	}
 	
-	public void setStreamRequestTime(String streamId,Long requestTime){
+	public void setStreamRequestTime(String streamId,Long requestTime) {
 		this.requestTimePerStream.put(streamId, requestTime);
 	}
 	/**
@@ -111,7 +111,7 @@ public class StreamsMonitor {
 	 * @param streamId
 	 */
 	public void startStream(String streamId) {
-		if(!streams.containsKey(streamId)){
+		if(!streams.containsKey(streamId)) {
 			logger.error("Stream "+streamId+" needs to be added to the monitor first");
 			return;
 		}
@@ -120,8 +120,7 @@ public class StreamsMonitor {
 		try {
 			streamTask = new StreamFetchTask(streams.get(streamId),feedsPerStream.get(streamId));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e);
 		}
 		streamsFetchTasks.put(streamId, streamTask);
 		executor.execute(streamTask);
@@ -135,38 +134,34 @@ public class StreamsMonitor {
 	 * by a different thread->StreamFetchTask
 	 * @param 
 	 */
-	public void startAllStreamsAtOnce(){
-		
+	public void startAllStreamsAtOnce() {
 		for(Map.Entry<String, Stream> entry : streams.entrySet()){
-			
 			startStream(entry.getKey());
 		}
-		
 		reInitializer.start();
 	}
 	
-	public void startReInitializer(){
+	public void startReInitializer() {
 		reInitializer.start();
 	}
 	
 	/**
-	 *Starts the retrieval process for all the streams added. Each stream is served
-	 * by a different thread->StreamFetchTask. All streams are assigned the
-	 * same input feeds for retrieving relevant content.
-	 * @param feeds
-	 * @throws Exception 
+	 *	Starts the retrieval process for all the streams added. Each stream is served by a different thread->StreamFetchTask. 
+	 *	All streams are assigned the same input feeds for retrieving relevant content.
+	 * 	@param feeds
+	 * 	@throws Exception 
 	 */
-	public void retrieveFromAllStreams(List<Feed> feeds) throws Exception{
-		totalRetrievedItems.clear();
+	public void retrieveFromAllStreams(List<Feed> feeds) throws Exception {
 		
-		for(Map.Entry<String, Stream> entry : streams.entrySet()){
+		totalRetrievedItems.clear();
+		for(Map.Entry<String, Stream> entry : streams.entrySet()) {
 			
-			StreamFetchTask streamTask = new StreamFetchTask(entry.getValue(),feeds);
+			StreamFetchTask streamTask = new StreamFetchTask(entry.getValue(), feeds);
 			streamsFetchTasks.put(entry.getKey(), streamTask);
 			executor.execute(streamTask);
 			runningTimePerStream.put(entry.getKey(), System.currentTimeMillis());
 			
-			System.out.println("Start stream task : "+entry.getKey()+" with "+feeds.size()+" feeds");
+			System.out.println("Start stream task : " + entry.getKey() + " with " + feeds.size() + " feeds");
 		}
 	}
 	
@@ -177,27 +172,27 @@ public class StreamsMonitor {
 	 * @param selectedStreams
 	 * @param feeds
 	 */
-	public void retrieveFromSelectedStreams(Set<String> selectedStreams, List<Feed> feeds){
+	public void retrieveFromSelectedStreams(Set<String> selectedStreams, List<Feed> feeds) {
 		totalRetrievedItems.clear();
 		
-		for(Map.Entry<String, Stream> entry : streams.entrySet()){
-			if(selectedStreams.contains(entry.getKey())){
+		for(Map.Entry<String, Stream> entry : streams.entrySet()) {
+			if(selectedStreams.contains(entry.getKey())) {
 				StreamFetchTask streamTask = null;
 				try {
-					streamTask = new StreamFetchTask(entry.getValue(),feeds);
+					streamTask = new StreamFetchTask(entry.getValue(), feeds);
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.error(e);
 				}
+				
 				streamsFetchTasks.put(entry.getKey(), streamTask);
 				executor.execute(streamTask);
 				runningTimePerStream.put(entry.getKey(), System.currentTimeMillis());
 				
-				System.out.println("Start stream task : "+entry.getKey()+" with "+feeds.size()+" feeds");
+				logger.info("Start stream task : " + entry.getKey() + " with " + feeds.size() + " feeds");
 			}
-			
 		}
 	}
+	
 	/**
 	 * Restarts a stream to start retrieving again for relevant content to its input feeds. 
 	 * Reinitializer checks the last time the stream was searched and if the specified time 
@@ -205,21 +200,22 @@ public class StreamsMonitor {
 	 * @author ailiakop
 	 *
 	 */
-	private class ReInitializer extends Thread{
+	private class ReInitializer extends Thread {
+		
 		private Map<String,Long> reformedRunningTimes = new HashMap<String,Long>();
 		
-		public ReInitializer(){
-			//logger.info("ReInitializer Thread instantiated");
+		public ReInitializer() {
+			logger.info("ReInitializer Thread instantiated");
 		}
 		
-		public void run(){
+		public void run() {
 			logger.info("ReInitializer Thread started");
-			while(!isFinished){
+			while(!isFinished) {
 				long currentTime = System.currentTimeMillis();
 				
-				for(String streamId : runningTimePerStream.keySet()){
-					if((currentTime - runningTimePerStream.get(streamId)) >= requestTimePerStream.get(streamId)){
-						if(streamsFetchTasks.get(streamId).completed){
+				for(String streamId : runningTimePerStream.keySet()) {
+					if((currentTime - runningTimePerStream.get(streamId)) >= requestTimePerStream.get(streamId)) {
+						if(streamsFetchTasks.get(streamId).isCompleted()) {
 							streamsFetchTasks.get(streamId).restartTask();
 							executor.execute(streamsFetchTasks.get(streamId));
 							reformedRunningTimes.put(streamId, System.currentTimeMillis());
@@ -227,12 +223,18 @@ public class StreamsMonitor {
 					}
 				}
 				
-				for(String streamId : reformedRunningTimes.keySet()){
-					logger.info("Reinitializing Stream : "+streamId);
+				for(String streamId : reformedRunningTimes.keySet()) {
+					logger.info("Reinitializing Stream: " + streamId);
 					runningTimePerStream.put(streamId, reformedRunningTimes.get(streamId));
 				}
 				
 				reformedRunningTimes.clear();
+				
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					logger.error(e);
+				}
 			}
 		}
 		
@@ -243,7 +245,7 @@ public class StreamsMonitor {
 	 * and if so sets returns true
 	 * @return
 	 */
-	public boolean areAllStreamsFinished(){
+	public boolean areAllStreamsFinished() {
 		int allStreamsDone = 0;
 		int allRunningStreams;
 		
@@ -252,17 +254,20 @@ public class StreamsMonitor {
 		allRunningStreams = streamsFetchTasks.size();
 		
 		while(allStreamsDone < allRunningStreams) {
-			for(StreamFetchTask streamTask : streamsFetchTasks.values()){
-				if(streamTask.completed && !finishedTasks.contains(streamTask)){
+			for(StreamFetchTask streamTask : streamsFetchTasks.values()) {
+				if(streamTask.isCompleted() && !finishedTasks.contains(streamTask)) {
 					totalRetrievedItems.addAll(streamTask.getTotalRetrievedItems());
 					finishedTasks.add(streamTask);
 					allStreamsDone++;
 				}	
 			}
+			
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-		
-		for(StreamFetchTask streamTask : finishedTasks)
-			streamTask = null;
 		
 		streamsFetchTasks.clear();
 		finishedTasks.clear();
@@ -273,15 +278,18 @@ public class StreamsMonitor {
 	/**
 	 * Stops the monitor - waits for all streams to shutdown
 	 */
-	public void stop(){
+	public void stop() {
 		isFinished = true;
-		
 		executor.shutdown();
 		
         while (!executor.isTerminated()) {
-        	System.out.println("Waiting for StreamsMonitor to shutdown");
+        	try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				logger.error(e);
+			}
+        	logger.info("Waiting for StreamsMonitor to shutdown");
         }
-        
-        System.out.println("Streams Monitor stopped");
+        logger.info("Streams Monitor stopped");
 	}
 }
