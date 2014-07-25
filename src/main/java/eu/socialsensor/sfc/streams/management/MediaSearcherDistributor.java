@@ -52,7 +52,7 @@ public class MediaSearcherDistributor {
      
         Runtime.getRuntime().addShutdownHook(new Shutdown(jedis, executor));
         
-        logger.info("Media Searcher Ditributor initialized.");
+        logger.info("Media Searcher Distributor initialized.");
 	}
 
 	/**
@@ -80,13 +80,11 @@ public class MediaSearcherDistributor {
 			int i = 1;
 			while(true) {
 				try {
-					
 					String msg = _queue.take();
-					
 					Message dyscoMessage = Message.create(msg);
 					
 					if(dyscoMessage.getAction().equals(Action.DELETE)){
-						System.out.println("Send DELETE message to all channels");
+						logger.info("Send DELETE message to all channels");
 						if(msg != null) {
 							_jedis.publish(_channel+"_1", msg);	
 							_jedis.publish(_channel+"_2", msg);	
@@ -96,7 +94,7 @@ public class MediaSearcherDistributor {
 					
 					i = i%_n + 1;
 					String channel = _channel + "_" + i;
-					System.out.println("Send message to " + channel);
+					logger.info("Send message to " + channel);
 					if(msg != null) {
 						_jedis.publish(channel, msg);	
 					}
