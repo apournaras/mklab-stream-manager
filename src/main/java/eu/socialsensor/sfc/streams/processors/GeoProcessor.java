@@ -129,7 +129,7 @@ public class GeoProcessor extends Processor {
 		"United Arab Emirates","Australia","United States","Kazakhstan","Netherlands","United States","Kazakhstan","Greece","Canada",
 		"New Zealand","Portugal","Iraq","Azerbaijan","Thailand","China","Serbia","Germany","Switzerland","Colombia","Brazil",
 		"Slovakia","Australia","Belgium","Romania","Hungary","Argetina","Egypt","Australia","Cape Verde",
-		"Venezuela","Morocco","United States","United States","India","Mexico","China",
+		"Venezuela","United Kingdom","United States","United States","India","Mexico","China",
 		"Denmark","Australia","Bangladesh","Ireland","United States","United Kingdom","Russia","Fiji",
 		"United States","Greenland","Mexico","United States","Vietnam","Zimbabwe","United States","Finland","Australia",
 		"China","United States","United States","Russia","Pakistan","Turkey",
