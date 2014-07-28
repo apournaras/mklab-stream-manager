@@ -12,7 +12,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
-
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.streams.Stream;
 import eu.socialsensor.framework.streams.StreamConfiguration;
@@ -22,7 +21,6 @@ import eu.socialsensor.sfc.builder.InputConfiguration;
 import eu.socialsensor.sfc.builder.input.DataInputType;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
-
 
 /**
  * Class responsible for storing items from news sources, such as 
@@ -34,7 +32,7 @@ public class NewsAggregator {
 	
 	public final Logger logger = Logger.getLogger(NewsAggregator.class);
 	
-	enum NewsAggregatorState{
+	enum NewsAggregatorState {
 		OPEN, CLOSE
 	}
 	
@@ -50,6 +48,7 @@ public class NewsAggregator {
 	private List<Feed> feeds = new ArrayList<Feed>();
 	
 	public NewsAggregator(StreamsManagerConfiguration config,InputConfiguration input_config) throws StreamException{
+		
 		if (config == null || input_config == null) {
 			throw new StreamException("News Aggregator's configuration must be specified");
 		}
@@ -57,10 +56,12 @@ public class NewsAggregator {
 		//Set the configuration files
 		this.config = config;
 		this.input_config = input_config;
+		
 		//Set up the Streams
 		initStreams();
+		
 		//If there are Streams to monitor start the StreamsMonitor
-		if(streams != null && !streams.isEmpty()){
+		if(streams != null && !streams.isEmpty()) {
 			monitor = new StreamsMonitor(streams.size());
 		}
 		
@@ -86,13 +87,12 @@ public class NewsAggregator {
 			storeManager.start();	
 			logger.info("Store Manager is ready to store.");
 
-			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.TXT_FILE,input_config);
-			Map<String,List<Feed>> results = feedsCreator.getQueryPerStream();
+			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.TXT_FILE, input_config);
+			Map<String, List<Feed>> results = feedsCreator.getQueryPerStream();
 			
 			//Start the Streams
 			for (String streamId : streams.keySet()) {
-				logger.info("NewsAggregator - Start Stream : "+streamId);
-				System.out.println("NewsAggregator - Start Stream : "+streamId);
+				logger.info("NewsAggregator - Start Stream : " + streamId);
 				StreamConfiguration sconfig = config.getStreamConfig(streamId);
 				Stream stream = streams.get(streamId);
 				stream.setHandler(storeManager);
@@ -100,9 +100,9 @@ public class NewsAggregator {
 				
 				feeds = results.get(streamId);
 				
-				if(feeds == null || feeds.isEmpty()){
-					logger.error("No feeds for Stream : "+streamId);
-					logger.error("Close Stream : "+streamId);
+				if(feeds == null || feeds.isEmpty()) {
+					logger.error("No feeds for Stream : " + streamId);
+					logger.error("Close Stream : " + streamId);
 					stream.close();
 					continue;
 				}
@@ -111,7 +111,7 @@ public class NewsAggregator {
 				monitor.startStream(streamId);
 			}
 			
-			if(monitor != null && monitor.getNumberOfStreamFetchTasks() > 0){
+			if(monitor != null && monitor.getNumberOfStreamFetchTasks() > 0) {
 				monitor.startReInitializer();
 			}
 			
@@ -119,7 +119,7 @@ public class NewsAggregator {
 			eliminator.start();
 
 		}catch(Exception e) {
-			e.printStackTrace();
+			logger.error(e);
 			throw new StreamException("Error during streams open", e);
 		}
 	}
@@ -190,9 +190,17 @@ public class NewsAggregator {
 		public void run() {
 			logger.info("Eliminator started");
 			System.out.println("Eliminator started");
-			while(aggregator.newsAggregatorState.equals(NewsAggregatorState.OPEN)){
+			while(aggregator.newsAggregatorState.equals(NewsAggregatorState.OPEN)) {
 				
-				while(Math.abs(currentTime - lastCheck) < checkTime){
+				while(Math.abs(currentTime - lastCheck) < checkTime) {
+					
+					// Sleep for an hour
+					try {
+						Thread.sleep(3600*1000);
+					} catch (InterruptedException e) {
+						logger.error(e);
+					}
+					
 					currentTime = System.currentTimeMillis();
 				}
 				
@@ -252,7 +260,7 @@ public class NewsAggregator {
 			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(streamConfigFile);		
 			InputConfiguration input_config = InputConfiguration.readFromFile(streamConfigFile);		
 			
-			NewsAggregator newsAggregator = new NewsAggregator(config,input_config);
+			NewsAggregator newsAggregator = new NewsAggregator(config, input_config);
 			newsAggregator.open();
 		
 		} catch (ParserConfigurationException e) {
