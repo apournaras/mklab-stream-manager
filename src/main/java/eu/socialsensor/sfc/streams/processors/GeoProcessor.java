@@ -25,7 +25,7 @@ public class GeoProcessor extends Processor {
 		String gnCountryInfoFile = configuration.getParameter("gnCountryInfoFile");
 		String gnAdminNames = configuration.getParameter("gnAdminNames");
 		
-		if(gnObjectsFile != null && gnCountryInfoFile != null && gnAdminNames != null) {
+		if(gnObjectsFile != null && gnCountryInfoFile!=null && gnAdminNames!=null) {
 			coder = new Countrycoder(gnObjectsFile, gnCountryInfoFile, gnAdminNames);
 		}
 		else {
@@ -49,30 +49,38 @@ public class GeoProcessor extends Processor {
 			Location loc = null;
 			StreamUser streamUser = item.getStreamUser();
 			if(streamUser != null) {
-				String userLocation = streamUser.getLocation();
-				if(userLocation != null && coder != null) {
-					Map<String, String> locationMap = coder.getLocation(userLocation);
-						
-					if(locationMap == null || locationMap.isEmpty()) {
-						String timezone = streamUser.getTimezone();
-						
-						if(timezone == null)
-							return;
-						
-						String country = timezoneToCountry.get(timezone);
-						loc = new Location(country);
-						loc.setCountryName(country);
+				
+				if(coder != null) {
+					String userLocation = streamUser.getLocation();
+					if(userLocation != null) {
+						Map<String, String> locationMap = coder.getLocation(userLocation);
+						if(locationMap == null || locationMap.isEmpty()) {
+							String timezone = streamUser.getTimezone();
+							
+							if(timezone == null)
+								return;
+							
+							String country = timezoneToCountry.get(timezone);
+							loc = new Location(country);
+							loc.setCountryName(country);
+						}
+						else {
+							String country = locationMap.get(Countrycoder.COUNTRY);
+							String city = locationMap.get(Countrycoder.CITY);
+							String area = locationMap.get(Countrycoder.AREA);
+							
+							if(area == null) {
+								area = (city==null?"":city+", ") + (country==null?"":country);
+							}
+							
+							loc = new Location(area);
+							loc.setCityName(city);
+							loc.setCountryName(country);
+						}
 					}
 					else {
-						String country = locationMap.get(Countrycoder.COUNTRY);
-						String city = locationMap.get(Countrycoder.CITY);
-						String area = locationMap.get(Countrycoder.AREA);
 						
-						loc = new Location(area);
-						loc.setCityName(city);
-						loc.setCountryName(country);
 					}
-						
 				}
 				else {
 					String timezone = streamUser.getTimezone();
