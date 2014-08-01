@@ -281,6 +281,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					synchronized(usersMap) {
 						userExists = usersMap.containsKey(userId) || streamUserDAO.exists(userId);
 					}
+					
 					if(!userExists) {
 						// save stream user
 						userInsertions++;
@@ -343,8 +344,9 @@ public class MongoDbStorage implements StreamUpdateStorage {
 						//Update media item
 						synchronized(mediaItemsSharesMap) {
 							Integer shares = mediaItemsSharesMap.get(mediaItem.getId());
-							if(shares == null)
+							if(shares == null) {
 								shares = 0;
+							}
 							mediaItemsSharesMap.put(mediaItem.getId(), ++shares);
 						}
 					}
@@ -428,6 +430,7 @@ public class MongoDbStorage implements StreamUpdateStorage {
 	
 	@Override
 	public void updateTimeslot() {
+		
 	}
 	
 	@Override
@@ -492,32 +495,6 @@ public class MongoDbStorage implements StreamUpdateStorage {
 						itemsMap.clear();
 					}
 					
-					/*
-					synchronized(usersMentionsMap) {
-						logger.info(usersMentionsMap.size() + " mentioned user");
-						for(Entry<String, Integer> e : usersMentionsMap.entrySet()) {
-							streamUserDAO.incStreamUserValue(e.getKey(), "mentions", e.getValue());
-						}
-						usersMentionsMap.clear();
-					}
-					
-					synchronized(usersSharesMap) {
-						logger.info(usersSharesMap.size() + " user shares");
-						for(Entry<String, Integer> e : usersSharesMap.entrySet()) {
-							streamUserDAO.incStreamUserValue(e.getKey(), "shares", e.getValue());
-						}
-						usersSharesMap.clear();
-					}
-
-					synchronized(usersItemsMap) {
-						logger.info(usersItemsMap.size() + " user");
-						for(Entry<String, Integer> e : usersItemsMap.entrySet()) {
-							streamUserDAO.incStreamUserValue(e.getKey(), "items", e.getValue());
-						}
-						usersItemsMap.clear();
-					}
-					*/
-					
 					synchronized(usersMap) {
 						logger.info(usersMap.size() + " users to update");
 						for(Entry<String, StreamUser> user : usersMap.entrySet()) {
@@ -552,6 +529,11 @@ public class MongoDbStorage implements StreamUpdateStorage {
 					}
 					else {
 						logger.error("Exception in mongo updater thread. ", e);
+						logger.info(mediaItemsSharesMap.size() + " media Items to update");
+						logger.info(webpagesSharesMap.size() + " web pages to update");
+						logger.info(usersMap.size() + " users to update");
+						logger.info(itemsMap.size() + " items to update");
+						
 					}
 					continue;
 				}
