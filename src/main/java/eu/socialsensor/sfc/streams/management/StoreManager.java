@@ -48,7 +48,7 @@ public class StoreManager implements StreamHandler {
 	private List<ItemFilter> filters = new ArrayList<ItemFilter>();
 	private List<Processor> processors = new ArrayList<Processor>();
 	
-	private StorageStatusAgent statusAgent;
+	private StorageStatusThread statusThread;
 	
 	private Map<String,Boolean> workingStatus = new HashMap<String, Boolean>();
 	private int items = 0;
@@ -79,8 +79,8 @@ public class StoreManager implements StreamHandler {
 			logger.error(e);
 		}
 		
-		this.statusAgent = new StorageStatusAgent(this);
-		this.statusAgent.start();
+		this.statusThread = new StorageStatusThread(this);
+		this.statusThread.start();
 		
 	}
 	
@@ -126,11 +126,13 @@ public class StoreManager implements StreamHandler {
 	 */
 	public void start() {
 		
-		for(int i=0; i<numberOfConsumers; i++)
+		for(int i=0; i<numberOfConsumers; i++) {
 			consumers.add(new Consumer(queue, store, filters, processors));
+		}
 		
-		for(Consumer consumer : consumers)
+		for(Consumer consumer : consumers) {
 			consumer.start();
+		}
 	}
 	
 	//StreamHandler methods
@@ -229,7 +231,7 @@ public class StoreManager implements StreamHandler {
 			}
 			catch(Exception e) {
 				e.printStackTrace();
-				logger.error("Error during filters initialization", e);
+				logger.error("Error during filter " + filterId + "initialization", e);
 			}
 		}
 	}
@@ -247,7 +249,7 @@ public class StoreManager implements StreamHandler {
 			}
 			catch(Exception e) {
 				e.printStackTrace();
-				logger.error("Error during processors initialization", e);
+				logger.error("Error during processor " + processorId + " initialization", e);
 			}
 		}
 	}
@@ -263,9 +265,9 @@ public class StoreManager implements StreamHandler {
 		
 		state = StoreManagerState.CLOSE;
 		do {
-			statusAgent.interrupt();
+			statusThread.interrupt();
 		}
-		while(statusAgent.isAlive());
+		while(statusThread.isAlive());
 	}
 	
 	/**
@@ -287,18 +289,19 @@ public class StoreManager implements StreamHandler {
 	 * @author ailiakop
 	 *
 	 */
-	public class StorageStatusAgent extends Thread {
+	public class StorageStatusThread extends Thread {
 		// Runs every two minutes by default
 		private long sleepTime = 2 * 60000;
 		
 		private StoreManager storeManager;
 		
-		public StorageStatusAgent(StoreManager storeManager) {
+		public StorageStatusThread(StoreManager storeManager) {
 			this.storeManager = storeManager;
 			logger.info("Status Check Thread initialized");
 		}
 		
 		public void run() {
+			
 			int p = items;
 			long T0 = System.currentTimeMillis();
 			long T = System.currentTimeMillis();
@@ -345,7 +348,6 @@ public class StoreManager implements StreamHandler {
 					logger.info(filter.name() + ": " + filter.status());
 				}
 				
-				logger.info("============================================================");
 				T = System.currentTimeMillis();
 				p = items;
 				

@@ -127,9 +127,11 @@ public class SolrStorage implements StreamUpdateStorage {
 	public void store(Item item) throws IOException {
 		
 		// Index only original Items and MediaItems come from original Items
-		if(!item.isOriginal() && onlyOriginal)
+		if(!item.isOriginal() && onlyOriginal) {
 			return;
+		}
 		
+		//System.out.println(item.toJSONString());
 		if(solrItemHandler != null) {
 			solrItemHandler.insertItem(item);
 		}
@@ -142,7 +144,7 @@ public class SolrStorage implements StreamUpdateStorage {
 			solrTwitterItemHandler.insertItem(item);
 		}
 		
-		if(solrNewsFeedHandler != null){
+		if(solrNewsFeedHandler != null) {
 			solrNewsFeedHandler.insertItem(item);
 		}
 		
