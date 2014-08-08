@@ -16,7 +16,7 @@ import eu.socialsensor.framework.streams.Stream;
 
 /**
  * Thread-safe class for monitoring the streams that correspond to each social network
- * Currently 7 social networks are supported (Twitter, Youtube,Flickr,Instagram,Tumblr,Facebook,GooglePlus)
+ * Currently 7 social networks are supported (Twitter, Youtube, Flickr, Instagram, Tumblr, Facebook, GooglePlus)
  * @author ailiakop
  * @email  ailiakop@iti.gr
  */
@@ -32,7 +32,8 @@ public class StreamsMonitor {
 	private Map<String, List<Feed>> feedsPerStream = new HashMap<String,List<Feed>>();
 	private Map<String, Long> requestTimePerStream = new HashMap<String,Long>();
 	private Map<String, Long> runningTimePerStream = new HashMap<String,Long>();
-	private Map<String, StreamFetchTask> streamsFetchTasks = new HashMap<String,StreamFetchTask>();
+	
+	private Map<String, StreamFetchTask> streamsFetchTasks = new HashMap<String, StreamFetchTask>();
 	
 	private List<Item> totalRetrievedItems = new ArrayList<Item>();
 	
@@ -58,7 +59,7 @@ public class StreamsMonitor {
 	 */
 	public void addStreams(Map<String,Stream> streams) {
 		for(String streamId : streams.keySet()) {
-			addStream(streamId,streams.get(streamId));
+			addStream(streamId, streams.get(streamId));
 		}
 	}
 
@@ -102,7 +103,7 @@ public class StreamsMonitor {
 		return streams.get(streamId);
 	}
 	
-	public void setStreamRequestTime(String streamId,Long requestTime) {
+	public void setStreamRequestTime(String streamId, Long requestTime) {
 		this.requestTimePerStream.put(streamId, requestTime);
 	}
 	/**
@@ -152,16 +153,22 @@ public class StreamsMonitor {
 	 * 	@throws Exception 
 	 */
 	public void retrieveFromAllStreams(List<Feed> feeds) throws Exception {
-		
 		totalRetrievedItems.clear();
 		for(Map.Entry<String, Stream> entry : streams.entrySet()) {
+			String streamId = entry.getKey();
+			try {
+				
+				StreamFetchTask streamTask = new StreamFetchTask(entry.getValue(), feeds);
+				streamsFetchTasks.put(streamId, streamTask);
+				executor.execute(streamTask);
+				runningTimePerStream.put(streamId, System.currentTimeMillis());
 			
-			StreamFetchTask streamTask = new StreamFetchTask(entry.getValue(), feeds);
-			streamsFetchTasks.put(entry.getKey(), streamTask);
-			executor.execute(streamTask);
-			runningTimePerStream.put(entry.getKey(), System.currentTimeMillis());
-			
-			System.out.println("Start stream task : " + entry.getKey() + " with " + feeds.size() + " feeds");
+				System.out.println("Start stream task : " + streamId + " with " + feeds.size() + " feeds");
+			}
+			catch(Exception e) {
+				logger.error(e);
+				streamsFetchTasks.remove(streamId);
+			}
 		}
 	}
 	
@@ -247,11 +254,9 @@ public class StreamsMonitor {
 	 */
 	public boolean areAllStreamsFinished() {
 		int allStreamsDone = 0;
-		int allRunningStreams;
+		int allRunningStreams = streamsFetchTasks.size();
 		
 		List<StreamFetchTask> finishedTasks = new ArrayList<StreamFetchTask>();
-		
-		allRunningStreams = streamsFetchTasks.size();
 		
 		while(allStreamsDone < allRunningStreams) {
 			for(StreamFetchTask streamTask : streamsFetchTasks.values()) {

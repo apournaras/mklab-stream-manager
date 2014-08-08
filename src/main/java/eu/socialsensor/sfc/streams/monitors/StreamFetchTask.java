@@ -13,6 +13,7 @@ import eu.socialsensor.framework.streams.StreamException;
 /**
  * Class for handling a Stream Task that is responsible for retrieving
  * content for the stream it is assigned to
+ * 
  * @author ailiakop
  * @email  ailiakop@iti.gr
  */
@@ -37,8 +38,9 @@ public class StreamFetchTask implements Runnable {
 		this.stream = stream;
 		this.feeds.addAll(feeds);
 		
-		if(!this.stream.setMonitor())
+		if(!this.stream.setMonitor()) {
 			throw new Exception("Feeds monitor for stream: " + this.stream.getClass() + " cannot be initialized");
+		}
 	}
 	
 	/**
@@ -97,8 +99,7 @@ public class StreamFetchTask implements Runnable {
 			
 		} catch (StreamException e) {
 			completed = true;
-			logger.error("ERROR IN STREAM FETCH TASK");
-			logger.error(e);
+			logger.error("ERROR IN STREAM FETCH TASK", e);
 		}
 		
 		
