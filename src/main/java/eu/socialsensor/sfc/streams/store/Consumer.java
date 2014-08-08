@@ -34,8 +34,7 @@ public class Consumer extends Thread {
 	private Collection<ItemFilter> filters;
 	private Collection<Processor> processors;
 	
-	public Consumer(BlockingQueue<Item> queue, StreamUpdateStorage store, 
-			Collection<ItemFilter> filters, Collection<Processor> processors) {
+	public Consumer(BlockingQueue<Item> queue, StreamUpdateStorage store, Collection<ItemFilter> filters, Collection<Processor> processors) {
 		this.store = store;
 		this.queue = queue;
 		this.filters = filters;
@@ -133,14 +132,8 @@ public class Consumer extends Thread {
 	
 	/**
 	 * Stops the consumer thread
-	 * and closes all storages in case they have
-	 * not yet been closed
 	 */
 	public synchronized void die() {
 		isAlive = false;
-		
-		if(store != null) {
-			store.close();
-		}
 	}
 }
