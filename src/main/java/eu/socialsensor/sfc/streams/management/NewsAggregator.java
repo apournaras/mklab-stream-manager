@@ -47,7 +47,7 @@ public class NewsAggregator {
 	
 	private List<Feed> feeds = new ArrayList<Feed>();
 	
-	public NewsAggregator(StreamsManagerConfiguration config,InputConfiguration input_config) throws StreamException{
+	public NewsAggregator(StreamsManagerConfiguration config, InputConfiguration input_config) throws StreamException{
 		
 		if (config == null || input_config == null) {
 			throw new StreamException("News Aggregator's configuration must be specified");
@@ -64,7 +64,6 @@ public class NewsAggregator {
 		if(streams != null && !streams.isEmpty()) {
 			monitor = new StreamsMonitor(streams.size());
 		}
-		
 		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
 	}
 	
@@ -78,6 +77,7 @@ public class NewsAggregator {
 		if (newsAggregatorState == NewsAggregatorState.OPEN) {
 			return;
 		}
+		
 		newsAggregatorState = NewsAggregatorState.OPEN;
 		logger.info("Streams are now open");
 		
@@ -92,6 +92,7 @@ public class NewsAggregator {
 			
 			//Start the Streams
 			for (String streamId : streams.keySet()) {
+				
 				logger.info("NewsAggregator - Start Stream : " + streamId);
 				StreamConfiguration sconfig = config.getStreamConfig(streamId);
 				Stream stream = streams.get(streamId);
@@ -106,6 +107,9 @@ public class NewsAggregator {
 					stream.close();
 					continue;
 				}
+				else {
+					logger.info(feeds.size() + " feeds for Stream : " + streamId);
+				}
 				
 				monitor.addStream(streamId, stream, feeds);
 				monitor.startStream(streamId);
@@ -118,7 +122,8 @@ public class NewsAggregator {
 			eliminator = new Eliminator(this);
 			eliminator.start();
 
-		}catch(Exception e) {
+		}
+		catch(Exception e) {
 			logger.error(e);
 			throw new StreamException("Error during streams open", e);
 		}
