@@ -46,13 +46,15 @@ public class MediaSearcherDistributor {
         
         BlockingQueue<String> queue = new LinkedBlockingQueue<String>();
         
-        ExecutorService executor = Executors.newFixedThreadPool(2);
-        executor.submit(new RequestSender(queue, jedis, channel, n));
-        executor.submit(new RequestReceiver(queue, jedisPool, channel), channel);
-     
-        Runtime.getRuntime().addShutdownHook(new Shutdown(jedis, executor));
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+        executor.submit(new RequestSender(queue, jedisPool, channel, n));
         
+        System.out.println("Subscribe to redis");
+        Listener receiver = new Listener(queue);
+        jedis.subscribe(receiver, channel);
+
         logger.info("Media Searcher Distributor initialized.");
+        
 	}
 
 	/**
@@ -67,10 +69,12 @@ public class MediaSearcherDistributor {
 		private Jedis _jedis;
 		private String _channel;
 		private int _n;
+		private JedisPool _jedisPool;
 
-		public RequestSender(BlockingQueue<String> queue, Jedis jedis, String channel, int n) {
+		public RequestSender(BlockingQueue<String> queue, JedisPool jedisPool, String channel, int n) {
 			_queue = queue;
-			_jedis = jedis;
+			_jedisPool = jedisPool;
+			_jedis = _jedisPool.getResource();
 			_channel = channel;
 			_n = n;
 		}
@@ -83,11 +87,30 @@ public class MediaSearcherDistributor {
 					String msg = _queue.take();
 					Message dyscoMessage = Message.create(msg);
 					
-					if(dyscoMessage.getAction().equals(Action.DELETE)){
+					boolean isConnected = true;
+					try {
+						_jedis.ping();
+					}
+					catch(Exception e) {
+						logger.error("Client is not connected");
+						isConnected = false;
+					}
+					
+					if(!isConnected) {
+						try {
+							_jedisPool.returnBrokenResource(_jedis);
+						}
+						catch(Exception e) {
+							logger.error("Error while returning broken resource");
+						}
+						_jedis = _jedisPool.getResource();
+					}
+					
+					if(dyscoMessage.getAction().equals(Action.DELETE)) {
 						logger.info("Send DELETE message to all channels");
 						if(msg != null) {
-							_jedis.publish(_channel+"_1", msg);	
-							_jedis.publish(_channel+"_2", msg);	
+							
+							_jedis.publish(_channel+"_*", msg);	
 						}
 						continue;
 					}
@@ -101,6 +124,7 @@ public class MediaSearcherDistributor {
 					
 					
 				} catch (Exception e) {
+					e.printStackTrace();
 					logger.error(e);
 					continue;
 				}
@@ -114,30 +138,17 @@ public class MediaSearcherDistributor {
 	 * @author ailiakop
 	 *
 	 */
-	public static class RequestReceiver extends JedisPubSub implements Runnable {
+	public static class Listener extends JedisPubSub {
 
 		private BlockingQueue<String> _queue;
-		private Jedis _jedis;
-		private String _channel;
 
-		public RequestReceiver(BlockingQueue<String> queue, JedisPool jedisPool, String channel) {
+		public Listener(BlockingQueue<String> queue) {
 			_queue = queue;
-			_jedis = jedisPool.getResource();
-			_channel = channel;
 		}
-		
-		@Override
-        public void run() {
-            try {
-            	System.out.println("Subscribe to redis");
-                _jedis.subscribe(this, _channel);
-            } catch (Exception e) {
-            }
-        }
 
 	    @Override
 	    public void onMessage(String channel, String message) {	    	
-	    	logger.info("Message received: " + message);
+	    	logger.info("Receive " + message);
 	    	_queue.add(message);
 	    }
 	 
@@ -165,30 +176,6 @@ public class MediaSearcherDistributor {
 	    public void onPSubscribe(String pattern, int subscribedChannels) {
 	    	// Do Nothing
 	    }
-	}
-	
-	/**
-	 * Class in case system is shutdown. 
-	 * Responsible to close all services that are running at the time being
-	 * @author ailiakop
-	 *
-	 */
-	private static class Shutdown extends Thread {
-		
-		private Jedis _jedis;
-		private ExecutorService _executor;
-
-		public Shutdown(Jedis jedis, ExecutorService executor) {
-			_jedis = jedis;
-			_executor = executor;
-		}
-
-		public void run() {
-			logger.info("Shutting down MediaSearcherDistributor...");
-			_executor.shutdownNow();
-			_jedis.quit();
-			logger.info("Done...");
-		}
 	}
 	
 }
