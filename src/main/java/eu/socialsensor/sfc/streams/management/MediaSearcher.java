@@ -7,13 +7,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -26,6 +26,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisPubSub;
+
 import eu.socialsensor.framework.client.search.solr.SolrDyscoHandler;
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.Item;
@@ -73,7 +74,6 @@ public class MediaSearcher {
 	private StreamsManagerConfiguration config = null;
 	
 	private StoreManager storeManager;
-	
 	private StreamsMonitor monitor;
 
 	private Jedis jedisClient;
@@ -97,11 +97,11 @@ public class MediaSearcher {
 	
 	private Map<String, Stream> streams = null;
 	
-	private Map<String, List<Query>> dyscosToQueries = new HashMap<String, List<Query>>();
+	private Map<String, List<Query>> dyscosToQueries = new ConcurrentHashMap<String, List<Query>>();
 	
-	private Queue<Dysco> requests = new LinkedList<Dysco>();
-	private Queue<String> requestsToDelete = new LinkedList<String>();
-	private Queue<String> dyscosToUpdate = new LinkedList<String>();
+	private Queue<Dysco> requests = new LinkedBlockingQueue<Dysco>();
+	private Queue<String> requestsToDelete = new LinkedBlockingQueue<String>();
+	private Queue<String> dyscosToUpdate = new LinkedBlockingQueue<String>();
 	
 	public MediaSearcher(StreamsManagerConfiguration config) throws StreamException {
 		
@@ -110,17 +110,18 @@ public class MediaSearcher {
 		}
 
 		this.config = config;
+		
 		this.redisHost = config.getParameter(MediaSearcher.REDIS_HOST);
 		this.solrHost = config.getParameter(MediaSearcher.SOLR_HOST);
 		this.solrService = config.getParameter(MediaSearcher.SOLR_SERVICE);
 		this.dyscoCollection = config.getParameter(MediaSearcher.DYSCO_COLLECTION);
-		
 		
 		//Set up the Streams
 		initStreams();
 		
 		//Set up the Storages
 		storeManager = new StoreManager(config);
+		
 	}
 	
 	/**
@@ -137,7 +138,7 @@ public class MediaSearcher {
 		state = MediaSearcherState.OPEN;
 		
 		storeManager.start();	
-		logger.info("Store Manager is ready to store.");
+		logger.info("Store Manager is ready to store. ");
 		
 		Set<String> failedStreams = new HashSet<String>();
 		for (String streamId : streams.keySet()) {
@@ -153,6 +154,7 @@ public class MediaSearcher {
 				failedStreams.add(streamId);
 			}
 		}
+		
 		for (String streamId : failedStreams) {
 			streams.remove(streamId);
 		}
@@ -197,7 +199,7 @@ public class MediaSearcher {
                 try {          
                     logger.info("Subscribe to redis...");
                     jedisClient.subscribe(dyscoRequestReceiver, config.getParameter(MediaSearcher.CHANNEL));  
-                                  
+
                     logger.info("subscribe returned, closing down");
                     jedisClient.quit();
                 } catch (Exception e) {
@@ -242,6 +244,7 @@ public class MediaSearcher {
 		}
 	}
 
+	
 	/**
 	 * Searches in all social media defined in the configuration file
 	 * for the list of feeds that is given as input and returns the retrieved items
@@ -264,6 +267,7 @@ public class MediaSearcher {
 				logger.error(e);
 			}
 		}
+		
 		return monitor.getTotalRetrievedItems();
 	}
 	
@@ -289,6 +293,7 @@ public class MediaSearcher {
 		}
 	}
 	
+	
 	/**
 	 * Class that implements the Redis Client. Receives the DySco request to be served
 	 * as a message. The request might entail the creation of a DySco (NEW), the update of
@@ -301,7 +306,7 @@ public class MediaSearcher {
 		private SolrDyscoHandler solrDyscoHandler;
 		
 		public DyscoRequestReceiver() {
-			this.solrDyscoHandler = SolrDyscoHandler.getInstance(solrHost+"/"+solrService+"/"+dyscoCollection);
+			this.solrDyscoHandler = SolrDyscoHandler.getInstance(solrHost + "/" + solrService + "/" + dyscoCollection);
 		}
 		
 	    @Override
@@ -391,7 +396,9 @@ public class MediaSearcher {
 				if(receivedDysco == null) {
 					try {
 						//Thread.sleep(10000);
-						this.wait(10000);
+						synchronized(this) {
+							this.wait(10000);
+						}
 					} catch (InterruptedException e) {
 						logger.error(e);
 					}
@@ -425,11 +432,9 @@ public class MediaSearcher {
 		 * Polls a  dysco request from the queue
 		 * @return
 		 */
-		private Dysco poll() {
-			synchronized (requests) {					
-				Dysco request = requests.poll();
-				return request;
-			}
+		private Dysco poll() {				
+			Dysco request = requests.poll();
+			return request;
 		}
 		
 		public void close() {
@@ -466,7 +471,9 @@ public class MediaSearcher {
 				if(dyscoToUpdate == null) {
 					try {
 						//Thread.sleep(1000);
-						this.wait(1000);
+						synchronized(this) {
+							this.wait(1000);
+						}
 					} catch (InterruptedException e) {
 						logger.error(e);
 					}
@@ -480,13 +487,13 @@ public class MediaSearcher {
 						updatedDysco.getSolrQueries().clear();
 						updatedDysco.setSolrQueries(solrQueries);
 						solrdyscoHandler.insertDysco(updatedDysco);
-						dyscosToQueries.remove(dyscoToUpdate);
 					
 						logger.info("Dysco: " + dyscoToUpdate + " is updated");
 					}
 					catch(Exception e) {
 						logger.error(e);
 					}
+					dyscosToQueries.remove(dyscoToUpdate);
 				}
 			}
 		}
@@ -495,13 +502,8 @@ public class MediaSearcher {
 		 * Polls a DySco request from the queue to update
 		 * @return
 		 */
-		private String poll() {
-			synchronized (dyscosToUpdate) {					
-				if (!dyscosToUpdate.isEmpty()) {
-					return dyscosToUpdate.poll();
-				}
-				return null;
-			}
+		private String poll() {				
+			return dyscosToUpdate.poll();
 		}
 		
 		public void close() {
@@ -606,7 +608,9 @@ public class MediaSearcher {
 				dyscoId = poll();
 				if(dyscoId == null) {
 					try {
-						this.wait(1000);
+						synchronized(this) {
+							this.wait(1000);
+						}
 					} catch (InterruptedException e) {
 						logger.error(e);
 					}
@@ -708,8 +712,9 @@ public class MediaSearcher {
 	 */
 	public class TrendingSearchHandler extends Thread {
 		
-		private BlockingQueue<Dysco> trendingDyscoQueue = new LinkedBlockingDeque<Dysco>(100);
-		private Map<String, List<Feed>> inputFeedsPerDysco = new HashMap<String, List<Feed>>();
+		private BlockingQueue<Dysco> trendingDyscoQueue = new LinkedBlockingDeque<Dysco>(200);
+		private Map<String, List<Feed>> inputFeedsPerDysco = new ConcurrentHashMap<String, List<Feed>>();
+		
 		private List<Item> retrievedItems = new ArrayList<Item>();
 		
 		private MediaSearcher searcher;
@@ -726,9 +731,7 @@ public class MediaSearcher {
 			try {
 				logger.info("New incoming Trending DySco: " + dysco.getId() + " with " + inputFeeds.size() + " searchable feeds");
 				trendingDyscoQueue.put(dysco);
-				synchronized (inputFeedsPerDysco) {	
-					inputFeedsPerDysco.put(dysco.getId(), inputFeeds);
-				}
+				inputFeedsPerDysco.put(dysco.getId(), inputFeeds);
 			}
 			catch(Exception e) {
 				logger.error(e);
@@ -742,7 +745,9 @@ public class MediaSearcher {
 				if(dysco == null) {
 					try {
 						//Thread.sleep(5000);
-						this.wait(5000);
+						synchronized(this) {
+							this.wait(5000);
+						}
 					} catch (InterruptedException e) {
 						logger.error(e);
 					}
@@ -778,22 +783,24 @@ public class MediaSearcher {
 		 */
 		private synchronized void searchForTrendingDysco(Dysco dysco) {
 			
+			String dyscoId = dysco.getId();
+			
 			long start = System.currentTimeMillis();
-			logger.info("Media Searcher handling #" + dysco.getId());
+			logger.info("Media Searcher handling #" + dyscoId);
 			
 			//first search
-			List<Feed> feeds = inputFeedsPerDysco.get(dysco.getId());
+			List<Feed> feeds = inputFeedsPerDysco.remove(dyscoId);
+			
 			retrievalDate = new Date(System.currentTimeMillis());
-			inputFeedsPerDysco.remove(dysco.getId());
 			retrievedItems = searcher.search(feeds);
 			
 			long t1 = System.currentTimeMillis();
-			logger.info("Time for First Search for Trending DySco: " + dysco.getId() + " is " + (t1-start)/1000 + " sec.");
-			logger.info("Items retrieved for Trending DySco : " + dysco.getId() + " : " + retrievedItems.size());
+			logger.info("Time for First Search for Trending DySco: " + dyscoId + " is " + (t1-start)/1000 + " sec.");
+			logger.info("Items retrieved for Trending DySco : " + dyscoId + " : " + retrievedItems.size());
 			
 			long t2 = System.currentTimeMillis();
 			
-			//second search
+			// Second search
 			
 			// Expand Queries
 			List<Query> queries = queryBuilder.getExpandedSolrQueries(retrievedItems, dysco, 5);
@@ -803,18 +810,18 @@ public class MediaSearcher {
 					expandedQueries.add(q);
 				}
 			}
-			logger.info("Number of additional queries for Trending DySco: " + dysco.getId() + " is " + expandedQueries.size());
+			logger.info("Number of additional queries for Trending DySco: " + dyscoId + " is " + expandedQueries.size());
 			
 			long t3 = System.currentTimeMillis();
-			logger.info("Time for computing queries for Trending DySco: " + dysco.getId() + " is " + (t3-t2)/1000 + " sec.");
+			logger.info("Time for computing queries for Trending DySco: " + dyscoId + " is " + (t3-t2)/1000 + " sec.");
 			
 			if(!expandedQueries.isEmpty()) {
 				List<Feed> newFeeds = transformQueriesToKeywordsFeeds(expandedQueries, retrievalDate);
 				List<Item> secondSearchItems = searcher.search(newFeeds);
 				
 				long t4 = System.currentTimeMillis();
-				logger.info("Total Items retrieved for Trending DySco : " + dysco.getId() + " : " + secondSearchItems.size());
-				logger.info("Time for Second Search for Trending DySco: " + dysco.getId() + " is " + (t4-t3)/1000 + " sec.");
+				logger.info("Total Items retrieved for Trending DySco : " + dyscoId + " : " + secondSearchItems.size());
+				logger.info("Time for Second Search for Trending DySco: " + dyscoId + " is " + (t4-t3)/1000 + " sec.");
 			
 				dyscosToQueries.put(dysco.getId(), queries);
 				dyscosToUpdate.add(dysco.getId());
@@ -824,7 +831,7 @@ public class MediaSearcher {
 			}
 			long end = System.currentTimeMillis();
 			
-			logger.info("Total Time searching for Trending DySco: " + dysco.getId() + " is " + (end-start)/1000 + " sec.");
+			logger.info("Total Time searching for Trending DySco: " + dyscoId + " is " + (end-start)/1000 + " sec.");
 		}
 		
 		
@@ -851,7 +858,7 @@ public class MediaSearcher {
 		private List<Feed> transformQueriesToKeywordsFeeds(List<Query> queries,Date dateToRetrieve) {	
 			List<Feed> feeds = new ArrayList<Feed>();
 			
-			for(Query query : queries){
+			for(Query query : queries) {
 				UUID UUid = UUID.randomUUID(); 
 				feeds.add(new KeywordsFeed(new Keyword(query.getName(),query.getScore()),dateToRetrieve,UUid.toString()));
 			}
@@ -874,6 +881,7 @@ public class MediaSearcher {
 		}
 		
 		try {
+			
 			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(configFile);
 			MediaSearcher mediaSearcher = new MediaSearcher(config);
 			mediaSearcher.open();
