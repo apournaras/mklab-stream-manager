@@ -28,10 +28,11 @@ public class StreamsMonitor {
 
 	private ExecutorService executor;
 	
-	private Map<String, Stream> streams = new HashMap<String,Stream>();
-	private Map<String, List<Feed>> feedsPerStream = new HashMap<String,List<Feed>>();
-	private Map<String, Long> requestTimePerStream = new HashMap<String,Long>();
-	private Map<String, Long> runningTimePerStream = new HashMap<String,Long>();
+	private Map<String, Stream> streams = new HashMap<String, Stream>();
+	private Map<String, List<Feed>> feedsPerStream = new HashMap<String, List<Feed>>();
+	
+	private Map<String, Long> requestTimePerStream = new HashMap<String, Long>();
+	private Map<String, Long> runningTimePerStream = new HashMap<String, Long>();
 	
 	private Map<String, StreamFetchTask> streamsFetchTasks = new HashMap<String, StreamFetchTask>();
 	
@@ -68,7 +69,7 @@ public class StreamsMonitor {
 	 * @param streamId
 	 * @param stream
 	 */
-	public void addStream(String streamId,Stream stream) {
+	public void addStream(String streamId, Stream stream) {
 		this.streams.put(streamId, stream);
 		this.requestTimePerStream.put(streamId, DEFAULT_REQUEST_TIME);
 	}
@@ -119,7 +120,7 @@ public class StreamsMonitor {
 		
 		StreamFetchTask streamTask = null;
 		try {
-			streamTask = new StreamFetchTask(streams.get(streamId),feedsPerStream.get(streamId));
+			streamTask = new StreamFetchTask(streams.get(streamId), feedsPerStream.get(streamId));
 		} catch (Exception e) {
 			logger.error(e);
 		}
@@ -296,5 +297,13 @@ public class StreamsMonitor {
         	logger.info("Waiting for StreamsMonitor to shutdown");
         }
         logger.info("Streams Monitor stopped");
+	}
+	
+	public void status() {
+		logger.info("streams: " + streams.size());
+		logger.info("feedsPerStream:" + feedsPerStream.size());
+		logger.info("requestTimePerStream:" + requestTimePerStream.size());
+		logger.info("runningTimePerStream:" + runningTimePerStream.size());
+		logger.info("streamsFetchTasks:" + streamsFetchTasks.size());
 	}
 }

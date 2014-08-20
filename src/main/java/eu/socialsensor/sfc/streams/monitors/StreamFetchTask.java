@@ -8,7 +8,6 @@ import org.apache.log4j.Logger;
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.streams.Stream;
-import eu.socialsensor.framework.streams.StreamException;
 
 /**
  * Class for handling a Stream Task that is responsible for retrieving
@@ -97,9 +96,9 @@ public class StreamFetchTask implements Runnable {
 			totalRetrievedItems.addAll(stream.getTotalRetrievedItems());
 			completed = true;
 			
-		} catch (StreamException e) {
+		} catch (Exception e) {
+			logger.error("ERROR IN STREAM FETCH TASK: " + e.getMessage());
 			completed = true;
-			logger.error("ERROR IN STREAM FETCH TASK", e);
 		}
 		
 		
