@@ -293,6 +293,9 @@ public class MongoDbStorage implements Storage {
 							if(tempUser == null) {
 								tempUser = new StreamUser(null, Operation.UPDATE);
 								tempUser.setId(user.getId());
+								tempUser.setImageUrl(user.getImageUrl());
+								tempUser.setProfileImage(user.getProfileImage());
+								tempUser.setName(user.getName());
 								usersMap.put(user.getId(), tempUser);
 							}
 							tempUser.incItems(1);
@@ -405,6 +408,9 @@ public class MongoDbStorage implements Storage {
 							if(tempUser == null) {
 								tempUser = new StreamUser(null, Operation.UPDATE);
 								tempUser.setId(user.getId());
+								tempUser.setImageUrl(user.getImageUrl());
+								tempUser.setProfileImage(user.getProfileImage());
+								tempUser.setName(user.getName());
 								usersMap.put(user.getId(), tempUser);
 							}
 							tempUser.incItems(1);
