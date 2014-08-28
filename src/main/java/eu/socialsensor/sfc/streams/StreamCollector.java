@@ -8,11 +8,9 @@ import java.net.ServerSocket;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 import org.xml.sax.SAXException;
 
-import eu.socialsensor.framework.streams.StreamException;
-import eu.socialsensor.sfc.builder.InputConfiguration;
+import eu.socialsensor.sfc.input.InputConfiguration;
 import eu.socialsensor.sfc.streams.management.StreamsManager;
 
 /**
@@ -42,9 +40,9 @@ public class StreamCollector {
 		StreamsManager manager = null;
 		try {
 			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(streamConfigFile);		
-			InputConfiguration input_config = InputConfiguration.readFromFile(inputConfigFile);		
+			InputConfiguration inputConfig = InputConfiguration.readFromFile(inputConfigFile);		
 	        
-			manager = new StreamsManager(config, input_config);
+			manager = new StreamsManager(config, inputConfig);
 			manager.open();
 			
 			Runtime.getRuntime().addShutdownHook(new Shutdown(manager));

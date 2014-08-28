@@ -1,14 +1,14 @@
 package eu.socialsensor.sfc.streams.processors;
 
+import eu.socialsensor.framework.Configuration;
 import eu.socialsensor.framework.common.domain.Item;
-import eu.socialsensor.sfc.streams.ProcessorConfiguration;
 
 public abstract class Processor {
 
 	@SuppressWarnings("unused")
-	private ProcessorConfiguration configuration;
+	private Configuration configuration;
 
-	public Processor(ProcessorConfiguration configuration) {
+	public Processor(Configuration configuration) {
 		this.configuration = configuration;
 	}
 	

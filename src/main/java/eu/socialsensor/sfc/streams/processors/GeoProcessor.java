@@ -6,19 +6,20 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import eu.socialsensor.framework.Configuration;
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.Location;
 import eu.socialsensor.framework.common.domain.MediaItem;
 import eu.socialsensor.framework.common.domain.StreamUser;
 import eu.socialsensor.geo.Countrycoder;
-import eu.socialsensor.sfc.streams.ProcessorConfiguration;
+
 
 public class GeoProcessor extends Processor {
 	
 	private Countrycoder coder = null;
 	private Map<String, String> timezoneToCountry = new HashMap<String, String>();
 	
-	public GeoProcessor(ProcessorConfiguration configuration) {
+	public GeoProcessor(Configuration configuration) {
 		super(configuration);
 		
 		String gnObjectsFile = configuration.getParameter("gnObjectsFile");

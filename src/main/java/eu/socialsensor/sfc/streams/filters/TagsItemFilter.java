@@ -2,8 +2,8 @@ package eu.socialsensor.sfc.streams.filters;
 
 import org.apache.log4j.Logger;
 
+import eu.socialsensor.framework.Configuration;
 import eu.socialsensor.framework.common.domain.Item;
-import eu.socialsensor.sfc.streams.FilterConfiguration;
 
 /**
  * 
@@ -16,7 +16,7 @@ public class TagsItemFilter extends ItemFilter {
 
 	private int maxTags = 4;
 	
-	public TagsItemFilter(FilterConfiguration configuration) {
+	public TagsItemFilter(Configuration configuration) {
 		super(configuration);
 		String lenStr =configuration.getParameter("maxTags", "4");
 		this.maxTags  = Integer.parseInt(lenStr);

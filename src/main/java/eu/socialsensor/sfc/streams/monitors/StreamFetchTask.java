@@ -6,8 +6,8 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import eu.socialsensor.framework.common.domain.Feed;
-import eu.socialsensor.framework.common.domain.Item;
-import eu.socialsensor.framework.streams.Stream;
+import eu.socialsensor.sfc.streams.Stream;
+
 
 /**
  * Class for handling a Stream Task that is responsible for retrieving
@@ -25,7 +25,6 @@ public class StreamFetchTask implements Runnable {
 	private boolean completed = false;
 	
 	private List<Feed> feeds = new ArrayList<Feed>();
-	private List<Item> totalRetrievedItems = new ArrayList<Item>();
 	
 	public StreamFetchTask(Stream stream) throws Exception {
 		this.stream = stream;
@@ -33,7 +32,7 @@ public class StreamFetchTask implements Runnable {
 			throw new Exception("Feeds monitor for stream: " + this.stream.getClass() + " cannot be initialized");
 	}
 	
-	public StreamFetchTask(Stream stream,List<Feed> feeds) throws Exception {
+	public StreamFetchTask(Stream stream, List<Feed> feeds) throws Exception {
 		this.stream = stream;
 		this.feeds.addAll(feeds);
 		
@@ -56,15 +55,6 @@ public class StreamFetchTask implements Runnable {
 	 */
 	public void clear() {
 		feeds.clear();
-	}
-	
-	/**
-	 * Returns the total number of retrieved items
-	 * for the associated stream
-	 * @return
-	 */
-	public List<Item> getTotalRetrievedItems() {
-		return totalRetrievedItems;
 	}
 	
 	/**
@@ -91,16 +81,11 @@ public class StreamFetchTask implements Runnable {
 	public void run() {
 		try {
 			stream.poll(feeds);
-			
-			//totalRetrievedItems.clear();
-			totalRetrievedItems.addAll(stream.getTotalRetrievedItems());
 			completed = true;
 			
 		} catch (Exception e) {
 			logger.error("ERROR IN STREAM FETCH TASK: " + e.getMessage());
 			completed = true;
 		}
-		
-		
 	}
 }

@@ -13,12 +13,12 @@ import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
 import eu.socialsensor.framework.common.domain.Feed;
-import eu.socialsensor.framework.streams.Stream;
-import eu.socialsensor.framework.streams.StreamConfiguration;
-import eu.socialsensor.framework.streams.StreamException;
-import eu.socialsensor.sfc.builder.FeedsCreator;
-import eu.socialsensor.sfc.builder.InputConfiguration;
-import eu.socialsensor.sfc.builder.input.DataInputType;
+import eu.socialsensor.sfc.input.DataInputType;
+import eu.socialsensor.sfc.input.FeedsCreator;
+import eu.socialsensor.sfc.input.InputConfiguration;
+import eu.socialsensor.sfc.streams.Stream;
+import eu.socialsensor.sfc.streams.StreamConfiguration;
+import eu.socialsensor.sfc.streams.StreamException;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 
@@ -39,7 +39,7 @@ public class NewsAggregator {
 	private Map<String, Stream> streams = null;
 	private StreamsManagerConfiguration config = null;
 	private InputConfiguration input_config = null;
-	private StoreManager storeManager;
+	private StorageHandler streamHandler;
 	private StreamsMonitor monitor;
 	private NewsAggregatorState newsAggregatorState = NewsAggregatorState.CLOSE;
 	
@@ -83,8 +83,8 @@ public class NewsAggregator {
 		
 		try {
 			//Start store Manager 
-			storeManager = new StoreManager(config);
-			storeManager.start();	
+			streamHandler = new StorageHandler(config);
+			streamHandler.start();	
 			logger.info("Store Manager is ready to store.");
 
 			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.TXT_FILE, input_config);
@@ -96,7 +96,7 @@ public class NewsAggregator {
 				logger.info("NewsAggregator - Start Stream : " + streamId);
 				StreamConfiguration sconfig = config.getStreamConfig(streamId);
 				Stream stream = streams.get(streamId);
-				stream.setHandler(storeManager);
+				stream.setHandler(streamHandler);
 				stream.open(sconfig);
 				
 				feeds = results.get(streamId);
@@ -164,8 +164,8 @@ public class NewsAggregator {
 				stream.close();
 			}
 			
-			if (storeManager != null) {
-				storeManager.stop();
+			if (streamHandler != null) {
+				streamHandler.stop();
 			}
 			
 			newsAggregatorState = NewsAggregatorState.CLOSE;
@@ -209,7 +209,7 @@ public class NewsAggregator {
 					currentTime = System.currentTimeMillis();
 				}
 				
-				storeManager.deleteItemsOlderThan(dateThreshold);
+				streamHandler.deleteItemsOlderThan(dateThreshold);
 				lastCheck = System.currentTimeMillis();
 			}
 			

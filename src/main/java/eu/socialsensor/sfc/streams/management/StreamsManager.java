@@ -8,14 +8,15 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import eu.socialsensor.framework.common.domain.Feed;
-import eu.socialsensor.framework.streams.Stream;
-import eu.socialsensor.framework.streams.StreamConfiguration;
-import eu.socialsensor.framework.streams.StreamException;
-import eu.socialsensor.sfc.builder.FeedsCreator;
-import eu.socialsensor.sfc.builder.InputConfiguration;
-import eu.socialsensor.sfc.builder.input.DataInputType;
+import eu.socialsensor.sfc.input.DataInputType;
+import eu.socialsensor.sfc.input.FeedsCreator;
+import eu.socialsensor.sfc.input.InputConfiguration;
+import eu.socialsensor.sfc.streams.Stream;
+import eu.socialsensor.sfc.streams.StreamConfiguration;
+import eu.socialsensor.sfc.streams.StreamException;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
+import eu.socialsensor.sfc.subscribers.Subscriber;
 
 /**
  * Class for retrieving content according to 
@@ -37,10 +38,10 @@ public class StreamsManager {
 	}
 
 	private Map<String, Stream> streams = null;
-	private Map<String, Stream> subscribers = null;
+	private Map<String, Subscriber> subscribers = null;
 	private StreamsManagerConfiguration config = null;
-	private InputConfiguration input_config = null;
-	private StoreManager storeManager;
+	private InputConfiguration inputConfig = null;
+	private StorageHandler storageHandler;
 	private StreamsMonitor monitor;
 	private ManagerState state = ManagerState.CLOSE;
 
@@ -54,7 +55,7 @@ public class StreamsManager {
 		
 		//Set the configuration files
 		this.config = config;
-		this.input_config = input_config;
+		this.inputConfig = input_config;
 		
 		//Set up the Subscribers
 		initSubscribers();
@@ -78,31 +79,32 @@ public class StreamsManager {
 		if (state == ManagerState.OPEN) {
 			return;
 		}
+		
 		state = ManagerState.OPEN;
 		logger.info("Streams are now open");
 		
 		try {
-			//Start store Manager 
-			storeManager = new StoreManager(config);
-			storeManager.start();	
+			//Start stream handler 
+			storageHandler = new StorageHandler(config);
+			storageHandler.start();	
 			logger.info("Store Manager is ready to store.");
 			
-			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.MONGO_STORAGE, input_config);
+			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.MONGO_STORAGE, inputConfig);
 			Map<String,List<Feed>> results = feedsCreator.getQueryPerStream();
 			
 			//Start the Subscribers
 			for(String subscriberId : subscribers.keySet()) {
-				logger.info("Stream Manager - Start Subscriber : "+subscriberId);
+				logger.info("Stream Manager - Start Subscriber : " + subscriberId);
 				StreamConfiguration srconfig = config.getSubscriberConfig(subscriberId);
-				Stream stream = subscribers.get(subscriberId);
-				stream.setHandler(storeManager);
-				stream.setAsSubscriber();
-				stream.open(srconfig);
+				Subscriber subscriber = subscribers.get(subscriberId);
+				subscriber.setHandler(storageHandler);
+				subscriber.open(srconfig);
 			
 				feeds = results.get(subscriberId);
-				stream.setUserLists(feedsCreator.getUsersToLists());
-				stream.setUserCategories(feedsCreator.getUsersToCategories());
-				stream.stream(feeds);
+				subscriber.setUserLists(feedsCreator.getUsersToLists());
+				subscriber.setUserCategories(feedsCreator.getUsersToCategories());
+				subscriber.subscribe(feeds);
+				
 			}
 			
 			//Start the Streams
@@ -110,12 +112,12 @@ public class StreamsManager {
 				logger.info("Stream Manager - Start Stream : " + streamId);
 				StreamConfiguration sconfig = config.getStreamConfig(streamId);
 				Stream stream = streams.get(streamId);
-				stream.setHandler(storeManager);
+				stream.setHandler(storageHandler);
 				stream.open(sconfig);
 				
 				feeds = results.get(streamId);
 				
-				if(feeds == null || feeds.isEmpty()){
+				if(feeds == null || feeds.isEmpty()) {
 					logger.error("No feeds for Stream : "+streamId);
 					logger.error("Close Stream : "+streamId);
 					stream.close();
@@ -126,11 +128,12 @@ public class StreamsManager {
 				monitor.startStream(streamId);
 			}
 			
-			if(monitor != null && monitor.getNumberOfStreamFetchTasks() > 0){
+			if(monitor != null && monitor.getNumberOfStreamFetchTasks() > 0) {
 				monitor.startReInitializer();
 			}
 
-		}catch(Exception e) {
+		}
+		catch(Exception e) {
 			e.printStackTrace();
 			throw new StreamException("Error during streams open", e);
 		}
@@ -153,8 +156,8 @@ public class StreamsManager {
 				stream.close();
 			}
 			
-			if (storeManager != null) {
-				storeManager.stop();
+			if (storageHandler != null) {
+				storageHandler.stop();
 			}
 			
 			state = ManagerState.CLOSE;
@@ -187,13 +190,16 @@ public class StreamsManager {
 	 * @throws StreamException
 	 */
 	private void initSubscribers() throws StreamException {
-		subscribers = new HashMap<String,Stream>();
-		try{
-			for (String subscriberId : config.getSubscriberIds()){
+		
+		subscribers = new HashMap<String, Subscriber>();
+		try {
+			for (String subscriberId : config.getSubscriberIds()) {
 				StreamConfiguration sconfig = config.getSubscriberConfig(subscriberId);
-				subscribers.put(subscriberId,(Stream)Class.forName(sconfig.getParameter(StreamConfiguration.CLASS_PATH)).newInstance());
+				Subscriber subscriber = (Subscriber) Class.forName(sconfig.getParameter(StreamConfiguration.CLASS_PATH)).newInstance();
+				subscribers.put(subscriberId, subscriber);
 			}
-		}catch(Exception e) {
+		}
+		catch(Exception e) {
 			e.printStackTrace();
 			throw new StreamException("Error during Subscribers initialization", e);
 		}

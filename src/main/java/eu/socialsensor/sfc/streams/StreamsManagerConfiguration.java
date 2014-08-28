@@ -20,11 +20,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import eu.socialsensor.framework.Configuration;
 import eu.socialsensor.framework.client.mongo.MongoHandler;
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.factories.ItemFactory;
-import eu.socialsensor.framework.streams.StreamConfiguration;
-import eu.socialsensor.sfc.streams.Configuration;
 
 public class StreamsManagerConfiguration extends Configuration {
 	
@@ -40,15 +39,15 @@ public class StreamsManagerConfiguration extends Configuration {
 	
 	@Expose
 	@SerializedName(value = "storages")
-	private Map<String, StorageConfiguration> storageConfigMap = null;
+	private Map<String, Configuration> storageConfigMap = null;
 	
 	@Expose
 	@SerializedName(value = "filters")
-	private Map<String, FilterConfiguration> filterConfigMap = null;
+	private Map<String, Configuration> filterConfigMap = null;
 	
 	@Expose
 	@SerializedName(value = "processors")
-	private Map<String, ProcessorConfiguration> processorsConfigMap = null;
+	private Map<String, Configuration> processorsConfigMap = null;
 	
 	@Expose
 	@SerializedName(value = "subscribers")
@@ -57,9 +56,9 @@ public class StreamsManagerConfiguration extends Configuration {
 	
 	public StreamsManagerConfiguration() {
 		streamConfigMap = new HashMap<String, StreamConfiguration>();
-		storageConfigMap = new HashMap<String, StorageConfiguration>();
-		filterConfigMap = new HashMap<String, FilterConfiguration>();
-		processorsConfigMap = new HashMap<String, ProcessorConfiguration>();
+		storageConfigMap = new HashMap<String, Configuration>();
+		filterConfigMap = new HashMap<String, Configuration>();
+		processorsConfigMap = new HashMap<String, Configuration>();
 		subscriberConfigMap = new HashMap<String, StreamConfiguration>();
 	}
 	
@@ -72,11 +71,11 @@ public class StreamsManagerConfiguration extends Configuration {
 		return streamConfigMap.get(streamId);
 	}
 	
-	public void setStorageConfig(String storageId, StorageConfiguration config){
+	public void setStorageConfig(String storageId, Configuration config){
 		storageConfigMap.put(storageId,config);
 	}
 	
-	public StorageConfiguration getStorageConfig(String storageId){
+	public Configuration getStorageConfig(String storageId){
 		return storageConfigMap.get(storageId);
 	}
 	
@@ -88,19 +87,19 @@ public class StreamsManagerConfiguration extends Configuration {
 		return subscriberConfigMap.get(subscriberId);
 	}
 	
-	public void setFilterConfig(String filterId, FilterConfiguration config){
+	public void setFilterConfig(String filterId, Configuration config){
 		filterConfigMap.put(filterId, config);
 	}
 	
-	public FilterConfiguration getFilterConfig(String filterId){
+	public Configuration getFilterConfig(String filterId){
 		return filterConfigMap.get(filterId);
 	}
 	
-	public void setProcessorConfig(String processorId, ProcessorConfiguration config){
+	public void setProcessorConfig(String processorId, Configuration config){
 		processorsConfigMap.put(processorId, config);
 	}
 	
-	public ProcessorConfiguration getProcessorConfig(String processorId){
+	public Configuration getProcessorConfig(String processorId){
 		return processorsConfigMap.get(processorId);
 	}
 	
@@ -199,9 +198,9 @@ public class StreamsManagerConfiguration extends Configuration {
 	    private String name = null;
 	    private StreamConfiguration sconfig = null;
 	    private StreamConfiguration srconfig = null;
-	    private StorageConfiguration storage_config = null; 
-	    private FilterConfiguration filter_config = null; 
-	    private ProcessorConfiguration processor_config = null; 
+	    private Configuration storage_config = null; 
+	    private Configuration filter_config = null; 
+	    private Configuration processor_config = null; 
 	    private String streamId = null, storageId = null, 
 	    		subscriberId = null, filterId = null, processorId = null;
 		
@@ -256,21 +255,21 @@ public class StreamsManagerConfiguration extends Configuration {
 				storageId = attributes.getValue("id");
 				value = new StringBuilder();
 				if (storageId == null) return;
-				storage_config = new StorageConfiguration();
+				storage_config = new Configuration();
 				state = ParseState.IN_CONFIG_STORAGE;
 			}
 			else if (name.equalsIgnoreCase("Filter")){
 				filterId = attributes.getValue("id");
 				value = new StringBuilder();
 				if (filterId == null) return;
-				filter_config = new FilterConfiguration();
+				filter_config = new Configuration();
 				state = ParseState.IN_CONFIG_FILTER;
 			}
 			else if (name.equalsIgnoreCase("Processor")){
 				processorId = attributes.getValue("id");
 				value = new StringBuilder();
 				if (processorId == null) return;
-				processor_config = new ProcessorConfiguration();
+				processor_config = new Configuration();
 				state = ParseState.IN_CONFIG_PROCESSOR;
 			}
 		}

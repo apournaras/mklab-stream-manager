@@ -5,18 +5,18 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import eu.socialsensor.framework.Configuration;
 import eu.socialsensor.framework.client.dao.SourceDAO;
 import eu.socialsensor.framework.client.dao.impl.SourceDAOImpl;
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.Source;
-import eu.socialsensor.sfc.streams.FilterConfiguration;
 
 public class MentionsItemFilter extends ItemFilter {
 
 	private List<String> ids;
 	private String listId;
 
-	public MentionsItemFilter(FilterConfiguration configuration) {
+	public MentionsItemFilter(Configuration configuration) {
 		super(configuration);
 		try {
 		this.listId =configuration.getParameter("listId");

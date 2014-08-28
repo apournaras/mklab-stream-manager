@@ -6,12 +6,12 @@ import com.cybozu.labs.langdetect.Detector;
 import com.cybozu.labs.langdetect.DetectorFactory;
 import com.cybozu.labs.langdetect.LangDetectException;
 
+import eu.socialsensor.framework.Configuration;
 import eu.socialsensor.framework.common.domain.Item;
-import eu.socialsensor.sfc.streams.ProcessorConfiguration;
 
 public class LanguageDetector extends Processor {
 
-	public LanguageDetector(ProcessorConfiguration configuration) {
+	public LanguageDetector(Configuration configuration) {
 		super(configuration);
 		String profileDirectory = configuration.getParameter("profileDirectory",
 				"profiles.sm");

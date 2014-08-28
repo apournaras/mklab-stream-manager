@@ -5,14 +5,14 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import eu.socialsensor.framework.Configuration;
 import eu.socialsensor.framework.common.domain.Item;
-import eu.socialsensor.sfc.streams.FilterConfiguration;
 
 public class LanguageItemFilter extends ItemFilter {
 
 	private Set<String> languages = new HashSet<String>();
 
-	public LanguageItemFilter(FilterConfiguration configuration) {
+	public LanguageItemFilter(Configuration configuration) {
 		super(configuration);
 		String langsStr = configuration.getParameter("lang", "en");
 		

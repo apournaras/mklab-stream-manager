@@ -11,15 +11,15 @@ import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.util.Version;
 
+import eu.socialsensor.framework.Configuration;
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.StreamUser;
-import eu.socialsensor.sfc.streams.FilterConfiguration;
 
 public class TokensItemFilter  extends ItemFilter {
 
 	private int maxTokens;
 	
-	public TokensItemFilter(FilterConfiguration configuration) {
+	public TokensItemFilter(Configuration configuration) {
 		super(configuration);
 		String lenStr =configuration.getParameter("maxTokens", "6");
 		this.maxTokens  = Integer.parseInt(lenStr);

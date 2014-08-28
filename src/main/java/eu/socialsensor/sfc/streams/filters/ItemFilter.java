@@ -1,17 +1,17 @@
 package eu.socialsensor.sfc.streams.filters;
 
+import eu.socialsensor.framework.Configuration;
 import eu.socialsensor.framework.common.domain.Item;
-import eu.socialsensor.sfc.streams.FilterConfiguration;
 
 public abstract class ItemFilter {
 	
 	@SuppressWarnings("unused")
-	private FilterConfiguration configuration;
+	private Configuration configuration;
 
 	private int discarded = 0;
 	private int accepted = 0;
 
-	public ItemFilter(FilterConfiguration configuration) {
+	public ItemFilter(Configuration configuration) {
 		this.configuration = configuration;
 	}
 	
