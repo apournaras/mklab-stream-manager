@@ -24,8 +24,6 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 	 */
 	public class CustomSearchHandler extends SearchHandler {
 		
-		
-
 		private Map<String, Dysco> dyscos = Collections.synchronizedMap(new HashMap<String, Dysco>());
 		private Map<String, Long> dyscosLifetime = Collections.synchronizedMap(new HashMap<String, Long>());
 		private Map<String, Long> dyscosTimestamps = Collections.synchronizedMap(new HashMap<String, Long>());
@@ -112,7 +110,7 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 		@Override
 		protected void searchForDysco(Dysco dysco) {
 			String dyscoId = dysco.getId();
-			logger.info("Media Searcher handling #" + dyscoId);
+			logger.info("Custom Media Searcher handling: " + dyscoId);
 			try {
 				List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
 				List<Item> customDyscoItems = search(feeds);

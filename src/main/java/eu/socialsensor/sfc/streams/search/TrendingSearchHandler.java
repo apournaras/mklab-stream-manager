@@ -62,7 +62,7 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 			String dyscoId = dysco.getId();
 			
 			long start = System.currentTimeMillis();
-			logger.info("Media Searcher handling #" + dyscoId);
+			logger.info("Trending Media Searcher handling: " + dyscoId);
 			
 			//first search
 			List<Feed> primalFeeds = inputFeedsPerDysco.remove(dyscoId);
@@ -86,22 +86,23 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 					expandedQueries.add(q);
 				}
 			}
+			
 			logger.info("Number of additional queries for Trending DySco: " + dyscoId + " is " + expandedQueries.size());
 			
 			long t3 = System.currentTimeMillis();
 			logger.info("Time for computing queries for Trending DySco: " + dyscoId + " is " + (t3-t2)/1000 + " sec.");
 			
 			if(!expandedQueries.isEmpty()) {
-				Date sinceDate = new Date(System.currentTimeMillis() - 2*24*3600*1000);
+				dysco.setSolrQueries(queries);
+				dyscosToUpdate.add(dysco);
+				
+				Date sinceDate = new Date(System.currentTimeMillis() - 2 * 24 * 3600 * 1000);
 				List<Feed> newFeeds = transformQueriesToKeywordsFeeds(expandedQueries, sinceDate);
 				List<Item> secondSearchItems = search(newFeeds);
 				
 				long t4 = System.currentTimeMillis();
 				logger.info("Total Items retrieved for Trending DySco : " + dyscoId + " : " + secondSearchItems.size());
 				logger.info("Time for Second Search for Trending DySco: " + dyscoId + " is " + (t4-t3)/1000 + " sec.");
-			
-				dysco.setSolrQueries(queries);
-				dyscosToUpdate.add(dysco);
 			}
 			else {
 				System.out.println("No queries to update");
@@ -110,7 +111,6 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 			long end = System.currentTimeMillis();
 			logger.info("Total Time searching for Trending DySco: " + dyscoId + " is " + (end-start)/1000 + " sec.");
 		}
-		
 		
 		public void status() {
 			logger.info("trendingDyscoQueue:" + dyscosQueue.size());

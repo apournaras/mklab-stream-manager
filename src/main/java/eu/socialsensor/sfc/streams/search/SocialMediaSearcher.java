@@ -16,16 +16,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.JedisPubSub;
 import eu.socialsensor.framework.client.search.solr.SolrDyscoHandler;
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Dysco.DyscoType;
-import eu.socialsensor.framework.common.domain.dysco.Message;
 import eu.socialsensor.framework.common.domain.dysco.Message.Action;
+import eu.socialsensor.framework.common.domain.dysco.Message;
 import eu.socialsensor.sfc.input.DataInputType;
 import eu.socialsensor.sfc.input.FeedsCreator;
 import eu.socialsensor.sfc.streams.Stream;
@@ -65,9 +61,6 @@ public class SocialMediaSearcher {
 	
 	private StorageHandler storageHandler;
 	private StreamsMonitor monitor;
-
-	private Jedis jedisClient;
-	private Thread listener;
 	
 	private DyscoRequestHandler dyscoRequestHandler;
 	private DyscoRequestReceiver dyscoRequestReceiver;
@@ -79,14 +72,14 @@ public class SocialMediaSearcher {
 	private CustomSearchHandler customSearchHandler;
 	
 	private String redisHost;
+	private String redisChannel;
 	private String solrHost;
 	private String solrService;
 	private String dyscoCollection;
 	
 	private Map<String, Stream> streams = null;
 	
-	private BlockingQueue<Dysco> requests = new LinkedBlockingQueue<Dysco>();
-	private Queue<String> requestsToDelete = new LinkedBlockingQueue<String>();
+	private BlockingQueue<String> dyscosToDelete = new LinkedBlockingQueue<String>();
 	private Queue<Dysco> dyscosToUpdate = new LinkedBlockingQueue<Dysco>();
 	
 	public SocialMediaSearcher(StreamsManagerConfiguration config) throws StreamException {
@@ -98,6 +91,8 @@ public class SocialMediaSearcher {
 		this.config = config;
 		
 		this.redisHost = config.getParameter(SocialMediaSearcher.REDIS_HOST);
+		this.redisChannel = config.getParameter(SocialMediaSearcher.REDIS_CHANNEL);
+		
 		this.solrHost = config.getParameter(SocialMediaSearcher.SOLR_HOST);
 		this.solrService = config.getParameter(SocialMediaSearcher.SOLR_SERVICE);
 		this.dyscoCollection = config.getParameter(SocialMediaSearcher.DYSCO_COLLECTION);
@@ -156,40 +151,24 @@ public class SocialMediaSearcher {
 			logger.error("Streams Monitor cannot be started");
 		}
 		
+		String solrServiceUrl = solrHost + "/" + solrService + "/" + dyscoCollection;
+		
 		//start handlers
-		this.dyscoRequestHandler = new DyscoRequestHandler();
-		this.dyscoRequestReceiver = new DyscoRequestReceiver();
+		dyscoRequestReceiver = new DyscoRequestReceiver(redisHost, redisChannel);
+		dyscoRequestHandler = new DyscoRequestHandler(solrServiceUrl);
 		
-		this.dyscoUpdateThread = new DyscoUpdateThread(solrHost, solrService, dyscoCollection, dyscosToUpdate);
+		dyscoUpdateThread = new DyscoUpdateThread(solrServiceUrl, dyscosToUpdate);
 		
-		this.trendingSearchHandler = new TrendingSearchHandler(monitor, dyscosToUpdate);
-		this.customSearchHandler = new CustomSearchHandler(monitor, requestsToDelete);
+		trendingSearchHandler = new TrendingSearchHandler(monitor, dyscosToUpdate);
+		customSearchHandler = new CustomSearchHandler(monitor, dyscosToDelete);
 		
 		dyscoRequestHandler.start();
 		dyscoUpdateThread.start();
-        trendingSearchHandler.start();
+        
+		trendingSearchHandler.start();
 		customSearchHandler.start();
 		
-		logger.info("Connect to redis...");
-    	JedisPoolConfig poolConfig = new JedisPoolConfig();
-        JedisPool jedisPool = new JedisPool(poolConfig, redisHost, 6379, 0);
-        jedisClient = jedisPool.getResource();
-        
-		this.listener = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {          
-                    logger.info("Subscribe to redis...");
-                    jedisClient.subscribe(dyscoRequestReceiver, config.getParameter(SocialMediaSearcher.REDIS_CHANNEL));  
-
-                    logger.info("Subscribe returned, closing down");
-                    jedisClient.quit();
-                } catch (Exception e) {
-                	logger.error(e);
-                }
-            }
-        });
-		listener.start();
+		dyscoRequestReceiver.start();
 		
 		logger.info("Set state to open");
 		state = MediaSearcherState.OPEN;
@@ -214,10 +193,7 @@ public class SocialMediaSearcher {
 				stream.close();
 			}
 			
-			if(jedisClient != null) {
-				jedisClient.close();
-				logger.info("Jedis Connection is closed");
-			}
+			dyscoRequestReceiver.close();
 			
 			if(dyscoRequestHandler != null) {
 				dyscoRequestHandler.close();
@@ -261,8 +237,7 @@ public class SocialMediaSearcher {
 		logger.info("CustomSearchHandler " + customSearchHandler.getState());
 		logger.info("DyscoUpdateThread " + dyscoUpdateThread.getState());
 		
-		logger.info("#Requests: " + requests.size());
-		logger.info("#RequestsToDelete: " + requestsToDelete.size());
+		logger.info("#RequestsToDelete: " + dyscosToDelete.size());
 		logger.info("#DyscosToUpdate: " + dyscosToUpdate.size());
 		
 		logger.info("#Streams: " + streams.size());
@@ -271,94 +246,7 @@ public class SocialMediaSearcher {
 		
 		logger.info("=================================================");
 	}
-	
 
-	
-	/**
-	 * Class that implements the Redis Client. Receives the DySco request to be served
-	 * as a message. The request might entail the creation of a DySco (NEW), the update of
-	 * a DySco (UPDATE) or the deletion of a DySco (DELETE). The service finds the received
-	 * DySco in Solr database by its id and passes on the request to the Search Handler modules.
-	 * @author ailiakop
-	 */
-	public class DyscoRequestReceiver extends JedisPubSub {
-
-		private SolrDyscoHandler solrDyscoHandler;
-		
-		public DyscoRequestReceiver() {
-			this.solrDyscoHandler = SolrDyscoHandler.getInstance(solrHost + "/" + solrService + "/" + dyscoCollection);
-		}
-		
-	    @Override
-	    public void onMessage(String channel, String message) {
-	    	
-	    	logger.info("Received dysco request: " + message);
-	    	Message dyscoMessage = Message.create(message);
-	    	
-	    	String dyscoId = dyscoMessage.getDyscoId();    	
-	    	Dysco dysco = null;
-	    	synchronized(solrDyscoHandler) {
-	    		dysco = solrDyscoHandler.findDyscoLight(dyscoId);
-	    	}
-	    	
-    		if(dysco == null) {
-    			logger.error("Invalid dysco request");
-    			return;
-    		}
-	    	
-    		Action action = dyscoMessage.getAction();
-	    	switch(action) {
-		    	case NEW : 
-		    		logger.info("New dysco with id: " + dyscoId);
-		    		try {
-		    			requests.put(dysco);
-		    		} catch (InterruptedException e) {
-		    			logger.error(e);
-		    		}
-		    		break;
-		    	case UPDATE:
-		    		logger.info("Dysco with id: " + dyscoId + " needs update");
-		    		//to be implemented
-		    		break;
-		    	case DELETE:
-		    		if(requests.contains(dysco)) {
-		    			requests.remove(dysco);
-		    		}
-		    		else {
-		    			requestsToDelete.add(dyscoId);
-		    		}
-		    		logger.info("Dysco with id : " + dyscoId + " deleted");
-		    		break;
-	    	}	
-	    }
-	 
-	    @Override
-	    public void onPMessage(String pattern, String channel, String message) {
-	    	// Do Nothing
-	    }
-	 
-	    @Override
-	    public void onSubscribe(String channel, int subscribedChannels) {
-	    	// Do Nothing
-	    }
-	 
-	    @Override
-	    public void onUnsubscribe(String channel, int subscribedChannels) {
-	    	// Do Nothing
-	    }
-	 
-	    @Override
-	    public void onPUnsubscribe(String pattern, int subscribedChannels) {
-	    	// Do Nothing
-	    }
-	 
-	    @Override
-	    public void onPSubscribe(String pattern, int subscribedChannels) {
-	    	// Do Nothing
-	    }
-	}
-	
-	
 	/**
 	 * Class responsible for setting apart trending from custom DyScos and creating the appropriate
 	 * feeds for searching them. Afterwards, it adds the DySco to the queue for further 
@@ -369,16 +257,16 @@ public class SocialMediaSearcher {
 	private class DyscoRequestHandler extends Thread {
 
 		private boolean isAlive = true;
+		private SolrDyscoHandler solrDyscoHandler;
 	
-		public DyscoRequestHandler() {
-			
+		public DyscoRequestHandler(String solrServiceUrl) {
+			this.solrDyscoHandler = SolrDyscoHandler.getInstance(solrServiceUrl);
 		}
 		
 		public void run() {
-			Dysco receivedDysco = null;
 			while(isAlive) {
-				receivedDysco = poll();
-				if(receivedDysco == null) {
+				Message message = dyscoRequestReceiver.getMessage();
+				if(message == null) {
 					try {
 						synchronized(this) {
 							this.wait(10000);
@@ -390,45 +278,60 @@ public class SocialMediaSearcher {
 				}
 				else {
 					try {
-						logger.info("Process Dysco with id: " + receivedDysco.getId());
+						String dyscoId = message.getDyscoId();    	
 						
-						FeedsCreator feedsCreator = new FeedsCreator(DataInputType.DYSCO, receivedDysco);
-						List<Feed> feeds = feedsCreator.getQuery();
-					
-						logger.info("Feeds: " + feeds.size() + " created for " + receivedDysco.getId());
+						Action action = message.getAction();
+				    	switch(action) {
+				    		case NEW : 
+				    			logger.info("New dysco with id: " + dyscoId);
+				    		
+				    			Dysco dysco = null;
+				    			synchronized(solrDyscoHandler) {
+				    				dysco = solrDyscoHandler.findDyscoLight(dyscoId);
+				    			}
+					    	
+				    			if(dysco == null) {
+				    				logger.error("Invalid dysco request: " + dyscoId + ". Dysco does not exist!");
+				    				continue;
+				    			}
+				    		
+				    			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.DYSCO, dysco);
+				    			List<Feed> feeds = feedsCreator.getQuery();
 						
-						DyscoType dyscoType = receivedDysco.getDyscoType();
-						logger.info("DyscoType: " + dyscoType);
-						
-						if(dyscoType.equals(DyscoType.TRENDING)) {
-							trendingSearchHandler.addDysco(receivedDysco, feeds);
-						}
-						else if(dyscoType.equals(DyscoType.CUSTOM)) {
-							customSearchHandler.addDysco(receivedDysco, feeds);
-						}
-						else {
-							logger.error("Unsupported dysco type - Cannot be processed from MediaSearcher");
-						}
+				    			for(Feed feed : feeds) {
+				    				logger.info(feed.toJSONString());
+				    			}
+				    			
+				    			logger.info("Feeds: " + feeds.size() + " created for " + dysco.getId());
+							
+				    			DyscoType dyscoType = dysco.getDyscoType();
+				    			logger.info("DyscoType: " + dyscoType);
+							
+				    			if(dyscoType.equals(DyscoType.TRENDING)) {
+				    				trendingSearchHandler.addDysco(dysco, feeds);
+				    			}
+				    			else if(dyscoType.equals(DyscoType.CUSTOM)) {
+				    				customSearchHandler.addDysco(dysco, feeds);
+				    			}
+				    			else {
+				    				logger.error("Unsupported dysco type - Cannot be processed from MediaSearcher");
+				    			}
+				    			continue;
+				    		case UPDATE:
+				    			logger.info("Dysco with id: " + dyscoId + " needs update");
+				    			//noting to do
+				    			continue;
+				    		case DELETE:
+				    			logger.info("Delete Dysco with id : " + dyscoId);
+				    			dyscosToDelete.add(dyscoId);
+				    			continue;
+				    	}	
 					}
 					catch(Exception e) {
 						logger.error(e);
 					}
 				}
 			}
-		}
-		
-		/**
-		 * Polls a  dysco request from the queue
-		 * @return
-		 */
-		private Dysco poll() {				
-			Dysco request = null;
-			try {
-				request = requests.take();
-			} catch (Exception e) {
-				logger.error(e);
-			}
-			return request;
 		}
 		
 		public void close() {
@@ -475,6 +378,7 @@ public class SocialMediaSearcher {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
 		File configFile = null;
 		if(args.length != 1 ) {
 			configFile = new File("./conf/mediasearcher.conf.xml");
@@ -495,7 +399,6 @@ public class SocialMediaSearcher {
 					mediaSearcher.status();
 				} catch (Throwable e) {
 					e.printStackTrace();
-					// TODO: Handle Error
 					break;
 				}
 			}

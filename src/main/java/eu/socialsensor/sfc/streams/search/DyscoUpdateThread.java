@@ -22,8 +22,8 @@ import eu.socialsensor.framework.common.domain.dysco.Dysco;
 
 		private Queue<Dysco> dyscosToUpdate;
 		
-		public DyscoUpdateThread(String solrHost, String solrService, String dyscoCollection, Queue<Dysco> dyscosToUpdate) {
-			this.solrdyscoHandler = SolrDyscoHandler.getInstance(solrHost+"/"+solrService+"/"+dyscoCollection);
+		public DyscoUpdateThread(String solrServiceUrl, Queue<Dysco> dyscosToUpdate) {
+			this.solrdyscoHandler = SolrDyscoHandler.getInstance(solrServiceUrl);
 			this.dyscosToUpdate = dyscosToUpdate;
 		}
 		
@@ -44,10 +44,10 @@ import eu.socialsensor.framework.common.domain.dysco.Dysco;
 				}
 				else {
 					try {
-						Dysco updatedDysco = solrdyscoHandler.findDyscoLight(dyscoToUpdate.getId());
-						updatedDysco.getSolrQueries().clear();
-						updatedDysco.setSolrQueries(dyscoToUpdate.getSolrQueries());
-						solrdyscoHandler.insertDysco(updatedDysco);
+						Dysco previousDysco = solrdyscoHandler.findDyscoLight(dyscoToUpdate.getId());
+						previousDysco.getSolrQueries().clear();
+						previousDysco.setSolrQueries(dyscoToUpdate.getSolrQueries());
+						solrdyscoHandler.insertDysco(previousDysco);
 					
 						logger.info("Dysco: " + dyscoToUpdate.getId() + " is updated");
 					}
