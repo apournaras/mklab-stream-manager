@@ -58,10 +58,11 @@ public class DyscoInputReader implements InputReader{
 		
 		//standard for trending dysco 
 		Set<Keyword> queryKeywords = new HashSet<Keyword>();
-		
+	
 		List<Query> solrQueries = dysco.getSolrQueries();
 		
 		if(customDysco != null) {
+			
 			this.date = new Date(0l);
 			List<Source> querySources = new ArrayList<Source>();
 			List<Location> queryLocations = new ArrayList<Location>();
@@ -74,19 +75,22 @@ public class DyscoInputReader implements InputReader{
 	    	
 			List<String> otherUrls = customDysco.getOtherSocialNetworks();
 			
+			System.out.println(otherUrls);
+			
 			if(twitterUsers != null) {
 				for(String user : twitterUsers) {
-					Source source = new Source(user,0f);
+					Source source = new Source(user, 0f);
 					source.setNetwork("Twitter");
 					querySources.add(source);
 				}
 			}
-			if(otherUrls != null){
+			
+			if(otherUrls != null) {
 				for(String url : otherUrls) {
 					try {
 						Map<String, String> map = Util.findNetworkSource(url);
 						for(String user : map.keySet()) {
-							Source source = new Source(user,0f);
+							Source source = new Source(user, 0f);
 							source.setNetwork(map.get(user));
 							querySources.add(source);
 						}
@@ -95,12 +99,12 @@ public class DyscoInputReader implements InputReader{
 					}
 				}
 			}
-			if(mentionedUsers != null){
-				for(String user : mentionedUsers){
-					Keyword key = new Keyword(user,0f);
+			
+			if(mentionedUsers != null) {
+				for(String user : mentionedUsers) {
+					Keyword key = new Keyword(user, 0f);
 					queryKeywords.add(key);
 				}
-				
 			}
 			
 			if(listsOfUsers != null) {
@@ -109,20 +113,22 @@ public class DyscoInputReader implements InputReader{
 				}
 			}
 			if(locations != null) {
-				for(Location location : locations){
+				for(Location location : locations) {
 					queryLocations.add(location);
 				}
 			}
 			
-			if(!querySources.isEmpty())
+			if(!querySources.isEmpty()) {
 				inputDataPerType.put(FeedType.SOURCE, querySources);
+			}
 			
-			if(!queryLocations.isEmpty())
+			if(!queryLocations.isEmpty()) {
 				inputDataPerType.put(FeedType.LOCATION, queryLocations);
+			}
 			
-			if(!queryLists.isEmpty())
+			if(!queryLists.isEmpty()) {
 				inputDataPerType.put(FeedType.LIST, queryLists);
-			
+			}
 		}
 		
 		if(solrQueries != null) {
@@ -138,9 +144,9 @@ public class DyscoInputReader implements InputReader{
 			}
 		}
 		
-		if(!queryKeywords.isEmpty())
+		if(!queryKeywords.isEmpty()) {
 			inputDataPerType.put(FeedType.KEYWORDS, queryKeywords);
-		
+		}
 		
 		return inputDataPerType;
 		
@@ -158,47 +164,46 @@ public class DyscoInputReader implements InputReader{
 		Map<FeedType,Object> inputData = getData();
 		
 		for(FeedType feedType : inputData.keySet()) {
-			switch(feedType){
-			case SOURCE :
-				@SuppressWarnings("unchecked")
-				List<Source> sources = (List<Source>) inputData.get(feedType);
-				for(Source source : sources) {
-					String feedID = UUID.randomUUID().toString();
-					SourceFeed sourceFeed = new SourceFeed(source, date, feedID);
-					feeds.add(sourceFeed);
-				}
-				break;
-			case KEYWORDS : 
-				@SuppressWarnings("unchecked")
-				Set<Keyword> keywords = (Set<Keyword>) inputData.get(feedType);
-				for(Keyword keyword : keywords) {
-					String feedID = UUID.randomUUID().toString();
-					KeywordsFeed keywordsFeed = new KeywordsFeed(keyword, date, feedID);
-					feeds.add(keywordsFeed);
-				}
-				break;
-			case LOCATION :
-				@SuppressWarnings("unchecked")
-				List<Location> locations = (List<Location>) inputData.get(feedType);
-				for(Location location : locations) {
-					String feedID = UUID.randomUUID().toString();
-					LocationFeed locationFeed = new LocationFeed(location, date, feedID);
-					feeds.add(locationFeed);
-				}
-				break;
-			case LIST :
-				@SuppressWarnings("unchecked")
-				List<String> lists = (List<String>) inputData.get(feedType);
-				for(String list : lists){
-					String feedID = UUID.randomUUID().toString();
-					ListFeed listFeed = new ListFeed(list, date, feedID);
-					feeds.add(listFeed);
-				}
-			default:
-				break;
+			switch(feedType) {
+				case SOURCE :
+					@SuppressWarnings("unchecked")
+					List<Source> sources = (List<Source>) inputData.get(feedType);
+					for(Source source : sources) {
+						String feedID = UUID.randomUUID().toString();
+						SourceFeed sourceFeed = new SourceFeed(source, date, feedID);
+						feeds.add(sourceFeed);
+					}
+					break;
+				case KEYWORDS : 
+					@SuppressWarnings("unchecked")
+					Set<Keyword> keywords = (Set<Keyword>) inputData.get(feedType);
+					for(Keyword keyword : keywords) {
+						String feedID = UUID.randomUUID().toString();
+						KeywordsFeed keywordsFeed = new KeywordsFeed(keyword, date, feedID);
+						feeds.add(keywordsFeed);
+					}
+					break;
+				case LOCATION :
+					@SuppressWarnings("unchecked")
+					List<Location> locations = (List<Location>) inputData.get(feedType);
+					for(Location location : locations) {
+						String feedID = UUID.randomUUID().toString();
+						LocationFeed locationFeed = new LocationFeed(location, date, feedID);
+						feeds.add(locationFeed);
+					}
+					break;
+				case LIST :
+					@SuppressWarnings("unchecked")
+					List<String> lists = (List<String>) inputData.get(feedType);
+					for(String list : lists){
+						String feedID = UUID.randomUUID().toString();
+						ListFeed listFeed = new ListFeed(list, date, feedID);
+						feeds.add(listFeed);
+					}
+				default:
+					break;
 			}
 		}
-		
 		return feeds;
 	}
 
