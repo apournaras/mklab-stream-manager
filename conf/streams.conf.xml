@@ -13,7 +13,7 @@
                     	<![CDATA[eu.socialsensor.sfc.storages.MongoDbStorage]]>
                   	</Parameter>
                     <Parameter name="mongodb.host">
-                    	<![CDATA[160.40.50.207]]>
+                    	<![CDATA[xxx.xxx.xxx.xxx]]>
                    	</Parameter>
                     <Parameter name="mongodb.private.host">
                     	<![CDATA[your.ip]]>
@@ -64,17 +64,18 @@
             </Storage> 
             -->
             
-            <!-- Solr storage configuaration  -->
+            <!-- Solr storage configuaration 
             <Storage id="Solr">
                     <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.storages.SolrStorage]]></Parameter>
-                    <Parameter name="solr.hostname"><![CDATA[http://160.40.50.207:8080]]></Parameter>
+                    <Parameter name="solr.hostname"><![CDATA[http://xxx.xxx.xxx.xxx:8080]]></Parameter>
                     <Parameter name="solr.service"><![CDATA[solr]]></Parameter>
                     <Parameter name="solr.items.collection"><![CDATA[PressRelationsItems]]></Parameter>
                     <Parameter name="solr.mediaitems.collection"><![CDATA[PressRelationsMediaItems]]></Parameter>
                     <Parameter name="solr.webpages.collection"><![CDATA[PressRelationsWebPages]]></Parameter>
                     <Parameter name="solr.onlyOriginal"><![CDATA[false]]></Parameter>
             </Storage>
-   
+    		-->
+    		
             <!--  Lucene storage configuaration 
             <Storage id="Lucene">
                     <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.LuceneStorage]]></Parameter>
@@ -134,16 +135,16 @@
 				<![CDATA[eu.socialsensor.sfc.subscribers.impl.TwitterSubscriber]]>
 			</Parameter>
             <Parameter name="Key">
-				<![CDATA[gP54AYABpp0Bp95N4DuEMQ]]>
+				<![CDATA[]]>
 			</Parameter>
 	        <Parameter name="Secret">
-	        	<![CDATA[S5otYAVwCqp6o8uDd5kjHiM9k3dicSfcNXjHnGPX4A]]>
+	        	<![CDATA[]]>
 	       	</Parameter>
         	<Parameter name="AccessToken">
-	        	<![CDATA[204974667-KFelb0g7mdYybIqixNE623rwqAYfP2f5V4ZFNxfN]]>
+	        	<![CDATA[]]>
 	       	</Parameter>
         	<Parameter name="AccessTokenSecret">
-	        	<![CDATA[ry9z4PpgRMiWb2AKjDCpvJBukxItUtZTctO4YEvzzY]]>
+	        	<![CDATA[]]>
 	       	</Parameter>
 		</Subscriber>
 	</Subscribers>
@@ -156,16 +157,16 @@
             	<![CDATA[eu.socialsensor.sfc.streams.impl.TwitterStream]]>
        		</Parameter>
             <Parameter name="Key">
-                                <![CDATA[gP54AYABpp0Bp95N4DuEMQ]]>
+                                <![CDATA[]]>
                         </Parameter>
                 <Parameter name="Secret">
-                        <![CDATA[S5otYAVwCqp6o8uDd5kjHiM9k3dicSfcNXjHnGPX4A]]>
+                        <![CDATA[]]>
                        </Parameter>
                 <Parameter name="AccessToken">
-                        <![CDATA[204974667-KFelb0g7mdYybIqixNE623rwqAYfP2f5V4ZFNxfN]]>
+                        <![CDATA[]]>
                        </Parameter>
                 <Parameter name="AccessTokenSecret">
-                        <![CDATA[ry9z4PpgRMiWb2AKjDCpvJBukxItUtZTctO4YEvzzY]]>
+                        <![CDATA[]]>
                        </Parameter>
                			 <Parameter name="maxResults">
                                 <![CDATA[10000]]>
@@ -184,7 +185,7 @@
            		<![CDATA[eu.socialsensor.sfc.streams.impl.FacebookStream]]>
           	</Parameter>
         	<Parameter name="AccessToken">
-             	<![CDATA[260504214011769|jATWKceE7aVH4jxsB4DBuNjKBRc]]>
+             	<![CDATA[]]>
         	</Parameter>
         	<Parameter name="maxResults">
              	<![CDATA[10000]]>
@@ -203,10 +204,10 @@
                                 <![CDATA[eu.socialsensor.sfc.streams.impl.YoutubeStream]]>
                         </Parameter>
                         <Parameter name="ClientId">
-                                <![CDATA[manosetro]]>
+                                <![CDATA[]]>
                         </Parameter>
                         <Parameter name="Key">
-                                <![CDATA[AI39si6DMfJRhrIFvJRv0qFubHHQypIwjkD-W7tsjLJArVKn9iR-QoT8t-UijtITl4TuyHzK-cxqDDCkCBoJB-seakq1gbt1iQ]]>
+                                <![CDATA[]]>
                         </Parameter>
                               <Parameter name="maxResults">
                                 <![CDATA[1000]]>
@@ -225,10 +226,10 @@
                                 <![CDATA[eu.socialsensor.sfc.streams.impl.FlickrStream]]>
                         </Parameter>
                         <Parameter name="Key">
-                                <![CDATA[029eab4d06c40e08670d78055bf61205]]>
+                                <![CDATA[]]>
                         </Parameter>
                         <Parameter name="Secret">
-                                <![CDATA[bc4105126a4dfb8c]]>
+                                <![CDATA[]]>
                         </Parameter>
                               <Parameter name="maxResults">
                                 <![CDATA[10000]]>
@@ -247,13 +248,13 @@
                                 <![CDATA[eu.socialsensor.sfc.streams.impl.GooglePlusStream]]>
                         </Parameter>
                         <Parameter name="Key">
-                                <![CDATA[AIzaSyCb_AeWe-ACSzlDRLqjNY9EADIWEXteKYc]]>
+                                <![CDATA[]]>
                         </Parameter>
                         <Parameter name="Secret">
-                                <![CDATA[-w2HCOTkDSFjgVuu9aVHwS7T]]>
+                                <![CDATA[]]>
                         </Parameter>
                         <Parameter name="ClientId">
-                                <![CDATA[407623149661.apps.googleusercontent.com]]>
+                                <![CDATA[]]>
                         </Parameter>
                       <Parameter name="maxResults">
                                 <![CDATA[5000]]>
@@ -301,13 +302,13 @@
                                 <![CDATA[eu.socialsensor.sfc.streams.impl.InstagramStream]]>
                         </Parameter>
                        	<Parameter name="Key">
-							<![CDATA[5bc7be32dbaa46ceaf98fc93f03fcfce]]>
+							<![CDATA[]]>
 						</Parameter>
 						<Parameter name="Secret">
-							<![CDATA[e53597da6d7749d2a944651bbe6e6f2a]]>
+							<![CDATA[]]>
 						</Parameter>
 						<Parameter name="AccessToken">
-							<![CDATA[342704836.5b9e1e6.503a35185da54224adaa76161a573e71]]>
+							<![CDATA[]]>
 						</Parameter>
                       	<Parameter name="maxResults">
                                 <![CDATA[50000]]>

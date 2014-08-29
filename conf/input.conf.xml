@@ -4,7 +4,7 @@
 		<!--   -->
 	   <StorageInput>
 	   		<Storage id = "Mongodb">
-	   			<Parameter name="host"><![CDATA[160.40.50.207]]></Parameter>
+	   			<Parameter name="host"><![CDATA[xxx.xxx.xxx.xxx]></Parameter>
 	   			<Parameter name="database"><![CDATA[PressRelations]]></Parameter>
 	   			<Parameter name="sources.collection"><![CDATA[Sources]]></Parameter>
 	   			<Parameter name="keywords.collection"><![CDATA[Keywords]]></Parameter>
@@ -16,7 +16,7 @@
 	  <!--
 	 	<StorageInput>
 	   		<Storage id = "Mongodb">
-	   			<Parameter name="host"><![CDATA[160.40.50.207]]></Parameter>
+	   			<Parameter name="host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
 	   			<Parameter name="database"><![CDATA[Prototype]]></Parameter>
 	   			<Parameter name="sources.collection"><![CDATA[Sources]]></Parameter>
 	  			<Parameter name="since">
