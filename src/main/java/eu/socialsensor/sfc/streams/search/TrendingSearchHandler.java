@@ -32,8 +32,6 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 		
 		private SolrQueryBuilder queryBuilder;
 
-		private long totalRetrievedItems = 0;
-
 		private Queue<Dysco> dyscosToUpdate; 
 
 		public TrendingSearchHandler(StreamsMonitor monitor, Queue<Dysco> dyscosToUpdate) {
@@ -59,6 +57,7 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 		 * 
 		 */
 		protected void searchForDysco(Dysco dysco) {
+			
 			String dyscoId = dysco.getId();
 			
 			long start = System.currentTimeMillis();
@@ -66,10 +65,7 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 			
 			//first search
 			List<Feed> primalFeeds = inputFeedsPerDysco.remove(dyscoId);
-			
 			List<Item> retrievedItems = search(primalFeeds);
-			
-			totalRetrievedItems += retrievedItems.size();
 			
 			long t1 = System.currentTimeMillis();
 			logger.info("Time for First Search for Trending DySco: " + dyscoId + " is " + (t1-start)/1000 + " sec.");
@@ -112,12 +108,6 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 			logger.info("Total Time searching for Trending DySco: " + dyscoId + " is " + (end-start)/1000 + " sec.");
 		}
 		
-		public void status() {
-			logger.info("trendingDyscoQueue:" + dyscosQueue.size());
-			logger.info("inputFeedsPerDysco:" + inputFeedsPerDysco.size());
-			logger.info("totalRetrievedItems:" + totalRetrievedItems);
-		}
-		
 		/**
 		 * Transforms Query instances to KeywordsFeed instances that will be used 
 		 * for searching social media
@@ -140,6 +130,11 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 		@Override
 		protected void update() {
 			// Nothing to update in Trending Dyscos
+		}
+
+		@Override
+		public void deleteDysco(String dyscoId) {
+			// Nothing to delete in Trending Dyscos
 		}
 		
 	}

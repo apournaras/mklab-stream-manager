@@ -65,7 +65,8 @@ public class TokensItemFilter  extends ItemFilter {
 			}
 			
 		} catch (Exception e) {
-			Logger.getLogger(TokensItemFilter.class).error(e);
+			e.printStackTrace();
+			//Logger.getLogger(TokensItemFilter.class).error(e);
 			incrementDiscarded();
 			return false;
 		}

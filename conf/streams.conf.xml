@@ -7,13 +7,22 @@
     </RequestPeriod>
     
     <Storages>
-            <!-- Mongodb storage configuaration  -->
+            <!-- Mongodb storage configuration  -->
             <Storage id="Mongodb">
-                    <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.MongoDbStorage]]></Parameter>
-                    <Parameter name="mongodb.host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
-                    <Parameter name="mongodb.private.host"><![CDATA[your.ip]]></Parameter>
-                    <Parameter name="mongodb.database"><![CDATA[Katerina]]></Parameter>
-                   
+                    <Parameter name="Classpath">
+                    	<![CDATA[eu.socialsensor.sfc.storages.MongoDbStorage]]>
+                  	</Parameter>
+                    <Parameter name="mongodb.host">
+                    	<![CDATA[160.40.50.207]]>
+                   	</Parameter>
+                    <Parameter name="mongodb.private.host">
+                    	<![CDATA[your.ip]]>
+                    </Parameter>
+                  	
+                   	<Parameter name="mongodb.database">
+                    	<![CDATA[PressRelations]]>
+                  	</Parameter>
+           
                    	<!-- In case you want to create separate databases for each collection - comment the database field above -->
 					<!--                
 					<Parameter name="mongodb.items.database"><![CDATA[name.of.your.database]]></Parameter>
@@ -27,17 +36,27 @@
                     <Parameter name="mongodb.mediashares.collection"><![CDATA[MediaShares]]></Parameter>
                     <Parameter name="mongodb.streamusers.collection"><![CDATA[StreamUsers]]></Parameter>
                     <Parameter name="mongodb.webpages.collection"><![CDATA[WebPages]]></Parameter>
-                    
             </Storage>
             
-        	<!--  Redia storage configuaration  -->
+            <!-- Metrics Storage configuration  
+            <Storage id="Metrics">
+                    <Parameter name="Classpath">
+                    	<![CDATA[eu.socialsensor.sfc.streams.store.MetricsStorage]]>
+                    </Parameter>
+                    <Parameter name="host"><![CDATA[160.40.50.207]]></Parameter>
+                    <Parameter name="database"><![CDATA[PressRelations]]></Parameter>
+                    <Parameter name="collection"><![CDATA[Metrics]]></Parameter>           
+            </Storage>
+            -->
+            
+        	<!--  Redia storage configuaration 
            	<Storage id="Redis">
                     <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.RedisStorage]]></Parameter>
-                    <Parameter name="redis.host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
-                    <Parameter name="redis.webpages.channel"><![CDATA[webpagesLocal]]></Parameter>
-                    <Parameter name="redis.media.channel"><![CDATA[mediaLocal]]></Parameter>
+                    <Parameter name="redis.host"><![CDATA[160.40.50.207]]></Parameter>
+                    <Parameter name="redis.webpages.channel"><![CDATA[PressRelationsWebPages]]></Parameter>
+                    <Parameter name="redis.media.channel"><![CDATA[PressRelationsMediaItems]]></Parameter>
             </Storage> 
-            
+            --> 
             
             <!--  Stdout storage configuaration  
              <Storage id="Stdout">
@@ -45,15 +64,16 @@
             </Storage> 
             -->
             
-            <!--Solr storage configuaration  
+            <!-- Solr storage configuaration  -->
             <Storage id="Solr">
-                    <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.store.SolrStorage]]></Parameter>
-                    <Parameter name="solr.hostname"><![CDATA[your.ip]]></Parameter>
+                    <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.storages.SolrStorage]]></Parameter>
+                    <Parameter name="solr.hostname"><![CDATA[http://160.40.50.207:8080]]></Parameter>
                     <Parameter name="solr.service"><![CDATA[solr]]></Parameter>
-                    <Parameter name="solr.items.collection"><![CDATA[collection.two]]></Parameter>
-                    <Parameter name="solr.mediaitems.collection"><![CDATA[collection.two]]></Parameter>
+                    <Parameter name="solr.items.collection"><![CDATA[PressRelationsItems]]></Parameter>
+                    <Parameter name="solr.mediaitems.collection"><![CDATA[PressRelationsMediaItems]]></Parameter>
+                    <Parameter name="solr.webpages.collection"><![CDATA[PressRelationsWebPages]]></Parameter>
+                    <Parameter name="solr.onlyOriginal"><![CDATA[false]]></Parameter>
             </Storage>
-   			-->
    
             <!--  Lucene storage configuaration 
             <Storage id="Lucene">
@@ -67,11 +87,10 @@
             <!-- Filter that discards Items with short text -->
             <Filter id="LengthFilter">
                     <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.filters.LengthItemFilter]]></Parameter>
-                    <Parameter name="length"><![CDATA[10]]></Parameter>
+                    <Parameter name="length"><![CDATA[15]]></Parameter>
             </Filter>
              
-             
-          	<!-- Filter that discards Items that mention users of a list  -->
+          	<!-- Filter that discards Items that mention users of a list  
             <Filter id="MentionsFilter">
                     <Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.filters.MentionsItemFilter]]></Parameter>
                     <Parameter name="listId"><![CDATA[2]]></Parameter>
@@ -79,174 +98,175 @@
 	   				<Parameter name="database"><![CDATA[Prototype]]></Parameter>
 	   				<Parameter name="collection"><![CDATA[Sources]]></Parameter>
             </Filter>
+            -->
   	</Filters>
     
     <Processors>
     	<Processor id="GeoProcessor">
-    			<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.processors.GeoProcessor]]></Parameter>
-            	<Parameter name="citiesFile">
-                    <![CDATA[/disk1_data/workspace/git/geo-util/allCountries.txt]]>
-            	</Parameter>
-            	<Parameter name="countryInfoFile">
-                    <![CDATA[/disk1_data/workspace/git/geo-util/countryInfo.txt]]>
-            	</Parameter>
+    		<Parameter name="Classpath">
+        		<![CDATA[eu.socialsensor.sfc.streams.processors.GeoProcessor]]>
+    		</Parameter>
+    		<Parameter name="gnObjectsFile">
+        		<![CDATA[/home/manosetro/Desktop/geoprocessor/cities1000_mod.txt]]>
+    		</Parameter>
+    		<Parameter name="gnCountryInfoFile">
+        		<![CDATA[/home/manosetro/Desktop/geoprocessor/countryInfo.txt]]>
+    		</Parameter>
+    		<Parameter name="gnAdminNames">
+        		<![CDATA[/home/manosetro/Desktop/geoprocessor/admin1CodesASCII_mod.txt]]>
+    		</Parameter>     
+		</Processor>
+
+		<!--  -->
+   		<Processor id="LanguageDetector">
+    		<Parameter name="Classpath"><![CDATA[eu.socialsensor.sfc.streams.processors.LanguageDetector]]></Parameter>
+   			<Parameter name="profileDirectory">
+           		<![CDATA[/disk1_data/workspace/git/socialsensor-stream-manager/src/main/resources/profiles.sm]]>
+           	</Parameter>
    		</Processor>
+   		
     </Processors>
             
-    <!--   -->
+    <!-- 
 	<Subscribers>
 		<Subscriber id ="Twitter">
 			<Parameter name="Classpath">
-				<![CDATA[eu.socialsensor.framework.streams.socialmedia.twitter.TwitterStream]]>
+				<![CDATA[eu.socialsensor.sfc.subscribers.impl.TwitterSubscriber]]>
 			</Parameter>
             <Parameter name="Key">
-				<![CDATA[]]>
+				<![CDATA[gP54AYABpp0Bp95N4DuEMQ]]>
 			</Parameter>
 	        <Parameter name="Secret">
-	        	<![CDATA[]]>
+	        	<![CDATA[S5otYAVwCqp6o8uDd5kjHiM9k3dicSfcNXjHnGPX4A]]>
 	       	</Parameter>
         	<Parameter name="AccessToken">
-	        	<![CDATA[]]>
+	        	<![CDATA[204974667-KFelb0g7mdYybIqixNE623rwqAYfP2f5V4ZFNxfN]]>
 	       	</Parameter>
         	<Parameter name="AccessTokenSecret">
-	        	<![CDATA[]]>
+	        	<![CDATA[ry9z4PpgRMiWb2AKjDCpvJBukxItUtZTctO4YEvzzY]]>
 	       	</Parameter>
 		</Subscriber>
 	</Subscribers>
-              
+  	--> 
                 
 	<Streams>
-        
-   		<!--  Facebook Stream Handler   
-        <Stream id="Facebook">
+    	<!-- Twitter Stream Handler -->
+     	<Stream id="Twitter">
         	<Parameter name="Classpath">
-           		<![CDATA[eu.socialsensor.framework.streams.socialmedia.facebook.FacebookStream]]>
-          	</Parameter>
-        	<Parameter name="AccessToken">
-             	<![CDATA[]]>
-        	</Parameter>
-     		<Parameter name="since">
-            	<![CDATA[2013-10-31 00:00:00.000]]>
-         	</Parameter>
-                      <Parameter name="maxResults">
-                                <![CDATA[10000]]>
-                        </Parameter>
-                        <Parameter name="maxRequests">
-                                <![CDATA[300]]>
-                        </Parameter>
-                </Stream>
-               -->
-                
-                <!-- Twitter Stream Handler 
-                <Stream id="Twitter">
-                        <Parameter name="Classpath">
-                                <![CDATA[eu.socialsensor.framework.streams.socialmedia.twitter.TwitterStream]]>
-                        </Parameter>
+            	<![CDATA[eu.socialsensor.sfc.streams.impl.TwitterStream]]>
+       		</Parameter>
             <Parameter name="Key">
-                                <![CDATA[your.key]]>
+                                <![CDATA[gP54AYABpp0Bp95N4DuEMQ]]>
                         </Parameter>
                 <Parameter name="Secret">
-                        <![CDATA[your.secret.key]]>
+                        <![CDATA[S5otYAVwCqp6o8uDd5kjHiM9k3dicSfcNXjHnGPX4A]]>
                        </Parameter>
                 <Parameter name="AccessToken">
-                        <![CDATA[your.accesstoken]]>
+                        <![CDATA[204974667-KFelb0g7mdYybIqixNE623rwqAYfP2f5V4ZFNxfN]]>
                        </Parameter>
                 <Parameter name="AccessTokenSecret">
-                        <![CDATA[your.secret.accesstoken]]>
+                        <![CDATA[ry9z4PpgRMiWb2AKjDCpvJBukxItUtZTctO4YEvzzY]]>
                        </Parameter>
                			 <Parameter name="maxResults">
-                                <![CDATA[100]]>
-                        </Parameter>
-                        <Parameter name="maxRequests">
-                                <![CDATA[1]]>
-                        </Parameter>
-                        <Parameter name="maxRunningTime">
-							<![CDATA[10000]]>
-						</Parameter>
-                </Stream>
-        		-->
-        
-                <!-- YouTube Handler 
-                <Stream id="YouTube">
-                        <Parameter name="Classpath">
-                                <![CDATA[eu.socialsensor.framework.streams.socialmedia.youtube.YoutubeStream]]>
-                        </Parameter>
-                        <Parameter name="ClientId">
-                                <![CDATA[your.clientId]]>
-                        </Parameter>
-                        <Parameter name="Key">
-                                <![CDATA[your.key]]>
-                        </Parameter>
-                        <Parameter name="since">
-                        <![CDATA[2013-10-31 00:00:00.000]]>
-                      </Parameter>
-                              <Parameter name="maxResults">
-                                <![CDATA[50]]>
+                                <![CDATA[10000]]>
                         </Parameter>
                         <Parameter name="maxRequests">
                                 <![CDATA[2]]>
                         </Parameter>
                         <Parameter name="maxRunningTime">
-							<![CDATA[10000]]>
+							<![CDATA[30000]]>
 						</Parameter>
-                </Stream> 
-                -->
-                
-                <!-- Flickr Stream Handler  
-                <Stream id="Flickr">
+               </Stream>
+        		
+   		<!--  Facebook Stream Handler  -->
+        <Stream id="Facebook">
+        	<Parameter name="Classpath">
+           		<![CDATA[eu.socialsensor.sfc.streams.impl.FacebookStream]]>
+          	</Parameter>
+        	<Parameter name="AccessToken">
+             	<![CDATA[260504214011769|jATWKceE7aVH4jxsB4DBuNjKBRc]]>
+        	</Parameter>
+        	<Parameter name="maxResults">
+             	<![CDATA[10000]]>
+          	</Parameter>
+        	<Parameter name="maxRequests">
+           		<![CDATA[100]]>
+          	</Parameter>
+        	<Parameter name="maxRunningTime">
+				<![CDATA[30000]]>
+			</Parameter>
+      	</Stream>        
+        		
+        		<!-- YouTube Handler -->
+                <Stream id="Youtube">
                         <Parameter name="Classpath">
-                                <![CDATA[eu.socialsensor.framework.streams.socialmedia.flickr.FlickrStream]]>
-                        </Parameter>
-                        <Parameter name="Key">
-                                <![CDATA[your.key]]>
-                        </Parameter>
-                        <Parameter name="Secret">
-                                <![CDATA[your.secret.key]]>
-                        </Parameter>
-                        <Parameter name="since">
-                        <![CDATA[2013-10-31 00:00:00.000]]>
-                      </Parameter>
-                              <Parameter name="maxResults">
-                                <![CDATA[10000000]]>
-                        </Parameter>
-                        <Parameter name="maxRequests">
-                                <![CDATA[50]]>
-                        </Parameter>
-                        </Parameter>
-                        <Parameter name="maxRunningTime">
-							<![CDATA[10000]]>
-						</Parameter>
-                </Stream>
-                -->
-                <!-- Google+ Stream Handler 
-                <Stream id="GooglePlus">
-                        <Parameter name="Classpath">
-                                <![CDATA[eu.socialsensor.framework.streams.socialmedia.gplus.GooglePlusStream]]>
-                        </Parameter>
-                        <Parameter name="Key">
-                                <![CDATA[your.key]]>
-                        </Parameter>
-                        <Parameter name="Secret">
-                                <![CDATA[your.secret.key]]>
+                                <![CDATA[eu.socialsensor.sfc.streams.impl.YoutubeStream]]>
                         </Parameter>
                         <Parameter name="ClientId">
-                                <![CDATA[your.clientId]]>
+                                <![CDATA[manosetro]]>
                         </Parameter>
-                        <Parameter name="since">
-                        <![CDATA[2013-10-01 00:00:00.000]]>
-                      </Parameter>
-                      <Parameter name="maxResults">
-                                <![CDATA[50]]>
+                        <Parameter name="Key">
+                                <![CDATA[AI39si6DMfJRhrIFvJRv0qFubHHQypIwjkD-W7tsjLJArVKn9iR-QoT8t-UijtITl4TuyHzK-cxqDDCkCBoJB-seakq1gbt1iQ]]>
+                        </Parameter>
+                              <Parameter name="maxResults">
+                                <![CDATA[1000]]>
                         </Parameter>
                         <Parameter name="maxRequests">
-                                <![CDATA[1]]>
+                                <![CDATA[10]]>
                         </Parameter>
                         <Parameter name="maxRunningTime">
-								<![CDATA[10000]]>
+							<![CDATA[30000]]>
+						</Parameter>
+                </Stream> 
+                
+                <!-- Flickr Stream Handler  -->
+                <Stream id="Flickr">
+                        <Parameter name="Classpath">
+                                <![CDATA[eu.socialsensor.sfc.streams.impl.FlickrStream]]>
+                        </Parameter>
+                        <Parameter name="Key">
+                                <![CDATA[029eab4d06c40e08670d78055bf61205]]>
+                        </Parameter>
+                        <Parameter name="Secret">
+                                <![CDATA[bc4105126a4dfb8c]]>
+                        </Parameter>
+                              <Parameter name="maxResults">
+                                <![CDATA[10000]]>
+                        </Parameter>
+                        <Parameter name="maxRequests">
+                                <![CDATA[10]]>
+                        </Parameter>
+                        <Parameter name="maxRunningTime">
+							<![CDATA[30000]]>
+						</Parameter>
+                </Stream>
+                
+                <!-- Google+ Stream Handler -->
+                <Stream id="GooglePlus">
+                        <Parameter name="Classpath">
+                                <![CDATA[eu.socialsensor.sfc.streams.impl.GooglePlusStream]]>
+                        </Parameter>
+                        <Parameter name="Key">
+                                <![CDATA[AIzaSyCb_AeWe-ACSzlDRLqjNY9EADIWEXteKYc]]>
+                        </Parameter>
+                        <Parameter name="Secret">
+                                <![CDATA[-w2HCOTkDSFjgVuu9aVHwS7T]]>
+                        </Parameter>
+                        <Parameter name="ClientId">
+                                <![CDATA[407623149661.apps.googleusercontent.com]]>
+                        </Parameter>
+                      <Parameter name="maxResults">
+                                <![CDATA[5000]]>
+                        </Parameter>
+                        <Parameter name="maxRequests">
+                                <![CDATA[10]]>
+                        </Parameter>
+                        <Parameter name="maxRunningTime">
+								<![CDATA[30000]]>
 						</Parameter>
                         
                 </Stream>
-                 --> 
+                  
                 <!-- Tumblr Stream Handler  
                 <Stream id="Tumblr">
                         <Parameter name="Classpath">
@@ -274,36 +294,33 @@
                 </Stream>
                 
                 -->
-                <!--  Instagram Stream Handler 
+                
+                <!--  Instagram Stream Handler -->
                 <Stream id="Instagram">
                         <Parameter name="Classpath">
-                                <![CDATA[eu.socialsensor.framework.streams.socialmedia.instagram.InstagramStream]]>
+                                <![CDATA[eu.socialsensor.sfc.streams.impl.InstagramStream]]>
                         </Parameter>
-                        <Parameter name="Key">
-                                <![CDATA[your.key]]>
-                        </Parameter>
-                        <Parameter name="Secret">
-                                <![CDATA[your.secret.key]]>
-                        </Parameter>
-                        <Parameter name="AccessToken">
-                                <![CDATA[your.accesstoken]]>
-                        </Parameter>
-                        <Parameter name="since">
-                        		<![CDATA[2013-10-01 00:00:00.000]]>
-                      	</Parameter>
+                       	<Parameter name="Key">
+							<![CDATA[5bc7be32dbaa46ceaf98fc93f03fcfce]]>
+						</Parameter>
+						<Parameter name="Secret">
+							<![CDATA[e53597da6d7749d2a944651bbe6e6f2a]]>
+						</Parameter>
+						<Parameter name="AccessToken">
+							<![CDATA[342704836.5b9e1e6.503a35185da54224adaa76161a573e71]]>
+						</Parameter>
                       	<Parameter name="maxResults">
-                                <![CDATA[50]]>
+                                <![CDATA[50000]]>
                         </Parameter>
                         <Parameter name="maxRequests">
-                                <![CDATA[1]]>
+                                <![CDATA[20]]>
                         </Parameter>
                         <Parameter name="maxRunningTime">
-								<![CDATA[10000]]>
+								<![CDATA[30000]]>
 						</Parameter>
                         
                 </Stream> 
-        -->
-        
+
         </Streams>
         
 </Configuration>

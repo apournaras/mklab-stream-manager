@@ -21,6 +21,7 @@ public abstract class SearchHandler extends Thread {
 	protected StreamsMonitor monitor = null;
 	
 	private boolean isAlive = true;
+	private long totalRetrievedItems = 0;
 	
 	protected BlockingQueue<Dysco> dyscosQueue = new LinkedBlockingDeque<Dysco>();
 	protected Map<String, List<Feed>> inputFeedsPerDysco = Collections.synchronizedMap(new HashMap<String, List<Feed>>());
@@ -51,7 +52,9 @@ public abstract class SearchHandler extends Thread {
 							logger.error(e);
 						}
 					}		
+					
 					items.addAll(monitor.getTotalRetrievedItems());
+					totalRetrievedItems += items.size();
 				}
 			} catch (Exception e) {
 				logger.error(e);
@@ -71,6 +74,8 @@ public abstract class SearchHandler extends Thread {
 			logger.error(e);
 		}
 	}
+	
+	public abstract void deleteDysco(String dyscoId);
 	
 	public void run() {
 		Dysco dysco = null;
@@ -124,6 +129,12 @@ public abstract class SearchHandler extends Thread {
 	 */
 	protected Dysco poll() {
 		return dyscosQueue.poll();
+	}
+	
+	public void status() {
+		logger.info("DyscoQueue:" + dyscosQueue.size());
+		logger.info("inputFeedsPerDysco:" + inputFeedsPerDysco.size());
+		logger.info("totalRetrievedItems:" + totalRetrievedItems);
 	}
 	
 	protected abstract void searchForDysco(Dysco dysco);

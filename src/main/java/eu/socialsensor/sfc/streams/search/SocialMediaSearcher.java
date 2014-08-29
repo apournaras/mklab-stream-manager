@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -40,7 +39,7 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
  * @author ailiakop
  * @email ailiakop@iti.gr
  */
-public class SocialMediaSearcher {
+public class SocialMediaSearcher extends Thread {
 	
 	private static String REDIS_HOST = "redis.host";
 	private static String REDIS_CHANNEL = "channel";
@@ -65,11 +64,9 @@ public class SocialMediaSearcher {
 	private DyscoRequestHandler dyscoRequestHandler;
 	private DyscoRequestReceiver dyscoRequestReceiver;
 	
-	private DyscoUpdateThread dyscoUpdateThread;
-	
 	// Handlers of Incoming Dyscos
-	private TrendingSearchHandler trendingSearchHandler;
-	private CustomSearchHandler customSearchHandler;
+	private SearchHandler trendingSearchHandler;
+	private SearchHandler customSearchHandler;
 	
 	private String redisHost;
 	private String redisChannel;
@@ -78,9 +75,10 @@ public class SocialMediaSearcher {
 	private String dyscoCollection;
 	
 	private Map<String, Stream> streams = null;
-	
-	private BlockingQueue<String> dyscosToDelete = new LinkedBlockingQueue<String>();
+
 	private Queue<Dysco> dyscosToUpdate = new LinkedBlockingQueue<Dysco>();
+	
+	private SolrDyscoHandler solrdyscoHandler = null;
 	
 	public SocialMediaSearcher(StreamsManagerConfiguration config) throws StreamException {
 		
@@ -153,28 +151,59 @@ public class SocialMediaSearcher {
 		
 		String solrServiceUrl = solrHost + "/" + solrService + "/" + dyscoCollection;
 		
+		solrdyscoHandler = SolrDyscoHandler.getInstance(solrServiceUrl);
+		
 		//start handlers
 		dyscoRequestReceiver = new DyscoRequestReceiver(redisHost, redisChannel);
 		dyscoRequestHandler = new DyscoRequestHandler(solrServiceUrl);
 		
-		dyscoUpdateThread = new DyscoUpdateThread(solrServiceUrl, dyscosToUpdate);
-		
 		trendingSearchHandler = new TrendingSearchHandler(monitor, dyscosToUpdate);
-		customSearchHandler = new CustomSearchHandler(monitor, dyscosToDelete);
+		customSearchHandler = new CustomSearchHandler(monitor);
 		
 		dyscoRequestHandler.start();
-		dyscoUpdateThread.start();
         
 		trendingSearchHandler.start();
 		customSearchHandler.start();
 		
 		dyscoRequestReceiver.start();
+		this.start();
 		
 		logger.info("Set state to open");
 		state = MediaSearcherState.OPEN;
 		
 		logger.info("Add Shutdown Hook for MediaSeacrher");
 		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
+	}
+	
+	public void run() {
+		Dysco dyscoToUpdate = null;
+		
+		while(state == MediaSearcherState.OPEN) {
+			dyscoToUpdate = dyscosToUpdate.poll();
+			if(dyscoToUpdate == null) {
+				try {
+					synchronized(this) {
+						this.wait(1000);
+					}
+				} catch (InterruptedException e) {
+					logger.error(e);
+				}
+				continue;
+			}
+			else {
+				try {
+					Dysco previousDysco = solrdyscoHandler.findDyscoLight(dyscoToUpdate.getId());
+					previousDysco.getSolrQueries().clear();
+					previousDysco.setSolrQueries(dyscoToUpdate.getSolrQueries());
+					solrdyscoHandler.insertDysco(previousDysco);
+				
+					logger.info("Dysco: " + dyscoToUpdate.getId() + " is updated");
+				}
+				catch(Exception e) {
+					logger.error(e);
+				}
+			}
+		}
 	}
 	
 	/**
@@ -200,9 +229,13 @@ public class SocialMediaSearcher {
 				logger.info("DyscoRequestHandler is closed.");
 			}
 			
+			trendingSearchHandler.close();
+			customSearchHandler.close();
+			
 			state = MediaSearcherState.CLOSE;
 			logger.info("MediaSearcher closed.");
-		}catch(Exception e) {
+		}
+		catch(Exception e) {
 			throw new StreamException("Error during streams close", e);
 		}
 	}
@@ -235,9 +268,8 @@ public class SocialMediaSearcher {
 		logger.info("DyscoRequestHandler.isAlive: " + dyscoRequestHandler.isAlive);
 		logger.info("TrendingSearchHandler " + trendingSearchHandler.getState());
 		logger.info("CustomSearchHandler " + customSearchHandler.getState());
-		logger.info("DyscoUpdateThread " + dyscoUpdateThread.getState());
-		
-		logger.info("#RequestsToDelete: " + dyscosToDelete.size());
+		logger.info("DyscoUpdateThread " + this.getState());
+
 		logger.info("#DyscosToUpdate: " + dyscosToUpdate.size());
 		
 		logger.info("#Streams: " + streams.size());
@@ -291,7 +323,7 @@ public class SocialMediaSearcher {
 				    			}
 					    	
 				    			if(dysco == null) {
-				    				logger.error("Invalid dysco request: " + dyscoId + ". Dysco does not exist!");
+				    				logger.error("Invalid dysco request: Dysco " + dyscoId + " does not exist!");
 				    				continue;
 				    			}
 				    		
@@ -319,11 +351,11 @@ public class SocialMediaSearcher {
 				    			continue;
 				    		case UPDATE:
 				    			logger.info("Dysco with id: " + dyscoId + " needs update");
-				    			//noting to do
+				    			//nothing to do
 				    			continue;
 				    		case DELETE:
 				    			logger.info("Delete Dysco with id : " + dyscoId);
-				    			dyscosToDelete.add(dyscoId);
+				    			customSearchHandler.deleteDysco(dyscoId);
 				    			continue;
 				    	}	
 					}
@@ -344,7 +376,6 @@ public class SocialMediaSearcher {
 			}
 		}
 	}
-	
 	
 	
 	
@@ -378,6 +409,19 @@ public class SocialMediaSearcher {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+//		SolrDyscoHandler handler = SolrDyscoHandler.getInstance("http://socialsensor.atc.gr/solr/dyscos");
+//		
+//		Dysco dysco = handler.findDyscoLight("340a5e42-6bee-4a38-8917-00db1f46bdff");
+//		FeedsCreator feedsCreator = new FeedsCreator(DataInputType.DYSCO, dysco);
+//		List<Feed> feeds = feedsCreator.getQuery();
+//		
+//		System.out.println(feeds.size() + " feeds");
+//		for(Feed feed : feeds)
+//			System.out.println(feed.toJSONString());
+//		
+//		if(!feeds.equals(""))
+//			return;
 		
 		File configFile = null;
 		if(args.length != 1 ) {

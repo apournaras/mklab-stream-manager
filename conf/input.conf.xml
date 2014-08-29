@@ -1,14 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
-		<!--  -->
+
+		<!--   -->
 	   <StorageInput>
 	   		<Storage id = "Mongodb">
 	   			<Parameter name="host"><![CDATA[160.40.50.207]]></Parameter>
-	   			<Parameter name="database"><![CDATA[Prototype]]></Parameter>
-	   			<Parameter name="collection"><![CDATA[Sources]]></Parameter>
+	   			<Parameter name="database"><![CDATA[PressRelations]]></Parameter>
+	   			<Parameter name="sources.collection"><![CDATA[Sources]]></Parameter>
+	   			<Parameter name="keywords.collection"><![CDATA[Keywords]]></Parameter>
+	  			<Parameter name="since">
+		        	<![CDATA[2014-06-10 00:00:00.000]]>
+		      	</Parameter>
 	   		</Storage>
 	   </StorageInput>
-	   
+	  <!--
+	 	<StorageInput>
+	   		<Storage id = "Mongodb">
+	   			<Parameter name="host"><![CDATA[160.40.50.207]]></Parameter>
+	   			<Parameter name="database"><![CDATA[Prototype]]></Parameter>
+	   			<Parameter name="sources.collection"><![CDATA[Sources]]></Parameter>
+	  			<Parameter name="since">
+		        	<![CDATA[2014-06-10 00:00:00.000]]>
+		      	</Parameter>
+	   		</Storage>
+	   </StorageInput>
+	   -->
 	   
 	   <StreamInput>
 	   		<!-- 
@@ -20,7 +36,7 @@
 		        	<![CDATA[]]>
 		      	</Parameter>
 		      	<Parameter name="follows">
-	        		<![CDATA[]]>
+	        		<![CDATA[LiebherrMaritime,LiebherrUSA,LiebherrMining,LiebherrConstruction,LiebherrKarriere]]>
 	        	</Parameter>
 	        	<Parameter name="locations">
 	        		<![CDATA[]]>
@@ -34,10 +50,10 @@
 		        	<![CDATA[2013-10-31 00:00:00.000]]>
 		      	</Parameter>
 		       	<Parameter name="keywords">
-		        	<![CDATA[]]>
+		        	<![CDATA[@Liebherr,@LH_Construction,@LH_Maritime,@LiebherrCT,@liebherrfridges,#Liebherr,Liebherr,LiebherrConstruction,liebherr AND cranes,Liebherr AND Maritime,Liebherr AND refrigerator,Liebherr AND Fridge]]>
 		        </Parameter>
 	            <Parameter name="follows">
-		        	<![CDATA[]]>
+		        	<![CDATA[Liebherr,LH_Maritime,LiebherrCT,LH_Construction,liebherrfridges]]>
 		        </Parameter>
 		        <Parameter name="locations">
 		        	<![CDATA[]]>
@@ -46,27 +62,29 @@
 			-->
 				
 			<!--
-			<Stream id="YouTube">
+			<Stream id="Youtube">
 				<Parameter name="since">
 		        	<![CDATA[2013-10-31 00:00:00.000]]>
 		      	</Parameter>
 				<Parameter name="keywords">
-		        	<![CDATA[rihanna]]>
+		        	<![CDATA[liebherr]]>
 		      	</Parameter>
 		      	<Parameter name="follows">
-		        	<![CDATA[]]>
+		        	<![CDATA[liebherr,LiebherrHausgeraete,pejoha100]]>
 		        </Parameter>
 		        <Parameter name="locations">
 		        	<![CDATA[]]>
 		        </Parameter>
 			</Stream> 
+			 -->
 			
+			<!--
 			<Stream id="Flickr">
 				<Parameter name="since">
 		        	<![CDATA[2013-10-31 00:00:00.000]]>
 		      	</Parameter>
 				<Parameter name="keywords">
-		        	<![CDATA[rihanna]]>
+		        	<![CDATA[liebherr]]>
 		      	</Parameter>
 		      	<Parameter name="follows">
 		        	<![CDATA[]]>
@@ -75,28 +93,32 @@
 		        	<![CDATA[]]>
 		        </Parameter>
 			</Stream>
-	
+			-->
+			
+			<!-- 
 			<Stream id="GooglePlus">
 				<Parameter name="since">
 		        	<![CDATA[2013-10-31 00:00:00.000]]>
 		      	</Parameter>
 				 <Parameter name="keywords">
-		        	<![CDATA[rihanna]]>
+		        	<![CDATA[Liebherr,liebherr4me]]>
 		      	</Parameter>
 		      	<Parameter name="follows">
-		        	<![CDATA[]]>
+		        	<![CDATA[LiebherrConstruction,LiebherrMaritime,LiebherrMining]]>
 		        </Parameter>
 		        <Parameter name="locations">
 		        	<![CDATA[]]>
 		        </Parameter>
 			</Stream>
-			 
+			-->
+			
+			<!--   
 			<Stream id="Tumblr">
 				<Parameter name="since">
 		        	<![CDATA[2013-10-31 00:00:00.000]]>
 		      	</Parameter>
 				 <Parameter name="keywords">
-		        	<![CDATA[rihanna]]>
+		        	<![CDATA[liebherr]]>
 		      	</Parameter>
 		      	<Parameter name="follows">
 		        	<![CDATA[]]>
@@ -105,13 +127,15 @@
 		        	<![CDATA[]]>
 		        </Parameter>
 			</Stream>
+			-->
 			
+			<!-- 
 			<Stream id="Instagram">
 				<Parameter name="since">
 		        	<![CDATA[2013-10-31 00:00:00.000]]>
 		      	</Parameter>
 				 <Parameter name="keywords">
-		        	<![CDATA[rihanna]]>
+		        	<![CDATA[liebherr]]>
 		      	</Parameter>
 		      	<Parameter name="follows">
 		        	<![CDATA[]]>
@@ -120,7 +144,7 @@
 		        	<![CDATA[]]>
 		        </Parameter>
 			</Stream> 
-	   		-->
+	   		--> 
 	   		
 	   </StreamInput>
    		 
