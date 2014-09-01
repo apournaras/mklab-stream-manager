@@ -184,13 +184,18 @@ public abstract class Stream implements Runnable {
 	 * @param item
 	 */
 	public synchronized void store(Item item) {
+		
 		if(handler == null) {
 			logger.error("NULL Handler!");
 			return;
 		}
 			
-		if(usersToLists != null && getUserList(item) != null)
+		if(usersToLists != null && getUserList(item) != null) {
 			item.setList(getUserList(item));
+		}
+		else {
+			return;
+		}
 		
 		if(usersToCategory != null && getUserCategory(item) != null)
 			item.setCategory(getUserCategory(item));
@@ -238,11 +243,9 @@ public abstract class Stream implements Runnable {
 		}
 		
 		if(lists.size() > 0) {
-	
 			return lists.toArray(new String[lists.size()]);
 		}
 		else {
-	
 			return null;
 		}
 		
