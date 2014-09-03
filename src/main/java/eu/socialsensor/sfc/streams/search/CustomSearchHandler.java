@@ -12,6 +12,8 @@ import org.apache.log4j.Logger;
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
+import eu.socialsensor.sfc.input.DataInputType;
+import eu.socialsensor.sfc.input.FeedsCreator;
 import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 
 /**
@@ -47,7 +49,7 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 				dyscosTimestamps.put(dyscoId, currentTimestamp);
 				dyscos.put(dyscoId, dysco);
 				
-				super.addDysco(dysco, inputFeeds);
+				super.addDysco(dysco);
 				
 			}
 			catch(Exception e) {
@@ -101,7 +103,10 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 			String dyscoId = dysco.getId();
 			logger.info("Custom Media Searcher handling: " + dyscoId);
 			try {
-				List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
+				//List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
+				FeedsCreator feedsCreator = new FeedsCreator(DataInputType.DYSCO, dysco);
+				List<Feed> feeds = feedsCreator.getQuery();
+				
 				List<Item> customDyscoItems = search(feeds);
 				logger.info("Total Items retrieved for Custom DySco " + dyscoId + " : " + customDyscoItems.size());
 			}
@@ -112,7 +117,6 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 
 		@Override
 		public void deleteDysco(String dyscoId) {
-			inputFeedsPerDysco.remove(dyscoId);
 			dyscosLifetime.remove(dyscoId);
 			dyscosTimestamps.remove(dyscoId);
 			Dysco dysco = dyscos.remove(dyscoId);

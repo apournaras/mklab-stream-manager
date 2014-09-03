@@ -1,10 +1,11 @@
 package eu.socialsensor.sfc.streams.search;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -12,7 +13,12 @@ import org.apache.log4j.Logger;
 
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.Item;
+import eu.socialsensor.framework.common.domain.Keyword;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
+import eu.socialsensor.framework.common.domain.dysco.Entity;
+import eu.socialsensor.framework.common.domain.dysco.Entity.Type;
+import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
+import eu.socialsensor.framework.common.util.DateUtil;
 import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 
 public abstract class SearchHandler extends Thread {
@@ -24,8 +30,6 @@ public abstract class SearchHandler extends Thread {
 	private long totalRetrievedItems = 0;
 	
 	protected BlockingQueue<Dysco> dyscosQueue = new LinkedBlockingDeque<Dysco>();
-	protected Map<String, List<Feed>> inputFeedsPerDysco = Collections.synchronizedMap(new HashMap<String, List<Feed>>());
-	//protected Map<String, List<Feed>> inputFeedsPerDysco = new ConcurrentHashMap<String, List<Feed>>();
 	
 	public SearchHandler(StreamsMonitor monitor) {
 		this.monitor = monitor;
@@ -38,37 +42,93 @@ public abstract class SearchHandler extends Thread {
 	 * @param streamsToSearch
 	 * @return the list of the items retrieved
 	 */
-	public List<Item> search(List<Feed> feeds) {
+	protected synchronized List<Item> search(List<Feed> feeds) {
 		List<Item> items = new ArrayList<Item>();
-		
 		if(feeds != null && !feeds.isEmpty()) {
 			try {
-				synchronized(monitor) {	
-					monitor.retrieve(feeds);	
-					while(!monitor.areAllStreamsFinished()) {
-						try {
-							Thread.sleep(500);
-						} catch (InterruptedException e) {
-							logger.error(e);
-						}
-					}		
+				monitor.retrieve(feeds);	
+				while(!monitor.areStreamsFinished()) {
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException e) {
+						logger.error(e.getMessage());
+					}
+				}		
 					
-					items.addAll(monitor.getTotalRetrievedItems());
-					totalRetrievedItems += items.size();
-				}
+				items.addAll(monitor.getTotalRetrievedItems());
+				totalRetrievedItems += items.size();
+					
+				monitor.reset();
 			} catch (Exception e) {
-				logger.error(e);
+				logger.error(e.getMessage());
+				monitor.reset();
 			}
 		}
 		return items;
 	}
 	
-	public void addDysco(Dysco dysco, List<Feed> inputFeeds) {
+	/**
+	 * Transforms Query instances to KeywordsFeed instances that will be used 
+	 * for searching social media
+	 * @param queries
+	 * @param dateToRetrieve
+	 * @return the list of feeds
+	 */
+	public List<Feed> getSimpleFeeds(Dysco dysco) {
+		
+		List<Feed> feeds = new ArrayList<Feed>();
+		
+		DateUtil dateUtil = new DateUtil();
+		Date dateToRetrieve = dateUtil.addDays(dysco.getCreationDate(), -1);
+		
+		Map<String, Double> keywords = dysco.getKeywords();
+		for(Entry<String, Double> entry : keywords.entrySet()) {
+			
+			String text = entry.getKey();
+			String[] parts = text.split("\\s+");
+			
+			if(parts.length < 2)
+				continue;
+			
+			UUID UUid = UUID.randomUUID(); 
+			Keyword keyword = new Keyword(text, entry.getValue());
+			KeywordsFeed feed = new KeywordsFeed(keyword, dateToRetrieve, UUid.toString());
+			feeds.add(feed);
+		}
+		
+		List<Entity> entities = dysco.getEntities();
+		for(Entity entity : entities) {
+			if(entity.getType().equals(Type.LOCATION))
+				continue;
+			
+			UUID UUid = UUID.randomUUID(); 
+			Keyword keyword = new Keyword(entity.getName(), entity.getCont());
+			KeywordsFeed feed = new KeywordsFeed(keyword, dateToRetrieve, UUid.toString());
+			feeds.add(feed);
+		}
+		
+		Map<String, Double> hashtags = dysco.getHashtags();
+		for(Entry<String, Double> entry : hashtags.entrySet()) {
+			
+			String hashtag = entry.getKey();
+			hashtag = hashtag.replaceAll("#", "");
+			
+			if(hashtag.length() < 4)
+				continue;
+			
+			UUID UUid = UUID.randomUUID(); 
+			Keyword keyword = new Keyword(hashtag, entry.getValue());
+			KeywordsFeed feed = new KeywordsFeed(keyword, dateToRetrieve, UUid.toString());
+			feeds.add(feed);
+		}
+
+		return feeds;
+	}
+	
+	public void addDysco(Dysco dysco) {
 		try {
-			logger.info("New incoming Trending DySco: " + dysco.getId() + " with " + inputFeeds.size() + " searchable feeds");
 			dyscosQueue.put(dysco);
-			inputFeedsPerDysco.put(dysco.getId(), inputFeeds);
-			logger.info("Putted in dyscos queue (" + dyscosQueue.size() + ")");
+			logger.info(dysco.getId() + " putted in dyscos queue (" + dyscosQueue.size() + ")");
 		}
 		catch(Exception e) {
 			logger.error(e);
@@ -78,16 +138,13 @@ public abstract class SearchHandler extends Thread {
 	public abstract void deleteDysco(String dyscoId);
 	
 	public void run() {
-		Dysco dysco = null;
 		while(isAlive) {
-			
-			update();
-			 
-			dysco = poll();
+			update(); 
+			Dysco dysco = dyscosQueue.poll();
 			if(dysco == null) {
 				try {
 					synchronized(this) {
-						this.wait(1000);
+						this.wait(100);
 					}
 				} catch (InterruptedException e) {
 					logger.error(e.getMessage());
@@ -100,7 +157,7 @@ public abstract class SearchHandler extends Thread {
 				}
 				catch(Exception e) {
 					logger.error("Error during searching for dysco: " + dysco.getId() + " of type: " + dysco.getDyscoType());
-					logger.error("Exception: " + e);
+					logger.error("Exception: " + e.getMessage());
 				}
 			}
 		}
@@ -119,22 +176,13 @@ public abstract class SearchHandler extends Thread {
 		}
 	}
 	
-	/**
-	 * Polls a DySco request from the queue to search
-	 * @return Dysco
-	 */
-	/**
-	 * Polls a trending DySco request from the queue to search
-	 * @return
-	 */
-	protected Dysco poll() {
-		return dyscosQueue.poll();
-	}
-	
 	public void status() {
 		logger.info("DyscoQueue:" + dyscosQueue.size());
-		logger.info("inputFeedsPerDysco:" + inputFeedsPerDysco.size());
 		logger.info("totalRetrievedItems:" + totalRetrievedItems);
+		
+		if(dyscosQueue.size() > 70) {
+			dyscosQueue.clear();
+		}
 	}
 	
 	protected abstract void searchForDysco(Dysco dysco);
