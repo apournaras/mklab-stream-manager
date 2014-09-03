@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.log4j.Logger;
 
@@ -36,19 +37,32 @@ public class StreamsMonitor {
 	private Map<String, Long> runningTimePerStream = new HashMap<String, Long>();
 	
 	private Map<String, StreamFetchTask> streamsFetchTasks = new HashMap<String, StreamFetchTask>();
-	
-	private List<Item> retrievedItems = new ArrayList<Item>();
+	private Map<String, Future<List<Item>>> responses = new HashMap<String, Future<List<Item>>>();
 	
 	boolean isFinished = false;
 	
-	private ReInitializer reInitializer = new ReInitializer();
+	private ReInitializer reInitializer;
 	
 	public StreamsMonitor(int numberOfStreams) {
+		logger.info("Initialize Execution Searvice with " + numberOfStreams + " threads.");
 		executor = Executors.newFixedThreadPool(numberOfStreams);
 	}
 	
 	public List<Item> getTotalRetrievedItems() {
-		return retrievedItems;
+		List<Item> totalRetrievedItems = new ArrayList<Item>();
+		for(String streamId : responses.keySet()) {
+			try {
+				Future<List<Item>> response = responses.get(streamId);
+				List<Item> retrievedItems = response.get();
+				if(retrievedItems != null) {
+					logger.info("Got " + retrievedItems.size() + " items from " + streamId);
+					totalRetrievedItems.addAll(retrievedItems);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return totalRetrievedItems;
 	}
 	
 	public int getNumberOfStreamFetchTasks() {
@@ -138,7 +152,7 @@ public class StreamsMonitor {
 			StreamFetchTask streamTask = new StreamFetchTask(streams.get(streamId), feeds);
 			
 			streamsFetchTasks.put(streamId, streamTask);
-			executor.execute(streamTask);
+			executor.submit(streamTask);
 			runningTimePerStream.put(streamId, System.currentTimeMillis());
 			
 			logger.info("Start stream task: " + streamId + " with " + feedsPerStream.get(streamId).size() + " feeds");
@@ -157,10 +171,12 @@ public class StreamsMonitor {
 		for(String streamId : streams.keySet()){
 			startStream(streamId);
 		}
+		reInitializer = new ReInitializer();
 		reInitializer.start();
 	}
 	
 	public void startReInitializer() {
+		reInitializer = new ReInitializer();
 		reInitializer.start();
 	}
 	
@@ -171,21 +187,17 @@ public class StreamsMonitor {
 	 * 	@throws Exception 
 	 */
 	public void retrieve(List<Feed> feeds) throws Exception {
-		retrievedItems.clear();
 		for(Map.Entry<String, Stream> entry : streams.entrySet()) {
 			String streamId = entry.getKey();
 			try {
-				
-				StreamFetchTask fetchTask = new StreamFetchTask(entry.getValue(), feeds);
-				streamsFetchTasks.put(streamId, fetchTask);
-				executor.execute(fetchTask);
-				runningTimePerStream.put(streamId, System.currentTimeMillis());
-			
-				System.out.println("Start stream task : " + streamId + " with " + feeds.size() + " feeds");
+				Stream stream = entry.getValue();
+				StreamFetchTask fetchTask = new StreamFetchTask(stream, feeds);
+				Future<List<Item>> response = executor.submit(fetchTask);
+				responses.put(streamId, response);
 			}
 			catch(Exception e) {
-				logger.error(e);
-				streamsFetchTasks.remove(streamId);
+				e.printStackTrace();
+				logger.error(e.getMessage());
 			}
 		}
 	}
@@ -198,16 +210,14 @@ public class StreamsMonitor {
 	 * @param feeds
 	 */
 	public void retrieve(Set<String> streamIds, List<Feed> feeds) {
-		retrievedItems.clear();
 		for(Map.Entry<String, Stream> entry : streams.entrySet()) {
-			if(streamIds.contains(entry.getKey())) {
+			String streamId = entry.getKey();
+			if(streamIds.contains(streamId)) {
 				try {
-					StreamFetchTask streamTask = new StreamFetchTask(entry.getValue(), feeds);
-					
-					streamsFetchTasks.put(entry.getKey(), streamTask);
-					executor.execute(streamTask);
-					runningTimePerStream.put(entry.getKey(), System.currentTimeMillis());
-					
+					Stream stream = entry.getValue();
+					StreamFetchTask fetchTask = new StreamFetchTask(stream, feeds);
+					Future<List<Item>> response = executor.submit(fetchTask);
+					responses.put(streamId, response);
 					logger.info("Start stream task : " + entry.getKey() + " with " + feeds.size() + " feeds");
 				} catch (Exception e) {
 					logger.error(e);
@@ -239,8 +249,10 @@ public class StreamsMonitor {
 				for(String streamId : runningTimePerStream.keySet()) {
 					if((currentTime - runningTimePerStream.get(streamId)) >= requestTimePerStream.get(streamId)) {
 						if(streamsFetchTasks.get(streamId).isCompleted()) {
-							streamsFetchTasks.get(streamId).restartTask();
-							executor.execute(streamsFetchTasks.get(streamId));
+							streamsFetchTasks.get(streamId).restartTask();				
+							StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);				
+							//executor.execute(fetchTask);
+							executor.submit(fetchTask);				
 							reformedRunningTimes.put(streamId, System.currentTimeMillis());
 						}
 					}
@@ -267,8 +279,8 @@ public class StreamsMonitor {
 	 * Checks if all streams are finished retrieving items
 	 * and if so sets returns true
 	 * @return
-	 */
-	public boolean areAllStreamsFinished() {
+	
+	public boolean areStreamsFinished() {
 		int streamsDone = 0;
 		int runningStreams = streamsFetchTasks.size();
 		
@@ -283,9 +295,8 @@ public class StreamsMonitor {
 					streamsDone++;
 				}	
 			}
-			
 			try {
-				Thread.sleep(500);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -294,6 +305,26 @@ public class StreamsMonitor {
 		streamsFetchTasks.clear();
 		finishedTasks.clear();
 		
+		return true;
+	}
+	*/
+	
+	/**
+	 * Checks if all streams are finished retrieving items if so sets returns true
+	 * @return
+	 */
+	public boolean areStreamsFinished() {		
+		for(String streamId : responses.keySet()) {
+			Future<List<Item>> response = responses.get(streamId);	
+			try {
+				if(response.get() == null)
+					return false;
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
 		return true;
 	}
 	
@@ -313,6 +344,14 @@ public class StreamsMonitor {
         	logger.info("Waiting for StreamsMonitor to shutdown");
         }
         logger.info("Streams Monitor stopped");
+	}
+	
+	public void reset() {
+		requestTimePerStream.clear();
+		runningTimePerStream.clear();
+		feedsPerStream.clear();
+		streamsFetchTasks.clear();
+		responses.clear();
 	}
 	
 	public void status() {

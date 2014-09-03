@@ -2,10 +2,12 @@ package eu.socialsensor.sfc.streams.monitors;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.apache.log4j.Logger;
 
 import eu.socialsensor.framework.common.domain.Feed;
+import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.sfc.streams.Stream;
 
 
@@ -16,7 +18,7 @@ import eu.socialsensor.sfc.streams.Stream;
  * @author ailiakop
  * @email  ailiakop@iti.gr
  */
-public class StreamFetchTask implements Runnable {
+public class StreamFetchTask implements  Callable<List<Item>> {
 	
 	private final Logger logger = Logger.getLogger(StreamFetchTask.class);
 	
@@ -78,14 +80,17 @@ public class StreamFetchTask implements Runnable {
 	 * making rest calls to stream's API. 
 	 */
 	@Override
-	public void run() {
+	public List<Item> call() throws Exception {
 		try {
-			stream.poll(feeds);
+			List<Item> items = stream.poll(feeds);
 			completed = true;
 			
+			return items;
 		} catch (Exception e) {
 			logger.error("ERROR IN STREAM FETCH TASK: " + e.getMessage());
 			completed = true;
 		}
+		
+		return new ArrayList<Item>();
 	}
 }
