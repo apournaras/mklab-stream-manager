@@ -1,7 +1,6 @@
 package eu.socialsensor.sfc.input;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +23,7 @@ import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
 import eu.socialsensor.framework.common.domain.feeds.ListFeed;
 import eu.socialsensor.framework.common.domain.feeds.LocationFeed;
 import eu.socialsensor.framework.common.domain.feeds.SourceFeed;
+import eu.socialsensor.framework.common.util.DateUtil;
 import eu.socialsensor.framework.common.util.Util;
 
 /**
@@ -138,9 +138,8 @@ public class DyscoInputReader implements InputReader{
 				if(solrQuery.getScore() != null)
 					score = solrQuery.getScore();
 				
-				Keyword key = new Keyword(queryName,score);
-			
-				queryKeywords.add(key);
+				Keyword keyword = new Keyword(queryName, score);
+				queryKeywords.add(keyword);
 			}
 		}
 		
@@ -217,18 +216,5 @@ public class DyscoInputReader implements InputReader{
 	public Map<String,Category> getUsersToCategories(){
 		return null;
 	}
-	
-	/**
-	 * Class for handling date util
-	 * @author ailiakop
-	 *
-	 */
-	public class DateUtil {
-	    public Date addDays(Date date, int days) {
-	        Calendar cal = Calendar.getInstance();
-	        cal.setTime(date);
-	        cal.add(Calendar.DATE, days); //negative number decrements the days
-	        return cal.getTime();
-	    }
-	}
+
 }

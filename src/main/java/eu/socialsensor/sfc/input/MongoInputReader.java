@@ -110,15 +110,15 @@ public class MongoInputReader implements InputReader{
 			//else if(stream.equals("RSS"))
 			//	this.streamType = NewsFeedSource.RSS.name();
 	
-			Map<FeedType,Object> inputData = getData();
-			
-			for(FeedType feedType : inputData.keySet()){
+			Map<FeedType, Object> inputData = getData();
+
+			for(FeedType feedType : inputData.keySet()) {
 
 				switch(feedType){
 				case SOURCE :
 					@SuppressWarnings("unchecked")
 					List<Source> sources = (List<Source>) inputData.get(feedType);
-					for(Source source : sources){
+					for(Source source : sources) {
 						String feedID = source.getNetwork() + "#" + source.getName(); //UUID.randomUUID().toString();
 						SourceFeed sourceFeed = new SourceFeed(source,sinceDate,feedID);
 						sourceFeed.setLabel(source.getList());				
@@ -128,7 +128,7 @@ public class MongoInputReader implements InputReader{
 				case URL :
 					@SuppressWarnings("unchecked")
 					List<String> rssSources = (List<String>) inputData.get(feedType);
-					for(String url : rssSources){
+					for(String url : rssSources) {
 						String feedID = url;//UUID.randomUUID().toString();
 						URLFeed sourceFeed = new URLFeed(url,sinceDate,feedID);
 						feedsPerStream.add(sourceFeed);
@@ -137,7 +137,7 @@ public class MongoInputReader implements InputReader{
 				case KEYWORDS : 
 					@SuppressWarnings("unchecked")
 					List<Keyword> keywords = (List<Keyword>) inputData.get(feedType);
-					for(Keyword keyword : keywords){
+					for(Keyword keyword : keywords) {
 						String feedID = UUID.randomUUID().toString();
 						KeywordsFeed keywordsFeed = new KeywordsFeed(keyword,sinceDate,feedID);
 						keywordsFeed.setLabel(keyword.getLabel());
@@ -147,7 +147,7 @@ public class MongoInputReader implements InputReader{
 				case LOCATION :
 					@SuppressWarnings("unchecked")
 					List<Location> locations = (List<Location>) inputData.get(feedType);
-					for(Location location : locations){
+					for(Location location : locations) {
 						String feedID = UUID.randomUUID().toString();
 						LocationFeed locationFeed = new LocationFeed(location,sinceDate,feedID);
 						feedsPerStream.add(locationFeed);
@@ -169,11 +169,11 @@ public class MongoInputReader implements InputReader{
 	}
 	
 	@Override
-	public Map<FeedType,Object> getData(){
+	public Map<FeedType, Object> getData() {
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 		String since = storage_config.getParameter(SINCE);
-		if(since != null){
+		if(since != null) {
 			try {
 				sinceDate = (Date) formatter.parse(since);
 			} catch (ParseException e) {
@@ -181,7 +181,7 @@ public class MongoInputReader implements InputReader{
 			}
 		}
 		
-		Map<FeedType,Object> inputDataPerType = new HashMap<FeedType,Object>();
+		Map<FeedType,Object> inputDataPerType = new HashMap<FeedType, Object>();
 		
 		this.host = storage_config.getParameter(MongoInputReader.HOST);
 		this.db = storage_config.getParameter(MongoInputReader.DB);
@@ -231,11 +231,10 @@ public class MongoInputReader implements InputReader{
 				lists.add(list);
 				usersToLists.put(user, lists);
 			}
-			
 		}
 		
 		//extract categories
-		for(Expert expert : experts){
+		for(Expert expert : experts) {
 			String user = streamType+"#"+expert.getId();
 			usersToCategories.put(user, expert.getCategory());
 		}
@@ -255,12 +254,12 @@ public class MongoInputReader implements InputReader{
 	}
 
 	@Override
-	public Map<String,Set<String>> getUsersToLists(){
+	public Map<String, Set<String>> getUsersToLists() {
 		return usersToLists;
 	}
 	
 	@Override
-	public Map<String,Category> getUsersToCategories(){
+	public Map<String, Category> getUsersToCategories() {
 		return usersToCategories;
 	}
 	
