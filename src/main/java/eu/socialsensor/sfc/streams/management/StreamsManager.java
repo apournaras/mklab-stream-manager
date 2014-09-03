@@ -26,6 +26,7 @@ import eu.socialsensor.sfc.subscribers.Subscriber;
  * 
  * @author manosetro
  * @email  manosetro@iti.gr
+ * 
  * @author ailiakop
  * @email  ailiakop@iti.gr
  */
@@ -101,7 +102,7 @@ public class StreamsManager {
 				subscriber.open(srconfig);
 			
 				feeds = results.get(subscriberId);
-				subscriber.setUserLists(feedsCreator.getUsersToLists());
+				//subscriber.setUserLists(feedsCreator.getUsersToLists());
 				subscriber.setUserCategories(feedsCreator.getUsersToCategories());
 				subscriber.subscribe(feeds);
 				
