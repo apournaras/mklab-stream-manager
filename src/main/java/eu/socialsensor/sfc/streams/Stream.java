@@ -1,10 +1,8 @@
 package eu.socialsensor.sfc.streams;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -47,11 +45,11 @@ public abstract class Stream implements Runnable {
 	protected Retriever retriever = null;
 	protected StorageHandler handler;
 	
-	protected List<Item> retrievedItems = new ArrayList<Item>();
+	//protected List<Item> retrievedItems = new ArrayList<Item>();
 	
 	private Logger  logger = Logger.getLogger(Stream.class);
 	
-	private Map<String, Set<String>> usersToLists;
+	//private Map<String, Set<String>> usersToLists;
 	private Map<String, Category> usersToCategory;
 	
 	/**
@@ -103,10 +101,11 @@ public abstract class Stream implements Runnable {
 		monitor = new FeedsMonitor(retriever);
 		return true;
 	}
+	
 	/**
 	 * Sets the users list that will be used to retrieve from the stream (utilized for Twitter Stream)
 	 * @param usersToLists
-	 */
+	 
 	public void setUserLists(Map<String, Set<String>> usersToLists) {
 		this.usersToLists = usersToLists;
 		
@@ -119,6 +118,8 @@ public abstract class Stream implements Runnable {
 			logger.info(usersToLists.size() + " user in " + allLists.size() + " Lists!!!");
 		}
 	}
+	*/
+	
 	/**
 	 * Sets the category that the investigated user belongs to
 	 * @param usersToCategory
@@ -131,9 +132,9 @@ public abstract class Stream implements Runnable {
 	 * Returns the list of retrieved items 
 	 * @return
 	 */
-	public synchronized List<Item> getRetrievedItems() {
-		return retrievedItems;
-	}
+//	public synchronized List<Item> getRetrievedItems() {
+//		return retrievedItems;
+//	}
 	
 	/**
 	 * Searches with the wrapper of the stream for a particular
@@ -141,17 +142,16 @@ public abstract class Stream implements Runnable {
 	 * @param feeds
 	 * @throws StreamException
 	 */
-	public synchronized void poll(List<Feed> feeds) throws StreamException {
-		retrievedItems.clear();
-		
+	public synchronized List<Item> poll(List<Feed> feeds) throws StreamException {
+		List<Item> retrievedItems = new ArrayList<Item>();
 		if(retriever != null) {
 		
 			if(feeds == null) {
 				logger.error("Feeds is null in poll method.");
-				return;
+				return retrievedItems;
 			}
 			
-			logger.info(getName() + ": poll for " + feeds.size() + " feeds");
+			//logger.info(getName() + ": poll for " + feeds.size() + " feeds");
 			for(Feed feed : feeds) {
 				try {
 					List<Item> items = retriever.retrieve(feed);
@@ -164,9 +164,40 @@ public abstract class Stream implements Runnable {
 				}
 			}
 			
-			logger.info("Retrieved items for " + getName() + " are : " + retrievedItems.size());
+			//logger.info("Retrieved items for " + getName() + " are : " + retrievedItems.size());
 		}
+		return retrievedItems;
 		
+	}
+	
+	/**
+	 * Searches with the wrapper of the stream for a particular
+	 * feed (feed can be keywordsFeeds, userFeeds, locationFeeds, listFeeds or URLFeeds)
+	 * @param feeds
+	 * @throws StreamException
+	 */
+	public synchronized List<Item> poll(Feed feed) throws StreamException {
+		List<Item> retrievedItems = new ArrayList<Item>();
+		if(retriever != null) {
+		
+			if(feed == null) {
+				logger.error("Feeds is null in poll method.");
+				return retrievedItems;
+			}
+			
+			try {
+				List<Item> items = retriever.retrieve(feed);
+				store(items);
+				retrievedItems.addAll(items);
+			}
+			catch(Exception e) {
+				logger.error("Exception for feed " + feed.getId() + " of type " + feed.getFeedtype());
+				logger.error(e.getMessage());
+			}
+			
+			//logger.info("Retrieved items for " + getName() + " are : " + retrievedItems.size());
+		}
+		return retrievedItems;
 	}
 	
 	/**
@@ -190,12 +221,9 @@ public abstract class Stream implements Runnable {
 			return;
 		}
 			
-		if(usersToLists != null && getUserList(item) != null) {
-			item.setList(getUserList(item));
-		}
-		else {
-			return;
-		}
+		//if(usersToLists != null && getUserList(item) != null) {
+		//	item.setList(getUserList(item));
+		//}
 		
 		if(usersToCategory != null && getUserCategory(item) != null)
 			item.setCategory(getUserCategory(item));
@@ -203,53 +231,6 @@ public abstract class Stream implements Runnable {
 		handler.update(item);
 	}
 	
-	/**
-	 * Returns the lists that the user associated with a given 
-	 * item belongs to
-	 * @param item
-	 * @return
-	 */
-	private String[] getUserList(Item item) {
-		
-		Set<String> lists = new HashSet<String>();
-		if(usersToLists == null) {
-			logger.error("User list is null");
-			return null;
-		}
-			
-		if(item.getUserId() == null) {
-			logger.error("User in item is null");
-			return null;
-		}
-				
-		Set<String> userLists = usersToLists.get(item.getUserId());
-		if(userLists != null) {
-			lists.addAll(userLists);
-		}
-		
-		for(String mention : item.getMentions()) {
-			userLists = usersToLists.get(mention);
-			if(userLists != null) {
-				lists.addAll(userLists);
-			}
-		}
-		
-		String refUserId = item.getReferencedUserId();
-		if(refUserId != null) {
-			userLists = usersToLists.get(refUserId);
-			if(userLists != null) {
-				lists.addAll(userLists);
-			}
-		}
-		
-		if(lists.size() > 0) {
-			return lists.toArray(new String[lists.size()]);
-		}
-		else {
-			return null;
-		}
-		
-	}
 	/**
 	 * Returns the category that a user associated with a given
 	 * item belongs to

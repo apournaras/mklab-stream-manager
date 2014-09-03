@@ -50,15 +50,15 @@ public class StreamCollector {
 			Thread.sleep(10000);
 			
 		} catch (ParserConfigurationException e) {
-			logger.error(e);
+			logger.error(e.getMessage());
 		} catch (SAXException e) {
-			logger.error(e);
+			logger.error(e.getMessage());
 		} catch (IOException e) {
-			logger.error(e);
+			logger.error(e.getMessage());
 		} catch (StreamException e) {
-			logger.error(e);
+			logger.error(e.getMessage());
 		} catch (Exception e) {
-			logger.error(e);
+			logger.error(e.getMessage());
 		}	
 	}
 	
