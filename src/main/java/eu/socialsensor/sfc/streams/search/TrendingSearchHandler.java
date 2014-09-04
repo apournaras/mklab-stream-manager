@@ -1,6 +1,8 @@
 package eu.socialsensor.sfc.streams.search;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -24,11 +26,17 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 		
 		public final Logger logger = Logger.getLogger(TrendingSearchHandler.class);
 		
+		private Set<String> targetedStreams = new HashSet<String>();
+
 		private QueryExpander queryExpander;
 		
 		public TrendingSearchHandler(StreamsMonitor monitor, QueryExpander queryExpander) {
 			super(monitor);
 			this.queryExpander = queryExpander;
+			
+			targetedStreams.add("Facebook");
+			targetedStreams.add("Flickr");
+			targetedStreams.add("Instagram");
 		}
 		
 		/**
@@ -52,11 +60,10 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 			List<Feed> feeds = feedsCreator.getQuery();
 			
 			List<Feed> simpleFeeds = getSimpleFeeds(dysco);
+			search(simpleFeeds, targetedStreams);
 			
 			logger.info(feeds.size() + " feeds for " + dyscoId); 
 			logger.info(simpleFeeds.size() + " simple feeds for " + dyscoId);
-			
-			feeds.addAll(simpleFeeds);
 
 			List<Item> retrievedItems = search(feeds);
 			

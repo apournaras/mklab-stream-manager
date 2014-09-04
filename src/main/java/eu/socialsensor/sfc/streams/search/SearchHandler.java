@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -35,6 +36,10 @@ public abstract class SearchHandler extends Thread {
 		this.monitor = monitor;
 	}
 	
+	protected List<Item> search(List<Feed> feeds) {
+		return search(feeds, null);
+	}
+	
 	/**
 	 * Searches in all social media defined in the configuration file
 	 * for the list of feeds that is given as input and returns the retrieved items
@@ -42,11 +47,15 @@ public abstract class SearchHandler extends Thread {
 	 * @param streamsToSearch
 	 * @return the list of the items retrieved
 	 */
-	protected synchronized List<Item> search(List<Feed> feeds) {
+	protected synchronized List<Item> search(List<Feed> feeds, Set<String> streams) {
 		List<Item> items = new ArrayList<Item>();
 		if(feeds != null && !feeds.isEmpty()) {
 			try {
-				monitor.retrieve(feeds);	
+				if(streams == null)
+					monitor.retrieve(feeds);	
+				else
+					monitor.retrieve(streams, feeds);
+				
 				while(!monitor.areStreamsFinished()) {
 					try {
 						Thread.sleep(50);
@@ -180,7 +189,7 @@ public abstract class SearchHandler extends Thread {
 		logger.info("DyscoQueue:" + dyscosQueue.size());
 		logger.info("totalRetrievedItems:" + totalRetrievedItems);
 		
-		if(dyscosQueue.size() > 70) {
+		if(dyscosQueue.size() > 100) {
 			dyscosQueue.clear();
 		}
 	}
