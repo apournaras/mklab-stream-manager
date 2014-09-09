@@ -81,6 +81,7 @@ public class StorageHandler {
 		}
 		
 		this.statusThread = new StorageStatusThread(this);
+		
 		this.statusThread.start();
 		
 	}
@@ -128,7 +129,9 @@ public class StorageHandler {
 	public void start() {
 		
 		for(int i=0; i<numberOfConsumers; i++) {
-			consumers.add(new Consumer(queue, store, filters, processors));
+			Consumer consumer = new Consumer(queue, store, filters, processors);
+			consumer.setName("Consumer_" + i);
+			consumers.add(consumer);
 		}
 		
 		for(Consumer consumer : consumers) {
@@ -289,6 +292,8 @@ public class StorageHandler {
 		public StorageStatusThread(StorageHandler handler) {
 			this.handler = handler;
 			logger.info("Status Check Thread initialized");
+			
+			this.setName("StorageStatusThread");
 		}
 		
 		public void run() {
