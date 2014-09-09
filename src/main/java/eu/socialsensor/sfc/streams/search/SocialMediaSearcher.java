@@ -161,6 +161,8 @@ public class SocialMediaSearcher extends Thread {
 		customSearchHandler.start();
 		
 		dyscoRequestReceiver.start();
+		
+		this.setName("DyscoUpdateThread");
 		this.start();
 		
 		logger.info("Set state to open");
@@ -263,9 +265,8 @@ public class SocialMediaSearcher extends Thread {
 		logger.info("DyscoRequestHandler.isAlive: " + dyscoRequestHandler.isAlive);
 		logger.info("TrendingSearchHandler " + trendingSearchHandler.getState());
 		logger.info("CustomSearchHandler " + customSearchHandler.getState());
+		logger.info("QueryExpander " + queryExpander.getState());
 		logger.info("DyscoUpdateThread " + this.getState());
-
-		//logger.info("#DyscosToUpdate: " + dyscosToUpdate.size());
 		
 		logger.info("#Streams: " + streams.size());
 		monitor.status();
@@ -289,6 +290,8 @@ public class SocialMediaSearcher extends Thread {
 		
 		public DyscoRequestHandler(String solrServiceUrl) {
 			this.solrDyscoHandler = SolrDyscoHandler.getInstance(solrServiceUrl);
+			
+			this.setName("DyscoRequestHandler");
 		}
 		
 		public void run() {

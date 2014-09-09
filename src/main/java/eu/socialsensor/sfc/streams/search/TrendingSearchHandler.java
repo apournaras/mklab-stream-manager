@@ -37,6 +37,8 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 			targetedStreams.add("Facebook");
 			targetedStreams.add("Flickr");
 			targetedStreams.add("Instagram");
+			
+			this.setName("TrendingSearchHandler");
 		}
 		
 		/**

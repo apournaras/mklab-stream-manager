@@ -36,6 +36,7 @@ import redis.clients.jedis.JedisPubSub;
 	        
 	        this.jedisClient = jedisPool.getResource();
 			this.redisChannel = redisChannel;
+			
 		}
 		
 	    @Override
@@ -100,6 +101,7 @@ import redis.clients.jedis.JedisPubSub;
 		
 		public void start() {
 			this.listener = new Thread(this);
+			listener.setName("DyscoRequestReceiver");
 			this.listener.start();
 		}
 		

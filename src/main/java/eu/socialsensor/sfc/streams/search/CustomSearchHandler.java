@@ -37,6 +37,8 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 			super(monitor);
 			
 			logger = Logger.getLogger(CustomSearchHandler.class);
+			
+			this.setName("CustomSearchHandler");
 		}
 		
 		public void addCustomDysco(Dysco dysco, List<Feed> inputFeeds) {

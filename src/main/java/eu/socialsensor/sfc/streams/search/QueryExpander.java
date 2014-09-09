@@ -32,11 +32,13 @@ public class QueryExpander extends Thread {
 	
 	public QueryExpander() {
 		executor = Executors.newFixedThreadPool(15);
+		this.setName("QueryExpander");
 	}
 	
 	public QueryExpander(int queryNumberLimit) {
 		this.queryNumberLimit = queryNumberLimit;
 		executor = Executors.newFixedThreadPool(15);
+		this.setName("QueryExpander");
 	}
 	
 	public void addDysco(Dysco dysco, List<Item> items) {
@@ -106,6 +108,7 @@ public class QueryExpander extends Thread {
 	public void status() {
 		logger.info("Executor is shutdown: " + executor.isShutdown());
 		logger.info("Tasks: " + tasks.size());
+
 		logger.info("dyscosToUpdate: " + dyscosToUpdate.size());
 	}
 	
