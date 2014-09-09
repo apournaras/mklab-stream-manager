@@ -117,6 +117,7 @@ public class SolrStorage implements Storage {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			logger.error(e);
 			return false;
 		}
 		return true;
@@ -210,7 +211,7 @@ public class SolrStorage implements Storage {
 				solrItemHandler.checkServerStatus();
 				return true;
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
+				logger.error(e);
 				return false;
 			}
 		}
@@ -219,7 +220,7 @@ public class SolrStorage implements Storage {
 				solrMediaHandler.checkServerStatus();
 				return true;
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
+				logger.error(e);
 				return false;
 			}
 		}
@@ -228,7 +229,7 @@ public class SolrStorage implements Storage {
 				solrNewsFeedHandler.checkServerStatus();
 				return true;
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
+				logger.error(e);
 				return false;
 			}
 		}
@@ -239,28 +240,12 @@ public class SolrStorage implements Storage {
 
 	@Override
 	public void close() {
-		try {
-			commit();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+
 	}
 
 	@Override
 	public void updateTimeslot() {
-		try {
-			commit();
-		} catch (Exception e) {
-			logger.error(e);
-		}
-	}
-	
-	private void commit() throws IOException {
-		try {
-			commit();
-		} catch (Exception e) {
-			logger.error(e);
-		}
+
 	}
 	
 	@Override

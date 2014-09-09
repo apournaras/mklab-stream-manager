@@ -54,7 +54,6 @@ public class Consumer extends Thread {
 				} else {
 					process(item);
 				}
-
 			} catch(IOException e) {
 				e.printStackTrace();
 				_logger.error(e);
@@ -107,27 +106,22 @@ public class Consumer extends Thread {
 	 * Polls an item from the queue
 	 * @return
 	 */
-	private Item poll() {
-		synchronized (queue) {					
-			Item item = queue.poll();		
-			return item;
-		}
+	private Item poll() {			
+		return queue.poll();		
 	}
 	
 	/**
 	 * Polls an item from the queue. Waits if the queue is empty. 
 	 * @return
 	 */
-	private Item take() {
-		synchronized (queue) {					
-			Item item = null;
-			try {
-				item = queue.take();
-			} catch (InterruptedException e) {
-				_logger.error(e);
-			}	
-			return item;
-		}
+	private Item take() {				
+		Item item = null;
+		try {
+			item = queue.take();
+		} catch (InterruptedException e) {
+			_logger.error(e);
+		}	
+		return item;
 	}
 	
 	/**
@@ -135,5 +129,11 @@ public class Consumer extends Thread {
 	 */
 	public synchronized void die() {
 		isAlive = false;
+		try {
+			this.interrupt();
+		}
+		catch(Exception e) {
+			_logger.error(e);
+		}
 	}
 }

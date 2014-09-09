@@ -242,6 +242,7 @@ public class MongoDbStorage implements Storage {
 		}
 		
 		updaterTask = new UpdaterTask();
+		updaterTask.setName("UpdaterTask");
 		updaterTask.start();
 		
 		return true;
