@@ -204,7 +204,7 @@ public class SolrStorage implements Storage {
 	}
 	
 	@Override
-	public boolean checkStatus(Storage storage) {
+	public boolean checkStatus() {
 		
 		if(itemsCollection != null){
 			try {

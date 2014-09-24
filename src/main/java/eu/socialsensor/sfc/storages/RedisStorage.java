@@ -52,19 +52,18 @@ public class RedisStorage implements Storage {
 			JedisPoolConfig poolConfig = new JedisPoolConfig();
 			JedisPool jedisPool = new JedisPool(poolConfig, host, 6379, 0);
 		
-			
 			this.publisherJedis = jedisPool.getResource();
 			return true;
 		}
 		catch(Exception e) {
 			logger.error("Error during opening.", e);
-			
 			return false;
 		}
 	}
 
 	@Override
 	public void store(Item item) throws IOException {
+		
 		if(item == null)
 			return;
 		
@@ -120,7 +119,7 @@ public class RedisStorage implements Storage {
 	}
 	
 	@Override
-	public boolean checkStatus(Storage storage) {
+	public boolean checkStatus() {
 		try {
 			logger.info("Redis sent " + items + " items, " + mItems + " media items and " 
 					+ wPages + " web pages!");
@@ -192,7 +191,7 @@ public class RedisStorage implements Storage {
 		RedisStorage redis = new RedisStorage(config);
 		redis.open();
 		
-		redis.checkStatus(redis);
+		redis.checkStatus();
 		
 	}
 }

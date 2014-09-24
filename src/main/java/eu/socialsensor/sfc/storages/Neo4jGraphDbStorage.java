@@ -123,7 +123,7 @@ public class Neo4jGraphDbStorage implements Storage {
 	}
 
 	@Override
-	public boolean checkStatus(Storage storage) {
+	public boolean checkStatus() {
 		// TODO Auto-generated method stub
 		return true;
 	}

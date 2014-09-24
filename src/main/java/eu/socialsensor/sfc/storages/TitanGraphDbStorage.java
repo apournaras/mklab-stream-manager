@@ -137,7 +137,7 @@ public class TitanGraphDbStorage implements Storage {
 	}
 
 	@Override
-	public boolean checkStatus(Storage storage) {
+	public boolean checkStatus() {
 		if(titanGraph.isOpen()) {
 			return true;
 		}

@@ -23,6 +23,9 @@ public class MultipleStorages implements Storage {
 	private List<Storage> storages = new ArrayList<Storage>();
 	private Logger logger = Logger.getLogger(MultipleStorages.class);
 	
+	public int totalItems = 0;
+	public long totalTime = 0l;
+	
 	public MultipleStorages() {
 		
 	}
@@ -54,7 +57,6 @@ public class MultipleStorages implements Storage {
 					storage.open();
 				}
 				catch(Exception e) {
-					// TODO: remove storages failed to open
 					logger.error("Error during opening " + storage.getStorageName(), e);
 				}
 			}
@@ -67,25 +69,29 @@ public class MultipleStorages implements Storage {
 	}
 	
 	@Override
-	public void store(Item update) throws IOException {
+	public void store(Item item) throws IOException {
 		synchronized(storages) {
+			long time = System.currentTimeMillis();
 			for(Storage storage : storages) {
 				try {
-					storage.store(update);
+					storage.store(item);
 				}
 				catch(Exception e) {
+					logger.error(e);
 					return;
 				}
 			}
+			totalItems++;
+			totalTime += (System.currentTimeMillis() - time);
 		}
 	}
 	
 	@Override
-	public void update(Item update) throws IOException {
+	public void update(Item item) throws IOException {
 		synchronized(storages) {
 			for(Storage storage : storages) {
 				try {
-					storage.update(update);
+					storage.update(item);
 				}
 				catch(Exception e) {
 					continue;
@@ -164,8 +170,12 @@ public class MultipleStorages implements Storage {
 	}
 
 	@Override
-	public boolean checkStatus(Storage storage) {
-		return storage.checkStatus(storage);
+	public boolean checkStatus() {
+		boolean status = true;
+		for(Storage storage : storages) {
+			status = status && storage.checkStatus();
+		}
+		return status;
 	}
 	
 	@Override

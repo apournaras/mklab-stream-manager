@@ -46,7 +46,7 @@ public interface Storage {
 	
 	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException;
 	
-	public boolean checkStatus(Storage storage);
+	public boolean checkStatus();
 	
 	/**
 	 * Update timeslot
