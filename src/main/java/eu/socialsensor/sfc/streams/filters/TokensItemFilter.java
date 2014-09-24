@@ -51,7 +51,7 @@ public class TokensItemFilter  extends ItemFilter {
 			tokenizer.reset();
 			while (tokenizer.incrementToken()) {
 				String token = charTermAtt.toString();
-				if(token.contains("http") || token.contains(".") || token.length() == 1)
+				if(token.contains("http") || token.contains(".") || token.length() <= 1)
 					continue;
 					
 				tokens.add(token);
@@ -66,7 +66,6 @@ public class TokensItemFilter  extends ItemFilter {
 			
 		} catch (Exception e) {
 			e.printStackTrace();
-			//Logger.getLogger(TokensItemFilter.class).error(e);
 			incrementDiscarded();
 			return false;
 		}

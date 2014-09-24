@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
@@ -29,6 +30,7 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
  * give a DySco as input. The retrieval of relevant content is based
  * on queries embedded to the DySco. DyScos are received as messages 
  * via Redis service and can be both custom or trending. 
+ * 
  * @author ailiakop
  * @email ailiakop@iti.gr
  */
@@ -87,12 +89,6 @@ public class SocialMediaSearcher extends Thread {
 		this.solrHost = config.getParameter(SocialMediaSearcher.SOLR_HOST);
 		this.solrService = config.getParameter(SocialMediaSearcher.SOLR_SERVICE);
 		this.dyscoCollection = config.getParameter(SocialMediaSearcher.DYSCO_COLLECTION);
-		
-		//Set up the Streams
-		initStreams();
-		
-		//Set up the Storages
-		storageHandler = new StorageHandler(config);
 	}
 	
 	/**
@@ -107,6 +103,12 @@ public class SocialMediaSearcher extends Thread {
 		}
 		
 		state = MediaSearcherState.OPEN;
+		
+		//Set up the Streams
+		initStreams();
+		
+		//Set up the Storages
+		storageHandler = new StorageHandler(config);
 		
 		storageHandler.start();	
 		logger.info("Store Manager is ready to store. ");
@@ -397,8 +399,47 @@ public class SocialMediaSearcher extends Thread {
 	
 	/**
 	 * @param args
+	 * @throws Exception 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
+		/*
+        DyscoDAOImpl dyscoDAO = new DyscoDAOImpl("Socialsensordb.atc.gr",
+                "WebPagesDB", "WebPages", "MediaItemsDB", "MediaItems",
+                "http://socialsensor.atc.gr/solr/dyscos",
+                "http://socialsensor.atc.gr/solr/items",
+                "http://socialsensor.atc.gr/solr/MediaItems",
+                "http://socialsensor.atc.gr/solr/WebPages",
+                "http://160.40.51.18:8080/VisualIndexService",
+                "Prototype");
+		
+		SolrDyscoHandler dyscoHandler = SolrDyscoHandler.getInstance("http://socialsensor.atc.gr/solr/dyscos");
+		
+		Dysco dysco = dyscoHandler.findDyscoLight("618e53f9-1683-4d82-9537-4cd75c3c4337");
+		System.out.println(dysco.getTitle());
+		
+		List<String> filters = new ArrayList<String>();
+		List<String> facets = new ArrayList<String>();
+		String orderBy = "publicationTime";
+		Map<String, String> params = new HashMap<String, String>();
+	        
+		long now = System.currentTimeMillis();
+		long window = 24 * 60L * 60L * 1000L;
+			
+		filters.add("publicationTime:[" + (now - window) + " TO " + now + "]");
+		SearchEngineResponse<Item> items = dyscoDAO.findItems(dysco, filters, facets, orderBy, params, 200);
+			
+		SolrQueryBuilder queryBuilder = new SolrQueryBuilder();
+		
+		List<Query> queries = queryBuilder.getExpandedSolrQueries(items.getResults(), dysco, 10);
+		
+		System.out.println(queries.size());
+		for(Query q : queries) {
+			System.out.println(q.getName());
+		}
+		
+		if(!filters.isEmpty())
+			return;
+		*/
 		
 		File configFile = null;
 		if(args.length != 1 ) {

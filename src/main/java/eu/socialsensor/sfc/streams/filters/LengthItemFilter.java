@@ -1,5 +1,7 @@
 package eu.socialsensor.sfc.streams.filters;
 
+import java.net.URL;
+
 import org.apache.log4j.Logger;
 
 import eu.socialsensor.framework.Configuration;
@@ -28,6 +30,36 @@ public class LengthItemFilter extends ItemFilter {
 		if(title == null) {
 			incrementDiscarded();
 			return false;
+		}
+		
+		try {
+			String[] tags = item.getTags();
+			if(tags != null) {
+				for(String tag : tags) {
+					title = title.replaceAll(tag, " ");
+				}
+			}
+		
+			String[] mentions = item.getMentions();
+			if(mentions != null) {
+				for(String mention : mentions) {
+					title = title.replaceAll(mention, " ");
+				}
+			}
+		
+			URL[] links = item.getLinks();
+			if(links != null) {
+				for(URL link : links) {
+					title = title.replaceAll(link.toString(), " ");
+				}
+			}
+		
+			title = title.replaceAll("#", " ");
+			title = title.replaceAll("@", " ");
+			title = title.replaceAll("\\s+", " ");
+		}
+		catch(Exception e) {
+			
 		}
 		
 		if(title.length() < minTextLenth) {

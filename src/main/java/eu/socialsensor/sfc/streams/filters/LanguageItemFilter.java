@@ -18,10 +18,10 @@ public class LanguageItemFilter extends ItemFilter {
 		
 		String[] langs = langsStr.split(",");
 		for(String lang : langs) {
-			if(lang != null)
+			if(lang != null) {
 				languages.add(lang.trim());
+			}
 		}
-		
 		Logger.getLogger(LengthItemFilter.class).info("Supported languages: " + langsStr);
 	}
 	
@@ -30,8 +30,8 @@ public class LanguageItemFilter extends ItemFilter {
 		
 		String lang = item.getLang();
 		if(lang == null) {
-			incrementAccepted();
-			return true;
+			incrementDiscarded();
+			return false;
 		}
 		
 		if(!languages.contains(lang)) {

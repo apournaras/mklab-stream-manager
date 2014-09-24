@@ -220,10 +220,6 @@ public abstract class Stream implements Runnable {
 			logger.error("NULL Handler!");
 			return;
 		}
-			
-		//if(usersToLists != null && getUserList(item) != null) {
-		//	item.setList(getUserList(item));
-		//}
 		
 		if(usersToCategory != null && getUserCategory(item) != null)
 			item.setCategory(getUserCategory(item));
@@ -266,8 +262,9 @@ public abstract class Stream implements Runnable {
 	 * @return
 	 */
 	public boolean addFeed(Feed feed) {
-		if(feedsQueue == null)
+		if(feedsQueue == null) {
 			return false;
+		}
 		
 		return feedsQueue.offer(feed);
 	}
@@ -278,8 +275,9 @@ public abstract class Stream implements Runnable {
 	 */
 	public boolean addFeeds(List<Feed> feeds) {
 		for(Feed feed : feeds) {
-			if(!addFeed(feed))
+			if(!addFeed(feed)) {
 				return false;
+			}
 		}
 		return true;
 	}

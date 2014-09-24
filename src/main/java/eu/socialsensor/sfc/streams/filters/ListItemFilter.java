@@ -1,5 +1,6 @@
 package eu.socialsensor.sfc.streams.filters;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,7 @@ import eu.socialsensor.framework.common.domain.Source;
 
 public class ListItemFilter extends ItemFilter {
 
-	private Map<String, Set<String>> usersToLists;
+	private Map<String, Set<String>> usersToLists = new HashMap<String, Set<String>>();
 	
 	public ListItemFilter(Configuration configuration) {
 		super(configuration);
@@ -26,7 +27,7 @@ public class ListItemFilter extends ItemFilter {
 		
 		SourceDAO sourceDao = new SourceDAOImpl(host, database, collection);
 		
-		List<Source> sources = sourceDao.findTopSources(75000);
+		List<Source> sources = sourceDao.findAllSources();
 		for(Source source : sources) {
 			String user = source.getNetwork()+"#"+source.getId();
 			
@@ -47,9 +48,10 @@ public class ListItemFilter extends ItemFilter {
 	public boolean accept(Item item) {
 		if(usersToLists != null && getUserList(item) != null) {
 			item.setList(getUserList(item));
+			incrementAccepted();
 			return true;
 		}
-		
+		incrementDiscarded();
 		return false;
 	}
 
@@ -82,10 +84,13 @@ public class ListItemFilter extends ItemFilter {
 			lists.addAll(userLists);
 		}
 		
-		for(String mention : item.getMentions()) {
-			userLists = usersToLists.get(mention);
-			if(userLists != null) {
-				lists.addAll(userLists);
+		String[] mentions = item.getMentions();
+		if(mentions != null) {
+			for(String mention : mentions) {
+				userLists = usersToLists.get(mention);
+				if(userLists != null) {
+					lists.addAll(userLists);
+				}
 			}
 		}
 		

@@ -37,7 +37,7 @@ public class TagsItemFilter extends ItemFilter {
 			return true;
 		}
 		
-		if(tags.length > maxTags) {
+		if(tags.length >= maxTags) {
 			incrementDiscarded();
 			return false;
 		}

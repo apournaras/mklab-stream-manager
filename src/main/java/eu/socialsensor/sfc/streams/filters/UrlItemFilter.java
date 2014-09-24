@@ -39,7 +39,7 @@ public class UrlItemFilter extends ItemFilter {
 			return true;
 		}
 		
-		if(urls.length > maxUrls) {
+		if(urls.length >= maxUrls) {
 			incrementDiscarded();
 			return false;
 		}

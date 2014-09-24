@@ -16,7 +16,6 @@ import eu.socialsensor.framework.common.domain.Item;
 import eu.socialsensor.sfc.storages.Consumer;
 import eu.socialsensor.sfc.storages.MultipleStorages;
 import eu.socialsensor.sfc.storages.Storage;
-import eu.socialsensor.sfc.streams.StreamError;
 import eu.socialsensor.sfc.streams.StreamException;
 import eu.socialsensor.sfc.streams.StreamsManagerConfiguration;
 import eu.socialsensor.sfc.streams.filters.ItemFilter;
@@ -40,7 +39,7 @@ public class StorageHandler {
 	
 	private StreamsManagerConfiguration config;
 	
-	private Integer numberOfConsumers = 8;
+	private Integer numberOfConsumers = 16;
 	
 	private List<Consumer> consumers;
 	
@@ -86,7 +85,7 @@ public class StorageHandler {
 		
 	}
 	
-	public Map<String,Boolean> getWorkingDataBases() {
+	public Map<String, Boolean> getWorkingDataBases() {
 		return workingStatus;
 	}
 	
@@ -95,7 +94,7 @@ public class StorageHandler {
 	 * @param storageId
 	 * @param status
 	 */
-	public void updateDataBasesStatus(String storageId,boolean status){
+	public void updateDataBasesStatus(String storageId, boolean status) {
 		workingStatus.put(storageId, status);
 	}
 	
@@ -138,11 +137,6 @@ public class StorageHandler {
 			consumer.start();
 		}
 	}
-	
-	public void error(StreamError error) {
-		logger.error(error.getException());
-		error.getException().printStackTrace();
-	}
 
 	public void update(Item item) {
 		try {
@@ -169,7 +163,7 @@ public class StorageHandler {
 	 * Deletes items older than a specific date
 	 * @param dateThreshold
 	 */
-	public void deleteItemsOlderThan(long dateThreshold){
+	public void deleteItemsOlderThan(long dateThreshold) {
 		try {
 			store.deleteItemsOlderThan(dateThreshold);
 		} catch (IOException e) {
@@ -192,8 +186,7 @@ public class StorageHandler {
 			Storage storageInstance;
 			try {
 				String storageClass = storageConfig.getParameter(Configuration.CLASS_PATH);
-				Constructor<?> constructor
-					= Class.forName(storageClass).getConstructor(Configuration.class);
+				Constructor<?> constructor = Class.forName(storageClass).getConstructor(Configuration.class);
 				storageInstance = (Storage) constructor.newInstance(storageConfig);
 				workingStorages.add(storageInstance);
 			} catch (Exception e) {
@@ -204,8 +197,9 @@ public class StorageHandler {
 				workingStatus.put(storageId, true);
 				storage.register(storageInstance);
 			}
-			else
+			else {
 				workingStatus.put(storageId, false);	
+			}
 			
 		}
 		
@@ -284,8 +278,8 @@ public class StorageHandler {
 	 */
 	public class StorageStatusThread extends Thread {
 		
-		// Runs every two minutes by default
-		private long sleepTime = 2 * 60000;
+		// Runs every one minute by default
+		private long sleepTime = 1 * 60000;
 		
 		private StorageHandler handler;
 		
@@ -316,9 +310,11 @@ public class StorageHandler {
 					}
 				}
 				
+				logger.info("Mean Storing Time: " + ((double)store.totalTime / (double)store.totalItems) + " msec / item");
+				
 				for(Storage storage : workingStorages) {
 					String storageId = storage.getStorageName();
-					Boolean status = store.checkStatus(storage);
+					Boolean status = storage.checkStatus();
 					
 					if(!status && handler.getWorkingDataBases().get(storageId)) {     
 						//was working and now is not responding
