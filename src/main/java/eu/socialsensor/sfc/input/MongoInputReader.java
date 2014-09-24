@@ -3,7 +3,6 @@ package eu.socialsensor.sfc.input;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +29,7 @@ import eu.socialsensor.framework.common.domain.feeds.URLFeed;
 import eu.socialsensor.framework.common.domain.Expert;
 import eu.socialsensor.framework.common.domain.Keyword;
 import eu.socialsensor.framework.common.domain.Location;
+import eu.socialsensor.framework.common.domain.NewsFeedSource;
 import eu.socialsensor.framework.common.domain.SocialNetworkSource;
 import eu.socialsensor.framework.common.domain.Source;
 import eu.socialsensor.framework.common.domain.StreamUser.Category;
@@ -41,7 +41,8 @@ import eu.socialsensor.framework.common.domain.StreamUser.Category;
  * @author ailiakop
  * @email  ailiakop@iti.gr
  */
-public class MongoInputReader implements InputReader{
+public class MongoInputReader implements InputReader {
+	
 	protected static final String SINCE = "since";
 	
 	protected static final String HOST = "host";
@@ -65,13 +66,13 @@ public class MongoInputReader implements InputReader{
 	
 	private Date sinceDate = null;
 	
-	private Map<String,List<Feed>> feeds = new HashMap<String,List<Feed>>();
-	private Map<String, Set<String>> usersToLists = new HashMap<String, Set<String>>();
+	private Map<String, List<Feed>> feedsPerStream = new HashMap<String, List<Feed>>();
+
 	private Map<String,Category> usersToCategories = new HashMap<String,Category>();
 
 	private String rssSourcesCollection;
 	
-	public MongoInputReader(Configuration config){
+	public MongoInputReader(Configuration config) {
 		
 		this.storage_config = config;
 		
@@ -79,88 +80,109 @@ public class MongoInputReader implements InputReader{
 		
 		streams.add("Twitter");
 		streams.add("Facebook");
-		//streams.add("RSS");
-		//streams.add("Tumblr");
+		streams.add("RSS");
+		streams.add("Tumblr");
 		streams.add("Instagram");
 		streams.add("GooglePlus");
 		streams.add("Youtube");
 		streams.add("Flickr");
+		
+		this.host = storage_config.getParameter(MongoInputReader.HOST);
+		this.db = storage_config.getParameter(MongoInputReader.DB);
+		this.newsHoundsCollection = storage_config.getParameter(MongoInputReader.SOURCES_COLLECTION, "Sources");
+		this.rssSourcesCollection = storage_config.getParameter(MongoInputReader.RSS_SOURCES_COLLECTION, "RssSources");
+		this.expertsCollection = storage_config.getParameter(MongoInputReader.EXPERTS_COLLECTION,"Experts");
+		this.keywordsCollection = storage_config.getParameter(MongoInputReader.KEYWORDS_COLLECTION, "Keywords");
+		
 	}
 	
 	@Override
-	public Map<String,List<Feed>> createFeedsPerStream(){
+	public Map<String, List<Feed>> createFeedsPerStream() {
 	
 		for(String stream : streams) {
 		
-			List<Feed> feedsPerStream = new ArrayList<Feed>();
-			if(stream.equals("Twitter"))
+			List<Feed> feeds = new ArrayList<Feed>();
+			
+			if(stream.equals("Twitter")) {
 				this.streamType = SocialNetworkSource.Twitter.name();
-			else if(stream.equals("Facebook"))
+			}
+			else if(stream.equals("Facebook")) {
 				this.streamType = SocialNetworkSource.Facebook.name();
-			else if(stream.equals("Flickr"))
+			}
+			else if(stream.equals("Flickr")) {
 				this.streamType = SocialNetworkSource.Flickr.name();
-			else if(stream.equals("GooglePlus"))
+			}
+			else if(stream.equals("GooglePlus")) {
 				this.streamType = SocialNetworkSource.GooglePlus.name();
-			else if(stream.equals("Instagram"))
+			}
+			else if(stream.equals("Instagram")) {
 				this.streamType = SocialNetworkSource.Instagram.name();
-			//else if(stream.equals("Tumblr"))
-			//	this.streamType = SocialNetworkSource.Tumblr.name();
-			else if(stream.equals("Youtube"))
+			}
+			else if(stream.equals("Tumblr")) {
+				this.streamType = SocialNetworkSource.Tumblr.name();
+			}
+			else if(stream.equals("Youtube")) {
 				this.streamType = SocialNetworkSource.Youtube.name();
-			//else if(stream.equals("RSS"))
-			//	this.streamType = NewsFeedSource.RSS.name();
+			}
+			else if(stream.equals("RSS")) {
+				this.streamType = NewsFeedSource.RSS.name();
+			}
 	
 			Map<FeedType, Object> inputData = getData();
 
 			for(FeedType feedType : inputData.keySet()) {
 
-				switch(feedType){
-				case SOURCE :
-					@SuppressWarnings("unchecked")
-					List<Source> sources = (List<Source>) inputData.get(feedType);
-					for(Source source : sources) {
-						String feedID = source.getNetwork() + "#" + source.getName(); //UUID.randomUUID().toString();
-						SourceFeed sourceFeed = new SourceFeed(source,sinceDate,feedID);
-						sourceFeed.setLabel(source.getList());				
-						feedsPerStream.add(sourceFeed);
-					}
-					break;
-				case URL :
-					@SuppressWarnings("unchecked")
-					List<String> rssSources = (List<String>) inputData.get(feedType);
-					for(String url : rssSources) {
-						String feedID = url;//UUID.randomUUID().toString();
-						URLFeed sourceFeed = new URLFeed(url,sinceDate,feedID);
-						feedsPerStream.add(sourceFeed);
-					}
-					break;
-				case KEYWORDS : 
-					@SuppressWarnings("unchecked")
-					List<Keyword> keywords = (List<Keyword>) inputData.get(feedType);
-					for(Keyword keyword : keywords) {
-						String feedID = UUID.randomUUID().toString();
-						KeywordsFeed keywordsFeed = new KeywordsFeed(keyword,sinceDate,feedID);
-						keywordsFeed.setLabel(keyword.getLabel());
-						feedsPerStream.add(keywordsFeed);
-					}
-					break;
-				case LOCATION :
-					@SuppressWarnings("unchecked")
-					List<Location> locations = (List<Location>) inputData.get(feedType);
-					for(Location location : locations) {
-						String feedID = UUID.randomUUID().toString();
-						LocationFeed locationFeed = new LocationFeed(location,sinceDate,feedID);
-						feedsPerStream.add(locationFeed);
-					}
-					break;
-				default:
-					break;
+				switch(feedType) {
+					case SOURCE :
+						@SuppressWarnings("unchecked")
+						List<Source> sources = (List<Source>) inputData.get(feedType);
+						for(Source source : sources) {
+							String feedID = source.getNetwork() + "#" + source.getName(); //UUID.randomUUID().toString();
+							SourceFeed sourceFeed = new SourceFeed(source, sinceDate, feedID);
+							sourceFeed.setLabel(source.getList());				
+							feeds.add(sourceFeed);
+						}
+						break;
+					
+					case URL :
+						@SuppressWarnings("unchecked")
+						List<String> rssSources = (List<String>) inputData.get(feedType);
+						for(String url : rssSources) {
+							String feedID = url;//UUID.randomUUID().toString();
+							URLFeed sourceFeed = new URLFeed(url, sinceDate, feedID);
+							feeds.add(sourceFeed);
+						}
+						break;
+				
+					case KEYWORDS : 
+						@SuppressWarnings("unchecked")
+						List<Keyword> keywords = (List<Keyword>) inputData.get(feedType);
+						for(Keyword keyword : keywords) {
+							String feedID = UUID.randomUUID().toString();
+							KeywordsFeed keywordsFeed = new KeywordsFeed(keyword, sinceDate, feedID);
+							keywordsFeed.setLabel(keyword.getLabel());
+							feeds.add(keywordsFeed);
+						}
+						break;
+				
+					case LOCATION :
+						@SuppressWarnings("unchecked")
+						List<Location> locations = (List<Location>) inputData.get(feedType);
+						for(Location location : locations) {
+							String feedID = UUID.randomUUID().toString();
+							LocationFeed locationFeed = new LocationFeed(location, sinceDate, feedID);
+							feeds.add(locationFeed);
+						}
+						break;
+					
+					default:
+						break;
 				}
 			}
-			feeds.put(stream, feedsPerStream);
+			feedsPerStream.put(stream, feeds);
 		}
 		
-		return feeds;
+		return feedsPerStream;
 	}
 	
 	@Override
@@ -181,14 +203,7 @@ public class MongoInputReader implements InputReader{
 			}
 		}
 		
-		Map<FeedType,Object> inputDataPerType = new HashMap<FeedType, Object>();
-		
-		this.host = storage_config.getParameter(MongoInputReader.HOST);
-		this.db = storage_config.getParameter(MongoInputReader.DB);
-		this.newsHoundsCollection = storage_config.getParameter(MongoInputReader.SOURCES_COLLECTION, "Sources");
-		this.rssSourcesCollection = storage_config.getParameter(MongoInputReader.RSS_SOURCES_COLLECTION, "Rss_Sources");
-		this.expertsCollection = storage_config.getParameter(MongoInputReader.EXPERTS_COLLECTION,"Experts");
-		this.keywordsCollection = storage_config.getParameter(MongoInputReader.KEYWORDS_COLLECTION, "Keywords");
+		Map<FeedType, Object> inputDataPerType = new HashMap<FeedType, Object>();
 		
 		if(host == null || db == null || newsHoundsCollection == null || expertsCollection == null){
 			System.out.println("News hounds collection needs to be configured correctly");
@@ -210,28 +225,10 @@ public class MongoInputReader implements InputReader{
 		}
 		else {
 			List<Source> streamSources = sourceDao.findTopSources(75000, SocialNetworkSource.valueOf(streamType));
-			Collections.shuffle(streamSources);
 			sources.addAll(streamSources);
 		}
 		
-		
 		experts = expertsDao.getExperts();
-		
-		//Assign users to newshound lists
-		for(Source source : sources) {
-			String user = streamType+"#"+source.getId();
-			
-			//extract list
-			String list = source.getList();
-			if(list != null) {
-				Set<String> lists = usersToLists.get(user);
-				if(lists == null) {
-					lists = new HashSet<String>();
-				}
-				lists.add(list);
-				usersToLists.put(user, lists);
-			}
-		}
 		
 		//extract categories
 		for(Expert expert : experts) {
@@ -240,22 +237,27 @@ public class MongoInputReader implements InputReader{
 		}
 		
 		// extract keywords
-		List<Keyword> keywords = keywordDao.findKeywords(SocialNetworkSource.valueOf(streamType));
-		if(!keywords.isEmpty())
+		List<Keyword> keywords;
+		if(streamType.equals("RSS")) {
+			keywords = new ArrayList<Keyword>();
+		}
+		else {
+			keywords = keywordDao.findKeywords(SocialNetworkSource.valueOf(streamType));
+		}
+		
+		if(!keywords.isEmpty()) {
 			inputDataPerType.put(FeedType.KEYWORDS, keywords);
+		}
 		
-		if(!sources.isEmpty())
-			inputDataPerType.put(FeedType.SOURCE,sources);
+		if(!sources.isEmpty()) {
+			inputDataPerType.put(FeedType.SOURCE, sources);
+		}
 		
-		if(!rssSources.isEmpty())
-			inputDataPerType.put(FeedType.URL,rssSources);
+		if(!rssSources.isEmpty()) {
+			inputDataPerType.put(FeedType.URL, rssSources);
+		}
 		
 		return inputDataPerType;
-	}
-
-	@Override
-	public Map<String, Set<String>> getUsersToLists() {
-		return usersToLists;
 	}
 	
 	@Override

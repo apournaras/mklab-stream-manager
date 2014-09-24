@@ -2,7 +2,6 @@ package eu.socialsensor.sfc.input;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.Feed.FeedType;
@@ -32,14 +31,6 @@ public interface InputReader {
 	 * @return A list of feeds 
 	 */
 	public List<Feed> createFeeds();
-	
-	/**
-	 * Maps the users to follow to the newshounds lists they
-	 * are included
-	 * @return the map of the user to the newshounds lists
-	 * he is included in
-	 */
-	public Map<String,Set<String>> getUsersToLists();
 	
 	/**
 	 * Maps the users to follow to a category 

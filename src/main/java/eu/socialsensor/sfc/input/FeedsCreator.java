@@ -115,15 +115,6 @@ public class FeedsCreator {
 	}
 	
 	/**
-	 * Returns the mapping of the users to follow to 
-	 * newhounds lists
-	 * @return the map of the user to the newshounds lists 
-	 * he is included in
-	 */
-	public Map<String,Set<String>> getUsersToLists(){
-		return reader.getUsersToLists();
-	}
-	/**
 	 * Returns the mapping of the users to follow to categories
 	 * @return the map of the user to the category he corresponds to
 	 */

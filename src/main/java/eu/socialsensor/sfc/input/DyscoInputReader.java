@@ -205,12 +205,6 @@ public class DyscoInputReader implements InputReader{
 		}
 		return feeds;
 	}
-
-	
-	@Override
-	public Map<String,Set<String>> getUsersToLists(){
-		return null;
-	}
 	
 	@Override
 	public Map<String,Category> getUsersToCategories(){

@@ -254,12 +254,6 @@ public class ConfigInputReader implements InputReader{
 		return inputDataPerType;
 	}
 	
-	
-	@Override
-	public Map<String,Set<String>> getUsersToLists(){
-		return null;
-	}
-	
 	@Override
 	public Map<String,Category> getUsersToCategories(){
 		return null;
