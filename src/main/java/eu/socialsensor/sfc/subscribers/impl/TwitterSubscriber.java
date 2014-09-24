@@ -1,6 +1,7 @@
 package eu.socialsensor.sfc.subscribers.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -103,17 +104,19 @@ public class TwitterSubscriber extends Subscriber {
 		} 
 		else {
 			List<String> keys = new ArrayList<String>();
-			List<String> users = new ArrayList<String>();
-			List<Long> userids = new ArrayList<Long>();
+			Set<String> users = new HashSet<String>();
+			Set<Long> userids = new HashSet<Long>();
 			List<double[]> locs = new ArrayList<double[]>();
 			
 			for(Feed feed : feeds) {
 				if(feed.getFeedtype().equals(FeedType.KEYWORDS)) {
-					if(((KeywordsFeed) feed).getKeyword() != null)
+					if(((KeywordsFeed) feed).getKeyword() != null) {
 						keys.add(((KeywordsFeed) feed).getKeyword().getName());
-					else{
-						for(Keyword keyword : ((KeywordsFeed) feed).getKeywords())
+					}
+					else {
+						for(Keyword keyword : ((KeywordsFeed) feed).getKeywords()) {
 							keys.add(keyword.getName());
+						}
 					}
 						
 				}
@@ -124,6 +127,7 @@ public class TwitterSubscriber extends Subscriber {
 							users.add(source.getName());
 						}
 						catch(Exception e) {
+							logger.error(e.getMessage());
 							continue;
 						}
 					}
@@ -144,25 +148,38 @@ public class TwitterSubscriber extends Subscriber {
 			userids.addAll(temp);
 			
 			String[] keywords = new String[keys.size()];
-			long[] follows = new long[userids.size()];
+			long[] follows = new long[Math.min(userids.size(), accessLevel.filterMaxFollows)];
 			double[][] locations = new double[locs.size()][2];
 			
-			for(int i=0;i<keys.size();i++)
+			for(int i=0; i<keys.size(); i++) {
 				keywords[i] = keys.get(i);
+				if(i >= accessLevel.filterMaxKeywords) {
+					break;
+				}
+			}
 			
-			for(int i=0;i<userids.size();i++)
-				follows[i] = userids.get(i);
+			int index = 0;
+			for(Long userId : userids) {
+				follows[index++] = userId;
+				if(index >= accessLevel.filterMaxFollows) {
+					break;
+				}
+			}
 			
-			for(int i=0;i<locs.size();i++)
+			for(int i=0; i<locs.size(); i++) {
 				locations[i] = locs.get(i);
+				if(i >= accessLevel.filterMaxLocations) {
+					break;
+				}
+			}
 			
 			if (!ensureFilterLimits(keywords, follows, locations)) {
 				logger.error("Filter exceeds Twitter's public access level limits");
-				throw new StreamException("Filter exceeds Twitter's public access level limits", null);
+				throw new StreamException("Filter exceeds Twitter's public access level limits");
 			}
 
-			FilterQuery fq = getFilterQuery(keywords, follows, locations);
-			if (fq != null) {
+			FilterQuery filterQuery = getFilterQuery(keywords, follows, locations);
+			if (filterQuery != null) {
 				
 				//getPastTweets(keywords, follows);
 				
@@ -170,13 +187,15 @@ public class TwitterSubscriber extends Subscriber {
                      try {
                     	 logger.info("Wait for " + FILTER_EDIT_WAIT_TIME + " msecs to edit filter");
                     	 wait(FILTER_EDIT_WAIT_TIME);
-					} catch (InterruptedException e) {}
+					} catch (InterruptedException e) {
+						logger.error(e.getMessage());
+					}
 				}
 				lastFilterInitTime = System.currentTimeMillis();
 				
 				logger.info("Start tracking from twitter stream");
 				twitterStream.shutdown();
-				twitterStream.filter(fq);
+				twitterStream.filter(filterQuery);
 			
 			}
 			else {
@@ -247,7 +266,7 @@ public class TwitterSubscriber extends Subscriber {
 		}
 	}
 	
-	private Set<Long> getUserIds(List<String> followsUsernames) {
+	private Set<Long> getUserIds(Collection<String> followsUsernames) {
 		
 		Set<Long> ids = new HashSet<Long>();
 		
@@ -353,8 +372,8 @@ public class TwitterSubscriber extends Subscriber {
 				}
 			}
 			@Override
-			public void onScrubGeo(long userid, long arg1) {
-				logger.info("Remove appropriate geolocation information for user " + userid + " up to tweet with id " + arg1);
+			public void onScrubGeo(long userid, long id) {
+				logger.info("Remove appropriate geolocation information for user " + userid + " up to tweet with id " + id);
 			}
 
 			@Override
@@ -368,9 +387,13 @@ public class TwitterSubscriber extends Subscriber {
 
 	
 	private boolean ensureFilterLimits(String[] keywords, long[] follows, double[][] locations) {
-		if (keywords != null && keywords.length > accessLevel.getFilterMaxKeywords()) return false;
-		if (follows != null && follows.length > accessLevel.getFilterMaxFollows()) return false;
-		if (locations != null && (locations.length/2) > accessLevel.getFilterMaxLocations()) return false;
+		if (keywords != null && keywords.length > accessLevel.getFilterMaxKeywords()) 
+			return false;
+		if (follows != null && follows.length > accessLevel.getFilterMaxFollows()) 
+			return false;
+		if (locations != null && (locations.length/2) > accessLevel.getFilterMaxLocations()) 
+			return false;
+		
 		return true;
 	}
 	
@@ -420,6 +443,11 @@ public class TwitterSubscriber extends Subscriber {
 		String oAuthAccessToken 		= 	config.getParameter(ACCESS_TOKEN);
 		String oAuthAccessTokenSecret 	= 	config.getParameter(ACCESS_TOKEN_SECRET);
 		
+		String accessLevel = config.getParameter("AccessLevel");
+		if(accessLevel != null && accessLevel.equals("public")) {
+			this.accessLevel = AccessLevel.PUBLIC;
+		}
+		
 		if (oAuthConsumerKey == null || oAuthConsumerSecret == null ||
 				oAuthAccessToken == null || oAuthAccessTokenSecret == null) {
 			logger.error("#Twitter : Stream requires authentication");
@@ -439,7 +467,6 @@ public class TwitterSubscriber extends Subscriber {
 			.setOAuthAccessToken(oAuthAccessToken)
 			.setOAuthAccessTokenSecret(oAuthAccessTokenSecret);
 		Configuration conf = cb.build();
-		
 		
 		listener = getListener();
 		twitterStream = new TwitterStreamFactory(conf).getInstance();	
