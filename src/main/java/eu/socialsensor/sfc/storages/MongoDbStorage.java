@@ -59,6 +59,8 @@ public class MongoDbStorage implements Storage {
 	
 	private Logger logger = Logger.getLogger(MongoDbStorage.class);
 	
+	private long totalTime = 0l;
+	
 	/**
 	 * @param args
 	 * @throws IOException 
@@ -253,6 +255,7 @@ public class MongoDbStorage implements Storage {
 	public void store(Item item) {
 		
 		try {
+			long time = System.currentTimeMillis();
 			// Handle Items
 			String itemId = item.getId();
 			
@@ -286,6 +289,20 @@ public class MongoDbStorage implements Storage {
 						// save stream user
 						userInsertions++;
 						streamUserDAO.insertStreamUser(user);
+						
+						synchronized(usersMap) {
+							StreamUser tempUser = usersMap.get(user.getId());
+							if(tempUser == null) {
+								tempUser = new StreamUser(null, Operation.UPDATE);
+								tempUser.setId(user.getId());
+								tempUser.setImageUrl(user.getImageUrl());
+								tempUser.setProfileImage(user.getProfileImage());
+								tempUser.setName(user.getName());
+								usersMap.put(user.getId(), tempUser);
+							}
+							tempUser.incItems(1);
+							tempUser.incMentions(1L);
+						}
 					}
 					else {
 						// Update statistics of stream user
@@ -337,20 +354,30 @@ public class MongoDbStorage implements Storage {
 				// Handle Media Items
 				for(MediaItem mediaItem : item.getMediaItems()) {
 					mediaItems++;
-					if(!mediaItemDAO.exists(mediaItem.getId())) {
-						
+					
+					String mediaItemId = mediaItem.getId();
+					
+					boolean mediaExists = false;
+					synchronized(mediaItemsSharesMap) {
+						mediaExists = mediaItemsSharesMap.containsKey(mediaItemId) || mediaItemDAO.exists(mediaItemId);
+					}
+					
+					if(!mediaExists) {	
 						// MediaItem does not exist. Save it.
 						mediaItemInsertions++;
 						mediaItemDAO.addMediaItem(mediaItem);
+						synchronized(mediaItemsSharesMap) {
+							mediaItemsSharesMap.put(mediaItemId, 0);
+						}
 					}
 					else {
 						//Update media item
 						synchronized(mediaItemsSharesMap) {
-							Integer shares = mediaItemsSharesMap.get(mediaItem.getId());
+							Integer shares = mediaItemsSharesMap.get(mediaItemId);
 							if(shares == null) {
 								shares = 0;
 							}
-							mediaItemsSharesMap.put(mediaItem.getId(), ++shares);
+							mediaItemsSharesMap.put(mediaItemId, ++shares);
 						}
 					}
 					
@@ -366,17 +393,26 @@ public class MongoDbStorage implements Storage {
 					for(WebPage webPage : webPages) {
 						wPages++;
 						String webPageURL = webPage.getUrl();
-						if(!webPageDAO.exists(webPageURL)) {
-							
+						
+						boolean wpExists = false;
+						synchronized(webpagesSharesMap) {
+							wpExists = webpagesSharesMap.containsKey(webPageURL) || webPageDAO.exists(webPageURL);
+						}
+						
+						if(!wpExists) {
 							// Web page does not exist. Save it.
 							wPageInsertions++;
 							webPageDAO.addWebPage(webPage);
+							synchronized(webpagesSharesMap) {
+								webpagesSharesMap.put(webPageURL, 1);
+							}
 						}
 						else {
 							synchronized(webpagesSharesMap) {
 								Integer shares = webpagesSharesMap.get(webPageURL);
-								if(shares == null)
+								if(shares == null) {
 									shares = 0;
+								}
 								webpagesSharesMap.put(webPageURL, ++shares);
 							}
 						}
@@ -420,6 +456,9 @@ public class MongoDbStorage implements Storage {
 					}
 				}
 			}
+			
+			totalTime += (System.currentTimeMillis() - time);
+			
 		}
 		catch(MongoException e) {
 			e.printStackTrace();
@@ -440,8 +479,9 @@ public class MongoDbStorage implements Storage {
 	}
 	
 	@Override
-	public boolean checkStatus(Storage storage) {
+	public boolean checkStatus() {
 		try {
+			
 			logger.info(itemInsertions + "(" + items + ") items inserted in mongodb");
 			logger.info(mediaItemInsertions + "(" + mediaItems + ") media items inserted in mongodb");
 			logger.info(userInsertions + "(" + users + ") stream users inserted in mongodb");
@@ -450,6 +490,8 @@ public class MongoDbStorage implements Storage {
 			logger.info("Mongo insertion rate: " + (itemInsertions - pItems)/((System.currentTimeMillis()-t)/60000) + " items/min");
 			pItems = itemInsertions;
 			t = System.currentTimeMillis();
+			
+			logger.info("Mean MongoDB Storing Time: " + ((double)totalTime / (double)items) + " msec / item");
 		}
 		catch(Exception e) {
 			logger.error("Exception on logging", e);
@@ -478,7 +520,7 @@ public class MongoDbStorage implements Storage {
 	
 	private class UpdaterTask extends Thread {
 
-		private long timeout = 15 * 60 * 1000;
+		private long timeout = 30 * 60 * 1000;
 		private boolean stop = true;
 		
 		@Override
@@ -494,7 +536,7 @@ public class MongoDbStorage implements Storage {
 					long t = System.currentTimeMillis();
 					
 					synchronized(itemsMap) {
-						logger.info(itemsMap.size() + " items");
+						logger.info(itemsMap.size() + " items to update");
 						for(Item item : itemsMap.values()) {
 							itemDAO.updateItem(item);
 						}
@@ -510,7 +552,7 @@ public class MongoDbStorage implements Storage {
 					}
 					
 					synchronized(webpagesSharesMap) {
-						logger.info(webpagesSharesMap.size() + " web pages");
+						logger.info(webpagesSharesMap.size() + " web pages to update");
 						for(Entry<String, Integer> e : webpagesSharesMap.entrySet()) {
 							webPageDAO.updateWebPageShares(e.getKey(), e.getValue());
 						}
@@ -518,7 +560,7 @@ public class MongoDbStorage implements Storage {
 					}
 					
 					synchronized(mediaItemsSharesMap) {
-						logger.info(mediaItemsSharesMap.size() + " media Items");
+						logger.info(mediaItemsSharesMap.size() + " media Items to update");
 						for(Entry<String, Integer> entry : mediaItemsSharesMap.entrySet()) {
 							mediaItemDAO.updateMediaItemShares(entry.getKey(), entry.getValue());
 						}
