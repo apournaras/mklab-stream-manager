@@ -56,6 +56,11 @@
             <artifactId>socialsensor-framework-common</artifactId>
             <version>0.2.2-SNAPSHOT</version>
         </dependency>
+      	<dependency>
+        	<groupId>eu.socialsensor</groupId>
+        	<artifactId>geo-util</artifactId>
+        	<version>0.1-SNAPSHOT</version>
+        </dependency>
         <dependency>
   			<groupId>eu.socialsensor</groupId>
   			<artifactId>socialmedia-abstractions</artifactId>
@@ -71,59 +76,41 @@
 			<artifactId>socialsensor-query-builder</artifactId>
 			<version>0.2-SNAPSHOT</version>
         </dependency>
-        
-        <dependency>
-     		<groupId>eu.socialsensor</groupId>
-			<artifactId>multimedia-indexing</artifactId>
-			<version>0.1-SNAPSHOT</version>
-     	</dependency>
-        <!--  
-        <dependency>
-            <groupId>org.apache.nutch</groupId>
-            <artifactId>nutch</artifactId>
-            <version>1.5.1</version>
-        </dependency>
-       	-->
         <dependency>
         	<groupId>com.thinkaurelius.titan</groupId>
         	<artifactId>titan-hbase</artifactId>
         	<version>0.4.4</version>
         	<exclusions>
-        		<exclusion>  <!-- declare the exclusion here -->
-       
+        		<exclusion>  
+       				<!-- declare the exclusion here -->
 					<groupId>org.slf4j</groupId>
 					<artifactId>slf4j-api</artifactId>
-
         		</exclusion>
-        		
         		<exclusion>
-        		
 					<groupId>org.slf4j</groupId>
 					<artifactId>slf4j-log4j12</artifactId>
-	
         		</exclusion>
       		</exclusions> 
         </dependency>
+        
         <dependency>
         	<groupId>com.sun.jersey</groupId>
         	<artifactId>jersey-client</artifactId>
         	<version>1.9</version>
         </dependency>
-        <dependency>
-        	<groupId>eu.socialsensor</groupId>
-        	<artifactId>geo-util</artifactId>
-        	<version>0.1-SNAPSHOT</version>
-        </dependency>
+        
         <dependency>
         	<groupId>com.cybozu.labs</groupId>
         	<artifactId>langdetect</artifactId>
         	<version>1.1-20120112</version>
         </dependency>
+        <!--
         <dependency>
         	<groupId>org.log4mongo</groupId>
         	<artifactId>log4mongo-java</artifactId>
         	<version>0.7.4</version>
         </dependency>
+        -->
     </dependencies>
     
 	<repositories>
@@ -145,7 +132,7 @@
                     <source>1.6</source>
                     <target>1.6</target>
                 </configuration>
-         
+		
             </plugin>
       
             <plugin>
@@ -194,6 +181,34 @@
                                         <exclude>META-INF/*.RSA</exclude>                                       
                                     </excludes>
                                 </filter>
+                                
+                                <!--  
+                                <filter>
+                       				<artifact>log4j:log4j</artifact>
+                       				<includes>
+                           				<include>**</include>
+                       				</includes>
+                    			</filter> 
+                    			<filter>
+                       				<artifact>org.log4mongo:log4mongo-java</artifact>
+                       				<includes>
+                           				<include>**</include>
+                       				</includes>
+                    			</filter>
+                    			<filter>
+                       				<artifact>org.twitter4j:*</artifact>
+                       				<includes>
+                           				<include>**</include>
+                       				</includes>
+                    			</filter>
+                    			<filter>
+                       				<artifact>org.apache.commons:*</artifact>
+                       				<includes>
+                           				<include>**</include>
+                       				</includes>
+                    			</filter>
+                    			-->
+                    			
                             </filters>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
