@@ -51,7 +51,8 @@ public class Consumer extends Thread {
 				item = take();
 				if (item == null) {
 					_logger.error("Item is null.");
-				} else {
+				} 
+				else {
 					process(item);
 				}
 			} catch(IOException e) {
@@ -78,9 +79,11 @@ public class Consumer extends Thread {
 	 */
 	private void process(Item item) throws IOException {
 		if (store != null) {
+			
 			for(ItemFilter filter : filters) {
-				if(!filter.accept(item))
+				if(!filter.accept(item)) {
 					return;
+				}
 			}
 			
 			for(Processor processor : processors) {
