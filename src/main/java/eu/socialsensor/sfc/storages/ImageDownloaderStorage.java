@@ -77,10 +77,6 @@ public class ImageDownloaderStorage implements Storage {
 		return false;
 	}
 	
-	public boolean checkStatus(Storage storage) {
-		return false;
-	}
-	
 	public void updateTimeslot(){
 		
 	}
@@ -102,6 +98,11 @@ public class ImageDownloaderStorage implements Storage {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public boolean checkStatus() {
+		return true;
 	}
 
 }
