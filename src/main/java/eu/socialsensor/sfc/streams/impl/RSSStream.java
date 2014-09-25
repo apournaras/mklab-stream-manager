@@ -14,12 +14,10 @@ public class RSSStream extends Stream {
 	
 	public static NewsFeedSource SOURCE = NewsFeedSource.RSS;
 	
-
 	@Override
-	public void open(StreamConfiguration config){
+	public void open(StreamConfiguration config) {
 		retriever = new RSSRetriever();
 	}
-
 
 	@Override
 	public String getName() {

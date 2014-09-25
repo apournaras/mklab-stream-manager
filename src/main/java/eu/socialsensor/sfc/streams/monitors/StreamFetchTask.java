@@ -24,8 +24,6 @@ public class StreamFetchTask implements  Callable<List<Item>> {
 	
 	private Stream stream;
 	
-	private boolean completed = false;
-	
 	private List<Feed> feeds = new ArrayList<Feed>();
 	
 	public StreamFetchTask(Stream stream) throws Exception {
@@ -58,22 +56,6 @@ public class StreamFetchTask implements  Callable<List<Item>> {
 	public void clear() {
 		feeds.clear();
 	}
-	
-	/**
-	 * Returns true if the stream task is completed
-	 * @return
-	 */
-	public boolean isCompleted() {
-		return completed;
-	}
-	
-	/**
-	 * Sets the task in ready mode to retrieve again 
-	 * from the stream with the same set of feeds
-	 */
-	public void restartTask() {
-		completed = false;
-	}
 
 	/**
 	 * Retrieves content using the feeds assigned to the task
@@ -83,12 +65,10 @@ public class StreamFetchTask implements  Callable<List<Item>> {
 	public List<Item> call() throws Exception {
 		try {
 			List<Item> items = stream.poll(feeds);
-			completed = true;
 			
 			return items;
 		} catch (Exception e) {
 			logger.error("ERROR IN STREAM FETCH TASK: " + e.getMessage());
-			completed = true;
 		}
 		
 		return new ArrayList<Item>();

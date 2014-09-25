@@ -48,7 +48,7 @@ public class StreamsManager {
 
 	private List<Feed> feeds = new ArrayList<Feed>();
 
-	public StreamsManager(StreamsManagerConfiguration config,InputConfiguration input_config) throws StreamException {
+	public StreamsManager(StreamsManagerConfiguration config, InputConfiguration input_config) throws StreamException {
 
 		if (config == null) {
 			throw new StreamException("Manager's configuration must be specified");
@@ -63,10 +63,6 @@ public class StreamsManager {
 		
 		//Set up the Streams
 		initStreams();
-		//If there are Streams to monitor start the StreamsMonitor
-		if(streams != null && !streams.isEmpty()){
-			monitor = new StreamsMonitor(streams.size());
-		}
 	}
 	
 	/**
@@ -85,13 +81,18 @@ public class StreamsManager {
 		logger.info("Streams are now open");
 		
 		try {
+			//If there are Streams to monitor start the StreamsMonitor
+			if(streams != null && !streams.isEmpty()) {
+				monitor = new StreamsMonitor(streams.size());
+			}
+			
 			//Start stream handler 
 			storageHandler = new StorageHandler(config);
 			storageHandler.start();	
 			logger.info("Store Manager is ready to store.");
 			
 			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.MONGO_STORAGE, inputConfig);
-			Map<String,List<Feed>> results = feedsCreator.getQueryPerStream();
+			Map<String, List<Feed>> results = feedsCreator.getQueryPerStream();
 			
 			//Start the Subscribers
 			for(String subscriberId : subscribers.keySet()) {
@@ -102,7 +103,6 @@ public class StreamsManager {
 				subscriber.open(srconfig);
 			
 				feeds = results.get(subscriberId);
-				//subscriber.setUserLists(feedsCreator.getUsersToLists());
 				subscriber.setUserCategories(feedsCreator.getUsersToCategories());
 				subscriber.subscribe(feeds);
 				
@@ -125,8 +125,10 @@ public class StreamsManager {
 					continue;
 				}
 				
-				monitor.addStream(streamId, stream, feeds);
-				monitor.startStream(streamId);
+				if(monitor != null) {
+					monitor.addStream(streamId, stream, feeds);
+					monitor.startStream(streamId);
+				}
 			}
 			
 			if(monitor != null && monitor.getNumberOfStreamFetchTasks() > 0) {
@@ -185,6 +187,7 @@ public class StreamsManager {
 			throw new StreamException("Error during streams initialization", e);
 		}
 	}
+	
 	/**
 	 * Initializes the streams apis, that implement subscriber channels, that are going to be searched for 
 	 * relevant content

@@ -13,7 +13,7 @@ public class LengthItemFilter extends ItemFilter {
 
 	public LengthItemFilter(Configuration configuration) {
 		super(configuration);
-		String lenStr =configuration.getParameter("length", "10");
+		String lenStr =configuration.getParameter("length", "15");
 		this.minTextLenth  = Integer.parseInt(lenStr);
 		
 		Logger.getLogger(LengthItemFilter.class).info("Initialized. Min Text Lenth: " + minTextLenth);

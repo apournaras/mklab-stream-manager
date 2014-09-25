@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -24,7 +25,8 @@ import eu.socialsensor.sfc.streams.Stream;
  */
 public class StreamsMonitor {
 	
-	private static final long DEFAULT_REQUEST_TIME = 5 * 60 * 60000; 
+	// 20 minutes
+	private static final long DEFAULT_REQUEST_PERIOD = 1 * 20 * 60000; 
 	
 	public final Logger logger = Logger.getLogger(StreamsMonitor.class);
 
@@ -33,7 +35,6 @@ public class StreamsMonitor {
 	private Map<String, Stream> streams = new HashMap<String, Stream>();
 	private Map<String, List<Feed>> feedsPerStream = new HashMap<String, List<Feed>>();
 	
-	private Map<String, Long> requestTimePerStream = new HashMap<String, Long>();
 	private Map<String, Long> runningTimePerStream = new HashMap<String, Long>();
 	
 	private Map<String, StreamFetchTask> streamsFetchTasks = new HashMap<String, StreamFetchTask>();
@@ -86,7 +87,6 @@ public class StreamsMonitor {
 	 */
 	public void addStream(String streamId, Stream stream) {
 		this.streams.put(streamId, stream);
-		this.requestTimePerStream.put(streamId, DEFAULT_REQUEST_TIME);
 	}
 	
 	/**
@@ -101,15 +101,10 @@ public class StreamsMonitor {
 	public void addStream(String streamId, Stream stream, List<Feed> feeds) {
 		this.streams.put(streamId, stream);
 		this.feedsPerStream.put(streamId, feeds);
-		this.requestTimePerStream.put(streamId, DEFAULT_REQUEST_TIME);
 	}
 	
 	public Stream getStream(String streamId) {
 		return streams.get(streamId);
-	}
-	
-	public void setStreamRequestTime(String streamId, Long requestTime) {
-		this.requestTimePerStream.put(streamId, requestTime);
 	}
 	
 	/**
@@ -152,7 +147,10 @@ public class StreamsMonitor {
 			StreamFetchTask streamTask = new StreamFetchTask(streams.get(streamId), feeds);
 			
 			streamsFetchTasks.put(streamId, streamTask);
-			executor.submit(streamTask);
+			
+			Future<List<Item>> response = executor.submit(streamTask);
+			responses.put(streamId, response);
+	
 			runningTimePerStream.put(streamId, System.currentTimeMillis());
 			
 			logger.info("Start stream task: " + streamId + " with " + feedsPerStream.get(streamId).size() + " feeds");
@@ -168,7 +166,7 @@ public class StreamsMonitor {
 	 * @param 
 	 */
 	public void startStreams() {
-		for(String streamId : streams.keySet()){
+		for(String streamId : streams.keySet()) {
 			startStream(streamId);
 		}
 		reInitializer = new ReInitializer();
@@ -234,9 +232,7 @@ public class StreamsMonitor {
 	 *
 	 */
 	private class ReInitializer extends Thread {
-		
-		private Map<String, Long> reformedRunningTimes = new HashMap<String, Long>();
-		
+			
 		public ReInitializer() {
 			logger.info("ReInitializer Thread instantiated");
 		}
@@ -247,23 +243,22 @@ public class StreamsMonitor {
 				long currentTime = System.currentTimeMillis();
 				
 				for(String streamId : runningTimePerStream.keySet()) {
-					if((currentTime - runningTimePerStream.get(streamId)) >= requestTimePerStream.get(streamId)) {
-						if(streamsFetchTasks.get(streamId).isCompleted()) {
-							streamsFetchTasks.get(streamId).restartTask();				
-							StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);				
-							//executor.execute(fetchTask);
-							executor.submit(fetchTask);				
-							reformedRunningTimes.put(streamId, System.currentTimeMillis());
+					if((currentTime - runningTimePerStream.get(streamId)) >= DEFAULT_REQUEST_PERIOD) {
+						Future<List<Item>> response = responses.get(streamId);
+						try {
+							if(response == null || response.get() != null) {				
+								StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);				
+								response = executor.submit(fetchTask);		
+								responses.put(streamId, response);
+								runningTimePerStream.put(streamId, System.currentTimeMillis());
+							}
+						} catch (InterruptedException e) {
+							logger.error(e);
+						} catch (ExecutionException e) {
+							logger.error(e);
 						}
 					}
 				}
-				
-				for(String streamId : reformedRunningTimes.keySet()) {
-					logger.info("Reinitializing Stream: " + streamId);
-					runningTimePerStream.put(streamId, reformedRunningTimes.get(streamId));
-				}
-				
-				reformedRunningTimes.clear();
 				
 				try {
 					Thread.sleep(1000);
@@ -347,7 +342,7 @@ public class StreamsMonitor {
 	}
 	
 	public void reset() {
-		requestTimePerStream.clear();
+		//requestTimePerStream.clear();
 		runningTimePerStream.clear();
 		feedsPerStream.clear();
 		streamsFetchTasks.clear();
@@ -357,7 +352,7 @@ public class StreamsMonitor {
 	public void status() {
 		logger.info("streams: " + streams.size());
 		logger.info("feedsPerStream:" + feedsPerStream.size());
-		logger.info("requestTimePerStream:" + requestTimePerStream.size());
+		//logger.info("requestTimePerStream:" + requestTimePerStream.size());
 		logger.info("runningTimePerStream:" + runningTimePerStream.size());
 		logger.info("streamsFetchTasks:" + streamsFetchTasks.size());
 	}
