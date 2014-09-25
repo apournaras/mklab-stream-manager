@@ -5,6 +5,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -39,11 +43,13 @@ import eu.socialsensor.sfc.streams.StreamException;
 import eu.socialsensor.sfc.subscribers.Subscriber;
 
 /**
- * Class for retrieving real-time Twitter content by subscribing to Twitter. 
+ * Class for retrieving real-time Twitter content by subscribing on Twitter Streaming API. 
  * Twitter content can be based on keywords,twitter users or locations or be 
- * a random sampling of currently posted statuses. 
+ * a random sampling (1%) of currently posted statuses. 
  * The retrieval process takes place through Twitter API (twitter4j)
- * @author ailiakop
+ * 
+ * @author Manos Schinas
+ * @email  manosetro@iti.gr
  *
  */
 public class TwitterSubscriber extends Subscriber {
@@ -54,14 +60,16 @@ public class TwitterSubscriber extends Subscriber {
 	
 	private long lastFilterInitTime = System.currentTimeMillis();
 	
+	private BlockingQueue<Status> queue = new LinkedBlockingQueue<Status>();
+	
 	public enum AccessLevel {
 		
 		PUBLIC(400, 5000, 25),
 		EXTENDED(400, 75000, 25);
 		
-		int filterMaxKeywords;
-		int filterMaxFollows;
-		int filterMaxLocations;
+		private int filterMaxKeywords;
+		private int filterMaxFollows;
+		private int filterMaxLocations;
 		
 		private AccessLevel(int filterMaxKeywords,
 						   int filterMaxFollows,
@@ -90,6 +98,10 @@ public class TwitterSubscriber extends Subscriber {
 	
 	private twitter4j.TwitterStream twitterStream  = null;
 	private Twitter twitterApi;
+
+	private int numberOfConsumers = 5;
+	private List<TwitterStreamConsumer> streamConsumers = new ArrayList<TwitterStreamConsumer>();
+	
 	
 	public TwitterSubscriber() {
 	
@@ -313,6 +325,10 @@ public class TwitterSubscriber extends Subscriber {
 			listener = null;
 			twitterStream  = null;
 		}
+		
+		for(TwitterStreamConsumer consumer : this.streamConsumers) {
+			consumer.stop();
+		}
 	}
 	
 	private StatusListener getListener() { 
@@ -321,24 +337,15 @@ public class TwitterSubscriber extends Subscriber {
 			
 			@Override
 			public void onStatus(Status status) {
-				synchronized(this) {
-					if(status != null) {
-						try {
-							// Update original tweet in case of retweets
-							Status retweetedStatus = status.getRetweetedStatus();
-							if(retweetedStatus != null) {
-								store(new TwitterItem(retweetedStatus));
-							}
-						
-							// store
-							if((++items)%5000==0) {
-								logger.info(items + " incoming items from twitter. " + deletion + " deletions.");
-							}
-							store(new TwitterItem(status));
+				if(status != null) {
+					try {
+						queue.add(status);
+						if((++items)%5000==0) {
+							logger.info(items + " incoming items from twitter. " + deletion + " deletions.");
 						}
-						catch(Exception e) {
-							logger.error("Exception onStatus: ", e);
-						}
+					}
+					catch(Exception e) {
+						logger.error("Exception onStatus: ", e);
 					}
 				}
 			}
@@ -468,6 +475,17 @@ public class TwitterSubscriber extends Subscriber {
 			.setOAuthAccessTokenSecret(oAuthAccessTokenSecret);
 		Configuration conf = cb.build();
 		
+		
+		
+		ExecutorService executorService = Executors.newFixedThreadPool(numberOfConsumers);
+		for(int i=0; i<numberOfConsumers; i++) {
+			TwitterStreamConsumer consumer = new TwitterStreamConsumer();
+			streamConsumers.add(consumer);
+			
+			executorService.execute(consumer);
+		}
+		logger.info(numberOfConsumers + " stream consumers submitted for execution");
+		
 		listener = getListener();
 		twitterStream = new TwitterStreamFactory(conf).getInstance();	
 		twitterStream.addListener(listener);	
@@ -480,4 +498,55 @@ public class TwitterSubscriber extends Subscriber {
 		return "Twitter";
 	}
 
+	private class TwitterStreamConsumer implements Runnable {
+		
+		private boolean stop = false;
+		
+		@Override
+		public void run() {
+			while(!stop) {
+				try {
+					Status status = queue.take();
+					
+					if(status == null) {
+						try {
+							wait(10000);
+						} catch (InterruptedException e) {
+							logger.error(e);
+						}
+						continue;
+					}
+					
+					
+					// Update original tweet in case of retweets
+					Status retweetedStatus = status.getRetweetedStatus();
+					if(retweetedStatus != null) {
+						TwitterItem originalItem = new TwitterItem(retweetedStatus);
+						store(originalItem);
+					}
+
+					TwitterItem item = new TwitterItem(status);
+					store(item);
+					
+				} catch (Exception e) {
+					logger.error("Error during stream consumption.", e);
+				}
+				
+			}
+		}
+		
+		public void stop() {
+			stop = true;
+			synchronized(this) {
+				try {
+					this.notify();
+				}
+				catch(Exception e) {
+					logger.error(e);
+				}
+			}
+		}
+		
+	}
+	
 }
