@@ -98,15 +98,12 @@ public class FeedsMonitor {
 		while(allComplete < feedFetchTasks.size()){
 			for(FeedFetchTask  feedFetcherTask : feedFetchTasks.values()) {
 				if(feedFetcherTask.isCompleted() && !finishedTasks.contains(feedFetcherTask)){
-					//System.out.println("feedFetcherTask : "+feedFetcherTask.toString()+" is completed");
 					finishedTasks.add(feedFetcherTask);
 					
 					allComplete++;
 				}
 			}
 		}
-		//_logger.info("FeedsMonitor has executed all tasks!");
-		
 		return true;
 	}
 	
@@ -127,6 +124,5 @@ public class FeedsMonitor {
 			_logger.info("Stop: " + feedFetcher.getFeedId());
 			feedFetcher.stop();
 		}
-		//_logger.info("FeedsMonitor has stopped all tasks!");
 	}
 }

@@ -12,11 +12,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import eu.socialsensor.framework.Configuration;
-import eu.socialsensor.framework.client.dao.ExpertDAO;
 import eu.socialsensor.framework.client.dao.KeywordDAO;
 import eu.socialsensor.framework.client.dao.RssSourceDAO;
 import eu.socialsensor.framework.client.dao.SourceDAO;
-import eu.socialsensor.framework.client.dao.impl.ExpertDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.KeywordDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.RssSourceDAOImpl;
 import eu.socialsensor.framework.client.dao.impl.SourceDAOImpl;
@@ -26,13 +24,11 @@ import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
 import eu.socialsensor.framework.common.domain.feeds.LocationFeed;
 import eu.socialsensor.framework.common.domain.feeds.SourceFeed;
 import eu.socialsensor.framework.common.domain.feeds.URLFeed;
-import eu.socialsensor.framework.common.domain.Expert;
 import eu.socialsensor.framework.common.domain.Keyword;
 import eu.socialsensor.framework.common.domain.Location;
 import eu.socialsensor.framework.common.domain.NewsFeedSource;
 import eu.socialsensor.framework.common.domain.SocialNetworkSource;
 import eu.socialsensor.framework.common.domain.Source;
-import eu.socialsensor.framework.common.domain.StreamUser.Category;
 
 
 /**
@@ -67,8 +63,6 @@ public class MongoInputReader implements InputReader {
 	private Date sinceDate = null;
 	
 	private Map<String, List<Feed>> feedsPerStream = new HashMap<String, List<Feed>>();
-
-	private Map<String,Category> usersToCategories = new HashMap<String,Category>();
 
 	private String rssSourcesCollection;
 	
@@ -213,11 +207,9 @@ public class MongoInputReader implements InputReader {
 		//sources
 		List<Source> sources = new ArrayList<Source>();
 		List<String> rssSources = new ArrayList<String>();
-		List<Expert> experts = new ArrayList<Expert>();
 		
 		SourceDAO sourceDao = new SourceDAOImpl(host, db, newsHoundsCollection);
 		RssSourceDAO rssSourceDao = new RssSourceDAOImpl(host, db, rssSourcesCollection);
-		ExpertDAO expertsDao = new ExpertDAOImpl(host,db,expertsCollection);
 		KeywordDAO keywordDao = new KeywordDAOImpl(host,db,keywordsCollection);
 		
 		if(streamType.equals("RSS")) {
@@ -226,14 +218,6 @@ public class MongoInputReader implements InputReader {
 		else {
 			List<Source> streamSources = sourceDao.findTopSources(75000, SocialNetworkSource.valueOf(streamType));
 			sources.addAll(streamSources);
-		}
-		
-		experts = expertsDao.getExperts();
-		
-		//extract categories
-		for(Expert expert : experts) {
-			String user = streamType+"#"+expert.getId();
-			usersToCategories.put(user, expert.getCategory());
 		}
 		
 		// extract keywords
@@ -258,11 +242,6 @@ public class MongoInputReader implements InputReader {
 		}
 		
 		return inputDataPerType;
-	}
-	
-	@Override
-	public Map<String, Category> getUsersToCategories() {
-		return usersToCategories;
 	}
 	
 }

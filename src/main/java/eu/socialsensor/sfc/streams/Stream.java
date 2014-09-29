@@ -2,14 +2,12 @@ package eu.socialsensor.sfc.streams;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.Item;
-import eu.socialsensor.framework.common.domain.StreamUser.Category;
 import eu.socialsensor.framework.retrievers.Retriever;
 import eu.socialsensor.sfc.streams.management.StorageHandler;
 import eu.socialsensor.sfc.streams.monitors.FeedsMonitor;
@@ -26,7 +24,7 @@ import eu.socialsensor.sfc.streams.monitors.FeedsMonitor;
  * @email  ailiakop@iti.gr
  *
  */
-public abstract class Stream implements Runnable {
+public abstract class Stream {//implements Runnable {
 
 	protected static final String KEY = "Key";
 	protected static final String SECRET = "Secret";
@@ -45,12 +43,7 @@ public abstract class Stream implements Runnable {
 	protected Retriever retriever = null;
 	protected StorageHandler handler;
 	
-	//protected List<Item> retrievedItems = new ArrayList<Item>();
-	
 	private Logger  logger = Logger.getLogger(Stream.class);
-	
-	//private Map<String, Set<String>> usersToLists;
-	private Map<String, Category> usersToCategory;
 	
 	/**
 	 * Opens a stream for updates delivery
@@ -119,14 +112,6 @@ public abstract class Stream implements Runnable {
 		}
 	}
 	*/
-	
-	/**
-	 * Sets the category that the investigated user belongs to
-	 * @param usersToCategory
-	 */
-	public void setUserCategories(Map<String, Category> usersToCategory) {
-		this.usersToCategory = usersToCategory;
-	}
 	
 	/**
 	 * Returns the list of retrieved items 
@@ -221,31 +206,7 @@ public abstract class Stream implements Runnable {
 			return;
 		}
 		
-		if(usersToCategory != null && getUserCategory(item) != null)
-			item.setCategory(getUserCategory(item));
-		
 		handler.update(item);
-	}
-	
-	/**
-	 * Returns the category that a user associated with a given
-	 * item belongs to
-	 * @param item
-	 * @return
-	 */
-	private Category getUserCategory(Item item) {
-		
-		if(usersToCategory == null){
-			logger.error("User categories is null");
-			return null;
-		}
-			
-		if(item.getUserId() == null){
-			logger.error("User in item is null");
-			return null;
-		}
-			
-		return usersToCategory.get(item.getUserId());
 	}
 	
 	/**
@@ -282,7 +243,7 @@ public abstract class Stream implements Runnable {
 		return true;
 	}
 	
-	
+	/*
 	@Override
 	public void run() {
 		while(true) {
@@ -297,6 +258,7 @@ public abstract class Stream implements Runnable {
 			}
 		}
 	}
+	*/
 	
 	public abstract String getName();
 	

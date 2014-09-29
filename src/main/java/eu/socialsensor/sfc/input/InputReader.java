@@ -5,7 +5,6 @@ import java.util.Map;
 
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.common.domain.Feed.FeedType;
-import eu.socialsensor.framework.common.domain.StreamUser.Category;
 
 /**
  * @brief The interface for the creation of input feeds
@@ -31,11 +30,5 @@ public interface InputReader {
 	 * @return A list of feeds 
 	 */
 	public List<Feed> createFeeds();
-	
-	/**
-	 * Maps the users to follow to a category 
-	 * @return the map of the user to the category he corresponds to
-	 */
-	public Map<String,Category> getUsersToCategories();
 	
 }

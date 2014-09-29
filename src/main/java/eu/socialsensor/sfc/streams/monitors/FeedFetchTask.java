@@ -5,7 +5,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-
 import eu.socialsensor.framework.common.domain.Feed;
 import eu.socialsensor.framework.retrievers.Retriever;
 
@@ -49,15 +48,15 @@ public class FeedFetchTask implements Runnable {
 		
 	}
 	
-	public Integer getRetrievedItems(){
+	public Integer getRetrievedItems() {
 		return retrievedItems;
 	}
 	
-	public boolean isCompleted(){
+	public boolean isCompleted() {
 		return completed;
 	}
 	
-	public boolean getPaused(){
+	public boolean getPaused() {
 		return needToPause;
 	}
 

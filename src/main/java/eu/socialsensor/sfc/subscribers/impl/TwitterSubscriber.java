@@ -99,7 +99,7 @@ public class TwitterSubscriber extends Subscriber {
 	private twitter4j.TwitterStream twitterStream  = null;
 	private Twitter twitterApi;
 
-	private int numberOfConsumers = 5;
+	private int numberOfConsumers = 10;
 	private List<TwitterStreamConsumer> streamConsumers = new ArrayList<TwitterStreamConsumer>();
 	
 	
@@ -342,6 +342,11 @@ public class TwitterSubscriber extends Subscriber {
 						queue.add(status);
 						if((++items)%5000==0) {
 							logger.info(items + " incoming items from twitter. " + deletion + " deletions.");
+						}
+						
+						if(queue.size() > 2000) {
+							logger.info("Twitter Queue size > 2000. Clear to prevent heapsize overflow.");
+							queue.clear();
 						}
 					}
 					catch(Exception e) {

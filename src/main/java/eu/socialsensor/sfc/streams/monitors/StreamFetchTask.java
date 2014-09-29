@@ -13,7 +13,7 @@ import eu.socialsensor.sfc.streams.Stream;
 
 /**
  * Class for handling a Stream Task that is responsible for retrieving
- * content for the stream it is assigned to
+ * content for the stream it is assigned to.
  * 
  * @author ailiakop
  * @email  ailiakop@iti.gr

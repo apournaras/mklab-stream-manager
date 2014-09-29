@@ -189,7 +189,7 @@ public abstract class SearchHandler extends Thread {
 		logger.info("DyscoQueue:" + dyscosQueue.size());
 		logger.info("totalRetrievedItems:" + totalRetrievedItems);
 		
-		if(dyscosQueue.size() > 100) {
+		if(dyscosQueue.size() > 500) {
 			dyscosQueue.clear();
 		}
 	}

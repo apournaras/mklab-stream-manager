@@ -21,7 +21,6 @@ import eu.socialsensor.framework.common.domain.Location;
 import eu.socialsensor.framework.common.domain.SocialNetworkSource;
 import eu.socialsensor.framework.common.domain.Source;
 import eu.socialsensor.framework.common.domain.Feed.FeedType;
-import eu.socialsensor.framework.common.domain.StreamUser.Category;
 import eu.socialsensor.framework.common.domain.feeds.KeywordsFeed;
 import eu.socialsensor.framework.common.domain.feeds.LocationFeed;
 import eu.socialsensor.framework.common.domain.feeds.SourceFeed;
@@ -254,8 +253,4 @@ public class ConfigInputReader implements InputReader{
 		return inputDataPerType;
 	}
 	
-	@Override
-	public Map<String,Category> getUsersToCategories(){
-		return null;
-	}
 }

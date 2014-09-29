@@ -6,7 +6,6 @@ import java.util.Set;
 
 import eu.socialsensor.framework.Configuration;
 import eu.socialsensor.framework.common.domain.Feed;
-import eu.socialsensor.framework.common.domain.StreamUser.Category;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 
 
@@ -112,14 +111,6 @@ public class FeedsCreator {
 			return null;
 		
 		return reader.createFeeds();
-	}
-	
-	/**
-	 * Returns the mapping of the users to follow to categories
-	 * @return the map of the user to the category he corresponds to
-	 */
-	public Map<String,Category> getUsersToCategories(){
-		return reader.getUsersToCategories();
 	}
 	
 	/**

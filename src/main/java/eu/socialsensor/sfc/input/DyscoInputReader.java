@@ -15,7 +15,6 @@ import eu.socialsensor.framework.common.domain.Location;
 import eu.socialsensor.framework.common.domain.Query;
 import eu.socialsensor.framework.common.domain.Source;
 import eu.socialsensor.framework.common.domain.Feed.FeedType;
-import eu.socialsensor.framework.common.domain.StreamUser.Category;
 import eu.socialsensor.framework.common.domain.dysco.CustomDysco;
 import eu.socialsensor.framework.common.domain.dysco.Dysco;
 import eu.socialsensor.framework.common.domain.dysco.Dysco.DyscoType;
@@ -204,11 +203,6 @@ public class DyscoInputReader implements InputReader{
 			}
 		}
 		return feeds;
-	}
-	
-	@Override
-	public Map<String,Category> getUsersToCategories(){
-		return null;
 	}
 
 }

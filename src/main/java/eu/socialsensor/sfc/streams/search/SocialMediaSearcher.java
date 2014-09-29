@@ -123,11 +123,12 @@ public class SocialMediaSearcher extends Thread {
 				stream.open(sconfig);
 			}
 			catch(Exception e) {
-				logger.error("Stream " + streamId + " filed to open.");
+				logger.error("Stream " + streamId + " failed to open.");
 				failedStreams.add(streamId);
 			}
 		}
 		
+		// Remove streams failed to open
 		for (String streamId : failedStreams) {
 			streams.remove(streamId);
 		}
@@ -174,11 +175,12 @@ public class SocialMediaSearcher extends Thread {
 		Runtime.getRuntime().addShutdownHook(new Shutdown(this));
 	}
 	
+	/**
+	 * 
+	 */
 	public void run() {
-		Dysco dyscoToUpdate = null;
-		
 		while(state == MediaSearcherState.OPEN) {
-			dyscoToUpdate = queryExpander.getDyscoToUpdate();
+			Dysco dyscoToUpdate = queryExpander.getDyscoToUpdate();
 			if(dyscoToUpdate == null) {
 				try {
 					synchronized(this) {

@@ -40,7 +40,6 @@ public class StorageHandler {
 	private StreamsManagerConfiguration config;
 	
 	private Integer numberOfConsumers = 16;
-	
 	private List<Consumer> consumers;
 	
 	private List<Storage> workingStorages = new ArrayList<Storage>();

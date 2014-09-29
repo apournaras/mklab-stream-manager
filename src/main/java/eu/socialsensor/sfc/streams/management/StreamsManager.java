@@ -44,6 +44,7 @@ public class StreamsManager {
 	private InputConfiguration inputConfig = null;
 	private StorageHandler storageHandler;
 	private StreamsMonitor monitor;
+	
 	private ManagerState state = ManagerState.CLOSE;
 
 	private List<Feed> feeds = new ArrayList<Feed>();
@@ -103,7 +104,6 @@ public class StreamsManager {
 				subscriber.open(srconfig);
 			
 				feeds = results.get(subscriberId);
-				subscriber.setUserCategories(feedsCreator.getUsersToCategories());
 				subscriber.subscribe(feeds);
 				
 			}
@@ -176,7 +176,7 @@ public class StreamsManager {
 	 * @throws StreamException
 	 */
 	private void initStreams() throws StreamException {
-		streams = new HashMap<String,Stream>();
+		streams = new HashMap<String, Stream>();
 		try{
 			for (String streamId : config.getStreamIds()){
 				StreamConfiguration sconfig = config.getStreamConfig(streamId);
