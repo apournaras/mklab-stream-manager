@@ -34,6 +34,7 @@ public class InstagramStream extends Stream {
 		String key = config.getParameter(KEY);
 		String secret = config.getParameter(SECRET);
 		String token = config.getParameter(ACCESS_TOKEN);
+		
 		String maxResults = config.getParameter(MAX_RESULTS);
 		String maxRequests = config.getParameter(MAX_REQUESTS);
 		String maxRunningTime = config.getParameter(MAX_RUNNING_TIME);
@@ -43,7 +44,7 @@ public class InstagramStream extends Stream {
 			throw new StreamException("Stream requires authentication.");
 		}
 		
-		retriever = new InstagramRetriever(secret, token,Integer.parseInt(maxResults),Integer.parseInt(maxRequests),Long.parseLong(maxRunningTime));
+		retriever = new InstagramRetriever(key, secret, token, Integer.parseInt(maxResults), Integer.parseInt(maxRequests),Long.parseLong(maxRunningTime));
 	
 	}
 
