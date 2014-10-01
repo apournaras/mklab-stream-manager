@@ -51,10 +51,12 @@ public abstract class SearchHandler extends Thread {
 		List<Item> items = new ArrayList<Item>();
 		if(feeds != null && !feeds.isEmpty()) {
 			try {
-				if(streams == null)
+				if(streams == null) {
 					monitor.retrieve(feeds);	
-				else
+				}
+				else {
 					monitor.retrieve(streams, feeds);
+				}
 				
 				while(!monitor.areStreamsFinished()) {
 					try {

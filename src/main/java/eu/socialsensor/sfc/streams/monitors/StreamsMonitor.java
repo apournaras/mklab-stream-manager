@@ -2,6 +2,7 @@ package eu.socialsensor.sfc.streams.monitors;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,8 +26,8 @@ import eu.socialsensor.sfc.streams.Stream;
  */
 public class StreamsMonitor {
 	
-	// 20 minutes
-	private static final long DEFAULT_REQUEST_PERIOD = 1 * 20 * 60000; 
+	// 30 minutes
+	private static final long DEFAULT_REQUEST_PERIOD = 1 * 30 * 60000; 
 	
 	public final Logger logger = Logger.getLogger(StreamsMonitor.class);
 
@@ -246,7 +247,8 @@ public class StreamsMonitor {
 					if((currentTime - runningTimePerStream.get(streamId)) >= DEFAULT_REQUEST_PERIOD) {
 						Future<List<Item>> response = responses.get(streamId);
 						try {
-							if(response == null || response.get() != null) {				
+							if(response == null || response.get() != null) {	
+								logger.info("* Re-Initialize " + streamId);
 								StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);				
 								response = executor.submit(fetchTask);		
 								responses.put(streamId, response);
@@ -271,53 +273,24 @@ public class StreamsMonitor {
 	}
 	
 	/**
-	 * Checks if all streams are finished retrieving items
-	 * and if so sets returns true
-	 * @return
-	
-	public boolean areStreamsFinished() {
-		int streamsDone = 0;
-		int runningStreams = streamsFetchTasks.size();
-		
-		List<String> finishedTasks = new ArrayList<String>();
-		while(streamsDone < runningStreams) {
-			for(String streamId : streamsFetchTasks.keySet()) {
-				Stream stream = streams.get(streamId);
-				StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);
-				if(fetchTask.isCompleted() && !finishedTasks.contains(streamId)) {
-					retrievedItems.addAll(stream.getRetrievedItems());
-					finishedTasks.add(streamId);
-					streamsDone++;
-				}	
-			}
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		streamsFetchTasks.clear();
-		finishedTasks.clear();
-		
-		return true;
-	}
-	*/
-	
-	/**
 	 * Checks if all streams are finished retrieving items if so sets returns true
 	 * @return
 	 */
 	public boolean areStreamsFinished() {		
-		for(String streamId : responses.keySet()) {
+		Set<String> streamIds = new HashSet<String>();
+		streamIds.addAll(responses.keySet());
+		
+		for(String streamId : streamIds) {
 			Future<List<Item>> response = responses.get(streamId);	
 			try {
-				if(response.get() == null)
+				if(response.get() == null) {
 					return false;
+				}
 				
 			} catch (Exception e) {
-				e.printStackTrace();
-				return false;
+				logger.error(e);
+				// Remove stream id from responses list. 
+				responses.remove(streamId);
 			}
 		}
 		return true;
@@ -342,7 +315,6 @@ public class StreamsMonitor {
 	}
 	
 	public void reset() {
-		//requestTimePerStream.clear();
 		runningTimePerStream.clear();
 		feedsPerStream.clear();
 		streamsFetchTasks.clear();
@@ -352,7 +324,6 @@ public class StreamsMonitor {
 	public void status() {
 		logger.info("streams: " + streams.size());
 		logger.info("feedsPerStream:" + feedsPerStream.size());
-		//logger.info("requestTimePerStream:" + requestTimePerStream.size());
 		logger.info("runningTimePerStream:" + runningTimePerStream.size());
 		logger.info("streamsFetchTasks:" + streamsFetchTasks.size());
 	}

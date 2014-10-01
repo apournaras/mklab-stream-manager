@@ -28,8 +28,9 @@ public class StreamFetchTask implements  Callable<List<Item>> {
 	
 	public StreamFetchTask(Stream stream) throws Exception {
 		this.stream = stream;
-		if(!this.stream.setMonitor())
+		if(!this.stream.setMonitor()) {
 			throw new Exception("Feeds monitor for stream: " + this.stream.getClass() + " cannot be initialized");
+		}
 	}
 	
 	public StreamFetchTask(Stream stream, List<Feed> feeds) throws Exception {
@@ -48,13 +49,6 @@ public class StreamFetchTask implements  Callable<List<Item>> {
 	 */
 	public void addFeeds(List<Feed> feeds) {
 		this.feeds.addAll(feeds);
-	}
-	
-	/**
-	 * Clear the input feeds
-	 */
-	public void clear() {
-		feeds.clear();
 	}
 
 	/**
