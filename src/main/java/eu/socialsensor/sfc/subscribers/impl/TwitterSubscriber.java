@@ -101,6 +101,8 @@ public class TwitterSubscriber extends Subscriber {
 
 	private int numberOfConsumers = 10;
 	private List<TwitterStreamConsumer> streamConsumers = new ArrayList<TwitterStreamConsumer>();
+
+	private ExecutorService executorService;
 	
 	
 	public TwitterSubscriber() {
@@ -329,6 +331,8 @@ public class TwitterSubscriber extends Subscriber {
 		for(TwitterStreamConsumer consumer : this.streamConsumers) {
 			consumer.stop();
 		}
+		
+		this.executorService.shutdown();
 	}
 	
 	private StatusListener getListener() { 
@@ -342,6 +346,7 @@ public class TwitterSubscriber extends Subscriber {
 						queue.add(status);
 						if((++items)%5000==0) {
 							logger.info(items + " incoming items from twitter. " + deletion + " deletions.");
+							logger.info(queue.size() + " statuses in queue");
 						}
 						
 						if(queue.size() > 2000) {
@@ -480,9 +485,7 @@ public class TwitterSubscriber extends Subscriber {
 			.setOAuthAccessTokenSecret(oAuthAccessTokenSecret);
 		Configuration conf = cb.build();
 		
-		
-		
-		ExecutorService executorService = Executors.newFixedThreadPool(numberOfConsumers);
+		this.executorService = Executors.newFixedThreadPool(numberOfConsumers);
 		for(int i=0; i<numberOfConsumers; i++) {
 			TwitterStreamConsumer consumer = new TwitterStreamConsumer();
 			streamConsumers.add(consumer);
