@@ -149,7 +149,7 @@ public class MultipleStorages implements Storage {
 		}
 	}
 	
-	public void remove(Storage storage){
+	public void remove(Storage storage) {
 		logger.info("Remove storage "+storage.getStorageName());
 		synchronized(storages) {
 			storages.remove(storage);

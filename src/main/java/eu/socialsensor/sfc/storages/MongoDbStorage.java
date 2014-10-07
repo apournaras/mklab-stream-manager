@@ -433,6 +433,7 @@ public class MongoDbStorage implements Storage {
 					synchronized(usersMap) {
 						userExists = usersMap.containsKey(userId) || streamUserDAO.exists(userId);
 					}
+					
 					if(!userExists) {
 						// save stream user
 						userInsertions++;
@@ -462,7 +463,7 @@ public class MongoDbStorage implements Storage {
 		}
 		catch(MongoException e) {
 			e.printStackTrace();
-			System.out.println("Storing item " + item.getId() + " failed.");
+			logger.error("Storing item " + item.getId() + " failed.");
 		}
 	
 	}
@@ -520,7 +521,7 @@ public class MongoDbStorage implements Storage {
 	
 	private class UpdaterTask extends Thread {
 
-		private long timeout = 30 * 60 * 1000;
+		private long timeout = 15 * 60 * 1000;
 		private boolean stop = true;
 		
 		@Override
@@ -529,8 +530,9 @@ public class MongoDbStorage implements Storage {
 			while(!stop) {
 				try {
 					
-					Thread.sleep(timeout);
-					//this.wait(timeout);
+					synchronized(this) {
+						this.wait(timeout);
+					}
 					
 					logger.info("Update: ");
 					long t = System.currentTimeMillis();
@@ -581,6 +583,11 @@ public class MongoDbStorage implements Storage {
 						logger.info(webpagesSharesMap.size() + " web pages to update");
 						logger.info(usersMap.size() + " users to update");
 						logger.info(itemsMap.size() + " items to update");
+						
+						mediaItemsSharesMap.clear();
+						webpagesSharesMap.clear();
+						usersMap.clear();
+						itemsMap.clear();
 						
 					}
 					continue;
