@@ -60,7 +60,7 @@ public abstract class SearchHandler extends Thread {
 				
 				while(!monitor.areStreamsFinished()) {
 					try {
-						Thread.sleep(50);
+						Thread.sleep(100);
 					} catch (InterruptedException e) {
 						logger.error(e.getMessage());
 					}

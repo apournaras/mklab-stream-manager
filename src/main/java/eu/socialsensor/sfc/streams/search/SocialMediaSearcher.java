@@ -304,7 +304,7 @@ public class SocialMediaSearcher extends Thread {
 				if(message == null) {
 					try {
 						synchronized(this) {
-							this.wait(10000);
+							wait(10000);	
 						}
 					} catch (InterruptedException e) {
 						logger.error(e);
@@ -331,7 +331,6 @@ public class SocialMediaSearcher extends Thread {
 				    			}
 							
 				    			DyscoType dyscoType = dysco.getDyscoType();
-				    			logger.info("DyscoType: " + dyscoType);
 							
 				    			if(dyscoType.equals(DyscoType.TRENDING)) {
 				    				trendingSearchHandler.addDysco(dysco);
@@ -340,7 +339,7 @@ public class SocialMediaSearcher extends Thread {
 				    				customSearchHandler.addDysco(dysco);
 				    			}
 				    			else {
-				    				logger.error("Unsupported dysco type - Cannot be processed from MediaSearcher");
+				    				logger.error("Unsupported dysco type " + dyscoType + " - Cannot be processed from MediaSearcher");
 				    			}
 				    			continue;
 				    		case UPDATE:

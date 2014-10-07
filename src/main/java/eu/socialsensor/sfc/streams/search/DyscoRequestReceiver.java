@@ -79,8 +79,8 @@ import redis.clients.jedis.JedisPubSub;
 
 	    public Message getMessage() {
 	    	try {
-				return messages.take();
-			} catch (InterruptedException e) {
+				return messages.poll();
+			} catch (Exception e) {
 				logger.error(e);
 			}
 	    	return null;

@@ -1,8 +1,9 @@
 package eu.socialsensor.sfc.streams.search;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -31,7 +32,9 @@ public class QueryExpander extends Thread {
 	protected ConcurrentHashMap<String, Future<Dysco>> tasks = new ConcurrentHashMap<String, Future<Dysco>>();
 	
 	public QueryExpander() {
-		executor = Executors.newFixedThreadPool(15);
+		this.executor = Executors.newFixedThreadPool(15);
+		//this.executor = Executors.newCachedThreadPool();
+		
 		this.setName("QueryExpander");
 	}
 	
@@ -42,44 +45,56 @@ public class QueryExpander extends Thread {
 	}
 	
 	public void addDysco(Dysco dysco, List<Item> items) {
-		QueryExpansionTask expansionTask = new QueryExpansionTask(dysco, items);
-		Future<Dysco> response = executor.submit(expansionTask);
-		tasks.put(dysco.getId(), response);
+		if(!tasks.containsKey(dysco.getId()) && !items.isEmpty()) {
+			QueryExpansionTask expansionTask = new QueryExpansionTask(dysco, items);
+			Future<Dysco> response = executor.submit(expansionTask);
+			tasks.put(dysco.getId(), response);
+		}
 	}
 	
 	public void run() {
 		while(isAlive) {
-			List<String> completed = new ArrayList<String>();
+			Set<String> completed = new HashSet<String>();
 			for(String dyscoId : tasks.keySet()) {
 				Future<Dysco> response = tasks.get(dyscoId);
 				try {
-					Dysco dysco = response.get();
-					if(dysco == null)
-						continue;
-					
-					completed.add(dyscoId);
-					
-					List<Query> queries = dysco.getSolrQueries();
-					Integer expandedQueries = 0;
-					for(Query q : queries) {
-						if(q.getIsFromExpansion()) {
-							expandedQueries++;
+					if(response.isDone()) {
+						Dysco dysco = response.get();
+						if(dysco == null) {
+							// Task has not finished yet. Continue to the next task.
+							continue;
+						}
+						
+						completed.add(dyscoId);
+
+						List<Query> queries = dysco.getSolrQueries();
+						Integer expandedQueries = 0;
+						for(Query q : queries) {
+							if(q.getIsFromExpansion()) {
+								expandedQueries++;
+							}
+						}
+						
+						if(expandedQueries > 0) {
+							logger.info("Number of additional queries for Trending DySco: " + dysco.getId() + " is " + expandedQueries);
+							dyscosToUpdate.add(dysco);
+						}
+						else {
+							logger.info("No queries to update for " + dyscoId);
 						}
 					}
+					else if(response.isCancelled()) {
+						completed.add(dyscoId);
+					}
 					
-					if(expandedQueries > 0) {
-						logger.info("Number of additional queries for Trending DySco: " + dysco.getId() + " is " + expandedQueries);
-						dyscosToUpdate.add(dysco);
-					}
-					else {
-						logger.info("No queries to update for " + dysco.getId());
-					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.error("Error during processing of dysco: " + dyscoId);
 					logger.error("Exception: " + e.getMessage());
+					completed.add(dyscoId);
 				}
 			}
 			
+			// Remove completed tasks.
 			for(String dyscoId : completed) {
 				tasks.remove(dyscoId);
 			}
