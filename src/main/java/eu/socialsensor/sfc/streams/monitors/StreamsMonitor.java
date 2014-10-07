@@ -1,12 +1,11 @@
 package eu.socialsensor.sfc.streams.monitors;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -50,21 +49,27 @@ public class StreamsMonitor {
 		executor = Executors.newFixedThreadPool(numberOfStreams);
 	}
 	
-	public List<Item> getTotalRetrievedItems() {
-		List<Item> totalRetrievedItems = new ArrayList<Item>();
+	public Collection<Item> getTotalRetrievedItems() {
+		Map<String, Item> totalRetrievedItems = new HashMap<String, Item>();
 		for(String streamId : responses.keySet()) {
 			try {
 				Future<List<Item>> response = responses.get(streamId);
+				
+				if(!response.isDone())
+					continue;
+				
 				List<Item> retrievedItems = response.get();
 				if(retrievedItems != null) {
 					logger.info("Got " + retrievedItems.size() + " items from " + streamId);
-					totalRetrievedItems.addAll(retrievedItems);
+					for(Item item : retrievedItems) {
+						totalRetrievedItems.put(item.getId(), item);
+					}
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error(e);
 			}
 		}
-		return totalRetrievedItems;
+		return totalRetrievedItems.values();
 	}
 	
 	public int getNumberOfStreamFetchTasks() {
@@ -246,18 +251,13 @@ public class StreamsMonitor {
 				for(String streamId : runningTimePerStream.keySet()) {
 					if((currentTime - runningTimePerStream.get(streamId)) >= DEFAULT_REQUEST_PERIOD) {
 						Future<List<Item>> response = responses.get(streamId);
-						try {
-							if(response == null || response.get() != null) {	
-								logger.info("* Re-Initialize " + streamId);
-								StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);				
-								response = executor.submit(fetchTask);		
-								responses.put(streamId, response);
-								runningTimePerStream.put(streamId, System.currentTimeMillis());
-							}
-						} catch (InterruptedException e) {
-							logger.error(e);
-						} catch (ExecutionException e) {
-							logger.error(e);
+						if(response == null || response.isDone() || response.isCancelled()) {	
+							// Reinitialize task as the previous one is done or cancelled
+							logger.info("* Re-Initialize " + streamId);
+							StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);				
+							response = executor.submit(fetchTask);		
+							responses.put(streamId, response);
+							runningTimePerStream.put(streamId, System.currentTimeMillis());
 						}
 					}
 				}
@@ -283,16 +283,24 @@ public class StreamsMonitor {
 		for(String streamId : streamIds) {
 			Future<List<Item>> response = responses.get(streamId);	
 			try {
-				if(response.get() == null) {
+				if(response.isCancelled()) {
+					responses.remove(streamId);
+					logger.error(streamId + " is cancelled.");
+					continue;
+				}
+				
+				if(!response.isDone()) {
 					return false;
 				}
 				
 			} catch (Exception e) {
 				logger.error(e);
-				// Remove stream id from responses list. 
+				// Remove stream id from responses. 
 				responses.remove(streamId);
 			}
 		}
+		
+		// All stream have finished or failed.
 		return true;
 	}
 	
