@@ -83,6 +83,7 @@ public class StreamCollector {
 	 *
 	 */
 	private static class Shutdown extends Thread {
+		
 		private StreamsManager _manager = null;
 		private Logger _logger = Logger.getLogger(Shutdown.class);
 		

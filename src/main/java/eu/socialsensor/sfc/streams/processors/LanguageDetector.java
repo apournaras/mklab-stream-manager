@@ -31,12 +31,15 @@ public class LanguageDetector extends Processor {
 			String title = item.getTitle();
 			String description = item.getDescription();
 			
-			if(title != null)
+			if(title != null) {
 				text = title;
-			else if (description != null)
+			}
+			else if (description != null) {
 				text = description;
-			else
+			}
+			else {
 				return;
+			}
 			
 			try {
 				Detector detector = DetectorFactory.create();

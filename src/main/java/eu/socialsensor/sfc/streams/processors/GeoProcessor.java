@@ -44,8 +44,9 @@ public class GeoProcessor extends Processor {
 	public void process(Item item) {
 		try {
 			Location location = item.getLocation();
-			if(location != null)
+			if(location != null) {
 				return;
+			}
 			
 			Location loc = null;
 			StreamUser streamUser = item.getStreamUser();
@@ -58,8 +59,9 @@ public class GeoProcessor extends Processor {
 						if(locationMap == null || locationMap.isEmpty()) {
 							String timezone = streamUser.getTimezone();
 							
-							if(timezone == null)
+							if(timezone == null) {
 								return;
+							}
 							
 							String country = timezoneToCountry.get(timezone);
 							loc = new Location(country);
@@ -80,7 +82,7 @@ public class GeoProcessor extends Processor {
 						}
 					}
 					else {
-						
+						// How to handle such situation;
 					}
 				}
 				else {
@@ -95,8 +97,9 @@ public class GeoProcessor extends Processor {
 				}
 			}
 			
-			if(loc == null)
+			if(loc == null) {
 				return;
+			}
 			
 			item.setLocation(loc);
 						
@@ -104,8 +107,9 @@ public class GeoProcessor extends Processor {
 			if(mItems != null) {
 				for(MediaItem mItem : mItems) {
 					Location miLoc = mItem.getLocation();
-					if(miLoc == null)
+					if(miLoc == null) {
 						mItem.setLocation(loc);
+					}
 				}
 			}
 		}

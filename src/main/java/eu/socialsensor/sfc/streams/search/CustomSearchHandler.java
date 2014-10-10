@@ -39,6 +39,8 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 			logger = Logger.getLogger(CustomSearchHandler.class);
 			
 			this.setName("CustomSearchHandler");
+			
+			//TODO: Read custom dyscos on start up
 		}
 		
 		public void addCustomDysco(Dysco dysco, List<Feed> inputFeeds) {
@@ -105,7 +107,6 @@ import eu.socialsensor.sfc.streams.monitors.StreamsMonitor;
 			String dyscoId = dysco.getId();
 			logger.info("Custom Media Searcher handling: " + dyscoId);
 			try {
-				//List<Feed> feeds = inputFeedsPerDysco.get(dyscoId);
 				FeedsCreator feedsCreator = new FeedsCreator(DataInputType.DYSCO, dysco);
 				List<Feed> feeds = feedsCreator.getQuery();
 				
