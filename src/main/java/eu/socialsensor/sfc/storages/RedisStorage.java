@@ -27,7 +27,7 @@ public class RedisStorage implements Storage {
 	
 	private Logger  logger = Logger.getLogger(RedisStorage.class);
 	
-	private Jedis publisherJedis;
+	private Jedis jedis;
 	private String host;
 	
 	private String itemsChannel = null;
@@ -52,7 +52,7 @@ public class RedisStorage implements Storage {
 			JedisPoolConfig poolConfig = new JedisPoolConfig();
 			JedisPool jedisPool = new JedisPool(poolConfig, host, 6379, 0);
 		
-			this.publisherJedis = jedisPool.getResource();
+			this.jedis = jedisPool.getResource();
 			return true;
 		}
 		catch(Exception e) {
@@ -70,16 +70,16 @@ public class RedisStorage implements Storage {
 		if(item.isOriginal()) { 	
 			if(itemsChannel != null) {
 				items++;
-				synchronized(publisherJedis) {
-					publisherJedis.publish(itemsChannel, item.toJSONString());
+				synchronized(jedis) {
+					jedis.publish(itemsChannel, item.toJSONString());
 				}
 			}
 		
 			if(mediaItemsChannel != null) {
 				for(MediaItem mediaItem : item.getMediaItems()) {
 					mItems++;
-					synchronized(publisherJedis) {
-						publisherJedis.publish(mediaItemsChannel, mediaItem.toJSONString());
+					synchronized(jedis) {
+						jedis.publish(mediaItemsChannel, mediaItem.toJSONString());
 					}
 				}
 			}
@@ -87,8 +87,8 @@ public class RedisStorage implements Storage {
 			if(webPagesChannel != null) {
 				for(WebPage webPage : item.getWebPages()) {
 					wPages++;
-					synchronized(publisherJedis) {
-						publisherJedis.publish(webPagesChannel, webPage.toJSONString());
+					synchronized(jedis) {
+						jedis.publish(webPagesChannel, webPage.toJSONString());
 					}
 				}
 			}
@@ -115,7 +115,7 @@ public class RedisStorage implements Storage {
 
 	@Override
 	public void close() {
-		publisherJedis.disconnect();
+		jedis.disconnect();
 	}
 	
 	@Override
@@ -125,9 +125,9 @@ public class RedisStorage implements Storage {
 					+ wPages + " web pages!");
 
 			boolean connected;
-			synchronized(publisherJedis) {
-				publisherJedis.info();
-				connected = publisherJedis.isConnected();
+			synchronized(jedis) {
+				jedis.info();
+				connected = jedis.isConnected();
 			}
 			if(!connected) {
 				connected = reconnect();
@@ -142,10 +142,10 @@ public class RedisStorage implements Storage {
 	}
 	
 	private boolean reconnect() {
-		synchronized(publisherJedis) {
+		synchronized(jedis) {
 			try {
-				if(publisherJedis != null) {
-					publisherJedis.disconnect();
+				if(jedis != null) {
+					jedis.disconnect();
 				}
 			}
 			catch(Exception e) { 
@@ -153,13 +153,13 @@ public class RedisStorage implements Storage {
 			}
 		}
 		try {
-			synchronized(publisherJedis) {
+			synchronized(jedis) {
 				JedisPoolConfig poolConfig = new JedisPoolConfig();
         		JedisPool jedisPool = new JedisPool(poolConfig, host, 6379, 0);
         	
-        		this.publisherJedis = jedisPool.getResource();
-        		publisherJedis.info();
-        		return publisherJedis.isConnected();
+        		this.jedis = jedisPool.getResource();
+        		jedis.info();
+        		return jedis.isConnected();
 			}
 		}
 		catch(Exception e) {

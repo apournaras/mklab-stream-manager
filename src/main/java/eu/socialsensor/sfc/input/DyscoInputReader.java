@@ -31,7 +31,7 @@ import eu.socialsensor.framework.common.util.Util;
  * @author ailiakop
  * @email  ailiakop@iti.gr
  */
-public class DyscoInputReader implements InputReader{
+public class DyscoInputReader implements InputReader {
 	
 	private Dysco dysco;
 	private CustomDysco customDysco;
@@ -62,7 +62,8 @@ public class DyscoInputReader implements InputReader{
 		
 		if(customDysco != null) {
 			
-			this.date = new Date(0l);
+			this.date = dateUtil.addDays(new Date(), -5);
+			
 			List<Source> querySources = new ArrayList<Source>();
 			List<Location> queryLocations = new ArrayList<Location>();
 			List<String> queryLists = new ArrayList<String>();
@@ -74,7 +75,6 @@ public class DyscoInputReader implements InputReader{
 	    	
 			List<String> otherUrls = customDysco.getOtherSocialNetworks();
 			
-			System.out.println(otherUrls);
 			
 			if(twitterUsers != null) {
 				for(String user : twitterUsers) {
@@ -107,7 +107,7 @@ public class DyscoInputReader implements InputReader{
 			}
 			
 			if(listsOfUsers != null) {
-				for(String list : listsOfUsers){
+				for(String list : listsOfUsers) {
 					queryLists.add(list);
 				}
 			}
@@ -151,8 +151,7 @@ public class DyscoInputReader implements InputReader{
 	}
 
 	@Override
-	public Map<String,List<Feed>> createFeedsPerStream(){
-
+	public Map<String, List<Feed>> createFeedsPerStream() {
 		return null;
 	}
 
@@ -193,7 +192,7 @@ public class DyscoInputReader implements InputReader{
 				case LIST :
 					@SuppressWarnings("unchecked")
 					List<String> lists = (List<String>) inputData.get(feedType);
-					for(String list : lists){
+					for(String list : lists) {
 						String feedID = UUID.randomUUID().toString();
 						ListFeed listFeed = new ListFeed(list, date, feedID);
 						feeds.add(listFeed);

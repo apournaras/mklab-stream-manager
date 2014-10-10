@@ -200,20 +200,26 @@ public class MongoDbStorage implements Storage {
 		
 		if(database != null) {
 			try {
-				if(itemsCollectionName != null)
+				if(itemsCollectionName != null) {
 					this.itemDAO = new ItemDAOImpl(host, database, itemsCollectionName);
+				}
 				
-				if(mediaItemsCollectionName != null)
+				if(mediaItemsCollectionName != null) {
 					this.mediaItemDAO = new MediaItemDAOImpl(host, database, mediaItemsCollectionName);
-				
-				if(mediaSharesCollectionName != null)
+				}
+			
+				if(mediaSharesCollectionName != null) {
 					this.mediaSharesDAO = new MediaSharesDAOImpl(host, database, mediaSharesCollectionName);
-				
-				if(streamUsersCollectionName != null)
+				}
+			
+				if(streamUsersCollectionName != null) {
 					this.streamUserDAO = new StreamUserDAOImpl(host, database, streamUsersCollectionName);
+				}
 				
-				if(webPageCollectionName != null)
+				if(webPageCollectionName != null) {
 					this.webPageDAO = new WebPageDAOImpl(host, database, webPageCollectionName);
+				}
+				
 			} catch (Exception e) {
 				logger.error("MongoDB Storage failed to open!");
 				logger.error(e);
@@ -222,20 +228,26 @@ public class MongoDbStorage implements Storage {
 		}
 		else {
 			try {
-				if(itemsCollectionName != null && itemsDbName != null)
+				if(itemsCollectionName != null && itemsDbName != null) {
 					this.itemDAO = new ItemDAOImpl(host, itemsDbName, itemsCollectionName);
+				}
 				
-				if(mediaItemsCollectionName != null && mediaItemsDbName != null)
+				if(mediaItemsCollectionName != null && mediaItemsDbName != null) {
 					this.mediaItemDAO = new MediaItemDAOImpl(host, mediaItemsDbName, mediaItemsCollectionName);
-				
-				if(mediaSharesCollectionName != null && mediaSharesDbName != null)
+				}
+			
+				if(mediaSharesCollectionName != null && mediaSharesDbName != null) {
 					this.mediaSharesDAO = new MediaSharesDAOImpl(host, mediaSharesDbName, mediaSharesCollectionName);
+				}
 				
-				if(streamUsersCollectionName != null && streamUsersDbName != null)
+				if(streamUsersCollectionName != null && streamUsersDbName != null) {
 					this.streamUserDAO = new StreamUserDAOImpl(host, streamUsersDbName, streamUsersCollectionName);
+				}
 				
-				if(webPageCollectionName != null && webPageDbName != null)
+				if(webPageCollectionName != null && webPageDbName != null) {
 					this.webPageDAO = new WebPageDAOImpl(host, webPageDbName, webPageCollectionName);
+				}
+				
 			} catch (Exception e) {
 				logger.error("MongoDB Storage failed to open!");
 				logger.error(e);
@@ -282,7 +294,7 @@ public class MongoDbStorage implements Storage {
 					String userId = user.getId();
 					boolean userExists = false;
 					synchronized(usersMap) {
-						userExists = usersMap.containsKey(userId) || streamUserDAO.exists(userId);
+						userExists = usersMap.containsKey(userId);
 					}
 					
 					if(!userExists) {
@@ -290,36 +302,44 @@ public class MongoDbStorage implements Storage {
 						userInsertions++;
 						streamUserDAO.insertStreamUser(user);
 						
-						synchronized(usersMap) {
-							StreamUser tempUser = usersMap.get(user.getId());
-							if(tempUser == null) {
-								tempUser = new StreamUser(null, Operation.UPDATE);
-								tempUser.setId(user.getId());
-								tempUser.setImageUrl(user.getImageUrl());
-								tempUser.setProfileImage(user.getProfileImage());
-								tempUser.setName(user.getName());
-								usersMap.put(user.getId(), tempUser);
-							}
-							tempUser.incItems(1);
-							tempUser.incMentions(1L);
+						StreamUser tempUser = usersMap.get(user.getId());
+						if(tempUser == null) {
+							tempUser = new StreamUser(null, Operation.UPDATE);
+							tempUser.setId(user.getId());
+							tempUser.setImageUrl(user.getImageUrl());
+							tempUser.setProfileImage(user.getProfileImage());
+							tempUser.setName(user.getName());
+							usersMap.put(user.getId(), tempUser);
 						}
+						tempUser.incItems(1);
+						tempUser.incMentions(1L);
 					}
-					else {
+					
+					//synchronized(usersMap) {
+					//	userExists = usersMap.containsKey(userId) || streamUserDAO.exists(userId);
+					//}
+					//if(!userExists) {
+						// save stream user
+					//	userInsertions++;
+					//	streamUserDAO.insertStreamUser(user);
+					//}
+					//else {
 						// Update statistics of stream user
-						synchronized(usersMap) {
-							StreamUser tempUser = usersMap.get(user.getId());
-							if(tempUser == null) {
-								tempUser = new StreamUser(null, Operation.UPDATE);
-								tempUser.setId(user.getId());
-								tempUser.setImageUrl(user.getImageUrl());
-								tempUser.setProfileImage(user.getProfileImage());
-								tempUser.setName(user.getName());
-								usersMap.put(user.getId(), tempUser);
-							}
-							tempUser.incItems(1);
-							tempUser.incMentions(1L);
-						}
-					}
+					//	synchronized(usersMap) {
+					//		StreamUser tempUser = usersMap.get(user.getId());
+					//		if(tempUser == null) {
+					//			tempUser = new StreamUser(null, Operation.UPDATE);
+					//			tempUser.setId(user.getId());
+					//			tempUser.setImageUrl(user.getImageUrl());
+					//			tempUser.setProfileImage(user.getProfileImage());
+					//			tempUser.setName(user.getName());
+					//			usersMap.put(user.getId(), tempUser);
+					//		}
+					//		tempUser.incItems(1);
+					//		tempUser.incMentions(1L);
+					//	}
+					//}
+					
 				}
 				
 				if(item.getMentions() != null) {
@@ -352,44 +372,45 @@ public class MongoDbStorage implements Storage {
 				}
 				
 				// Handle Media Items
-				for(MediaItem mediaItem : item.getMediaItems()) {
-					mediaItems++;
+				if(mediaItemDAO != null) {
+					for(MediaItem mediaItem : item.getMediaItems()) {
+						mediaItems++;
+						String mediaItemId = mediaItem.getId();
 					
-					String mediaItemId = mediaItem.getId();
-					
-					boolean mediaExists = false;
-					synchronized(mediaItemsSharesMap) {
-						mediaExists = mediaItemsSharesMap.containsKey(mediaItemId) || mediaItemDAO.exists(mediaItemId);
-					}
-					
-					if(!mediaExists) {	
-						// MediaItem does not exist. Save it.
-						mediaItemInsertions++;
-						mediaItemDAO.addMediaItem(mediaItem);
+						boolean mediaExists = false;
 						synchronized(mediaItemsSharesMap) {
-							mediaItemsSharesMap.put(mediaItemId, 0);
+							mediaExists = mediaItemsSharesMap.containsKey(mediaItemId) || mediaItemDAO.exists(mediaItemId);
 						}
-					}
-					else {
-						//Update media item
-						synchronized(mediaItemsSharesMap) {
-							Integer shares = mediaItemsSharesMap.get(mediaItemId);
-							if(shares == null) {
-								shares = 0;
+					
+						if(!mediaExists) {	
+							// MediaItem does not exist. Save it.
+							mediaItemInsertions++;
+							mediaItemDAO.addMediaItem(mediaItem);
+							synchronized(mediaItemsSharesMap) {
+								mediaItemsSharesMap.put(mediaItemId, 0);
 							}
-							mediaItemsSharesMap.put(mediaItemId, ++shares);
 						}
-					}
+						else {
+							//Update media item
+							synchronized(mediaItemsSharesMap) {
+								Integer shares = mediaItemsSharesMap.get(mediaItemId);
+								if(shares == null) {
+									shares = 0;
+								}
+								mediaItemsSharesMap.put(mediaItemId, ++shares);
+							}
+						}
 					
-					if(mediaSharesDAO != null) {
-						mediaSharesDAO.addMediaShare(mediaItem.getId(), mediaItem.getRef(), 
+						if(mediaSharesDAO != null) {
+							mediaSharesDAO.addMediaShare(mediaItem.getId(), mediaItem.getRef(), 
 								mediaItem.getPublicationTime(), mediaItem.getUserId());
+						}
 					}
 				}
 				
 				// Handle Web Pages
 				List<WebPage> webPages = item.getWebPages();
-				if(webPages != null) {
+				if(webPages != null && webPageDAO != null) {
 					for(WebPage webPage : webPages) {
 						wPages++;
 						String webPageURL = webPage.getUrl();
@@ -521,7 +542,7 @@ public class MongoDbStorage implements Storage {
 	
 	private class UpdaterTask extends Thread {
 
-		private long timeout = 15 * 60 * 1000;
+		private long timeout = 10 * 60 * 1000;
 		private boolean stop = true;
 		
 		@Override
@@ -553,20 +574,24 @@ public class MongoDbStorage implements Storage {
 						usersMap.clear();
 					}
 					
-					synchronized(webpagesSharesMap) {
-						logger.info(webpagesSharesMap.size() + " web pages to update");
-						for(Entry<String, Integer> e : webpagesSharesMap.entrySet()) {
-							webPageDAO.updateWebPageShares(e.getKey(), e.getValue());
+					if(webPageDAO != null) {
+						synchronized(webpagesSharesMap) {
+							logger.info(webpagesSharesMap.size() + " web pages to update");
+							for(Entry<String, Integer> e : webpagesSharesMap.entrySet()) {
+								webPageDAO.updateWebPageShares(e.getKey(), e.getValue());
+							}
+							webpagesSharesMap.clear();
 						}
-						webpagesSharesMap.clear();
 					}
 					
-					synchronized(mediaItemsSharesMap) {
-						logger.info(mediaItemsSharesMap.size() + " media Items to update");
-						for(Entry<String, Integer> entry : mediaItemsSharesMap.entrySet()) {
-							mediaItemDAO.updateMediaItemShares(entry.getKey(), entry.getValue());
+					if(mediaItemDAO != null) {
+						synchronized(mediaItemsSharesMap) {
+							logger.info(mediaItemsSharesMap.size() + " media Items to update");
+							for(Entry<String, Integer> entry : mediaItemsSharesMap.entrySet()) {
+								mediaItemDAO.updateMediaItemShares(entry.getKey(), entry.getValue());
+							}
+							mediaItemsSharesMap.clear();
 						}
-						mediaItemsSharesMap.clear();
 					}
 					
 					t = System.currentTimeMillis() - t;
@@ -605,5 +630,6 @@ public class MongoDbStorage implements Storage {
 				logger.error("Fail to stop update task in MongoDBStorage", e);
 			}
 		}
+		
 	}
 }
