@@ -285,63 +285,6 @@ public class MongoDbStorage implements Storage {
 				item.setInsertionTime(System.currentTimeMillis());
 				itemDAO.insertItem(item);
 				
-				// Handle Stream Users
-				StreamUser user = item.getStreamUser();
-				if(user != null) {
-					
-					users++;
-					
-					String userId = user.getId();
-					boolean userExists = false;
-					synchronized(usersMap) {
-						userExists = usersMap.containsKey(userId);
-					}
-					
-					if(!userExists) {
-						// save stream user
-						userInsertions++;
-						streamUserDAO.insertStreamUser(user);
-						
-						StreamUser tempUser = usersMap.get(user.getId());
-						if(tempUser == null) {
-							tempUser = new StreamUser(null, Operation.UPDATE);
-							tempUser.setId(user.getId());
-							tempUser.setImageUrl(user.getImageUrl());
-							tempUser.setProfileImage(user.getProfileImage());
-							tempUser.setName(user.getName());
-							usersMap.put(user.getId(), tempUser);
-						}
-						tempUser.incItems(1);
-						tempUser.incMentions(1L);
-					}
-					
-					//synchronized(usersMap) {
-					//	userExists = usersMap.containsKey(userId) || streamUserDAO.exists(userId);
-					//}
-					//if(!userExists) {
-						// save stream user
-					//	userInsertions++;
-					//	streamUserDAO.insertStreamUser(user);
-					//}
-					//else {
-						// Update statistics of stream user
-					//	synchronized(usersMap) {
-					//		StreamUser tempUser = usersMap.get(user.getId());
-					//		if(tempUser == null) {
-					//			tempUser = new StreamUser(null, Operation.UPDATE);
-					//			tempUser.setId(user.getId());
-					//			tempUser.setImageUrl(user.getImageUrl());
-					//			tempUser.setProfileImage(user.getProfileImage());
-					//			tempUser.setName(user.getName());
-					//			usersMap.put(user.getId(), tempUser);
-					//		}
-					//		tempUser.incItems(1);
-					//		tempUser.incMentions(1L);
-					//	}
-					//}
-					
-				}
-				
 				if(item.getMentions() != null) {
 					String[] mentionedUsers = item.getMentions();
 					for(String mentionedUser : mentionedUsers) {
@@ -372,7 +315,7 @@ public class MongoDbStorage implements Storage {
 				}
 				
 				// Handle Media Items
-				if(mediaItemDAO != null) {
+				if(mediaItemDAO != null && item.getMediaItems() != null) {
 					for(MediaItem mediaItem : item.getMediaItems()) {
 						mediaItems++;
 						String mediaItemId = mediaItem.getId();
@@ -444,38 +387,39 @@ public class MongoDbStorage implements Storage {
 				synchronized(itemsMap) {
 					itemsMap.put(item.getId(), item);
 				}
+			}
+			
+			// Handle Stream Users
+			StreamUser user = item.getStreamUser();
+			if(user != null) {
 				
-				StreamUser user = item.getStreamUser();
-				if(user != null) {
-					users++;
+				user.setLastUpdated(System.currentTimeMillis());
+				
+				users++;
+				
+				String userId = user.getId();
+				boolean userExists = false;
+				synchronized(usersMap) {
+					userExists = usersMap.containsKey(userId);
+				}
+				
+				if(!userExists) {
+					// save stream user
+					userInsertions++;
+					streamUserDAO.insertStreamUser(user);
 					
-					String userId = user.getId();
-					boolean userExists = false;
-					synchronized(usersMap) {
-						userExists = usersMap.containsKey(userId) || streamUserDAO.exists(userId);
+					StreamUser tempUser = usersMap.get(user.getId());
+					if(tempUser == null) {
+						tempUser = new StreamUser(null, Operation.UPDATE);
+						tempUser.setId(user.getId());
+						tempUser.setImageUrl(user.getImageUrl());
+						tempUser.setProfileImage(user.getProfileImage());
+						tempUser.setName(user.getName());
+						tempUser.setLastUpdated(user.getLastUpdated());
+						usersMap.put(user.getId(), tempUser);
 					}
-					
-					if(!userExists) {
-						// save stream user
-						userInsertions++;
-						streamUserDAO.insertStreamUser(user);
-					}
-					else {
-						// Update statistics of stream user
-						synchronized(usersMap) {
-							StreamUser tempUser = usersMap.get(user.getId());
-							if(tempUser == null) {
-								tempUser = new StreamUser(null, Operation.UPDATE);
-								tempUser.setId(user.getId());
-								tempUser.setImageUrl(user.getImageUrl());
-								tempUser.setProfileImage(user.getProfileImage());
-								tempUser.setName(user.getName());
-								usersMap.put(user.getId(), tempUser);
-							}
-							tempUser.incItems(1);
-							tempUser.incMentions(1L);
-						}
-					}
+					tempUser.incItems(1);
+					tempUser.incMentions(1L);
 				}
 			}
 			
