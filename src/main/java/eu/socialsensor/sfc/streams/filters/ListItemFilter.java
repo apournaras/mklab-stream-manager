@@ -42,6 +42,9 @@ public class ListItemFilter extends ItemFilter {
 				usersToLists.put(user, lists);
 			}
 		}
+		
+		Logger.getLogger(ListItemFilter.class).info(usersToLists.size() + " users");
+		
 	}
 
 	@Override

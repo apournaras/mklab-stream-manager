@@ -22,7 +22,7 @@ public class LanguageItemFilter extends ItemFilter {
 				languages.add(lang.trim());
 			}
 		}
-		Logger.getLogger(LengthItemFilter.class).info("Supported languages: " + langsStr);
+		Logger.getLogger(LanguageItemFilter.class).info("Supported languages: " + langsStr);
 	}
 	
 	@Override
