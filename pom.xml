@@ -2,13 +2,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>eu.socialsensor</groupId>
-    <artifactId>socialsensor-stream-manager</artifactId>
+    <groupId>gr.iti.mklab</groupId>
+    <artifactId>mklab-stream-manager</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 	
-    <name>socialsensor-stream-manager</name>
-    <url>https://github.com/socialsensor/socialsensor-stream-manager</url>
+    <name>mklab-stream-manager</name>
+    <url>https://github.com/MKLab-ITI/mklab-stream-manager</url>
     <description>
     	Monitors a set of social streams (e.g. Twitter status updates) and collects the incoming content.
     </description>
@@ -40,9 +40,9 @@
   	</licenses>
   	
   	<scm>
-        <connection>scm:git:git@github.com:socialsensor/socialsensor-stream-manager.git</connection>
-        <developerConnection>scm:git:git@github.com:socialsensor/socialsensor-stream-manager.git</developerConnection>
-        <url>git@github.com:socialsensor/socialsensor-stream-manager.git</url>
+        <connection>scm:git:git@github.com:MKLab-ITI/mklab-stream-manager.git</connection>
+        <developerConnection>scm:git:git@github.com:MKLab-ITI/mklab-stream-manager.git</developerConnection>
+        <url>git@github.com:MKLab-ITI/mklab-stream-manager.git</url>
     </scm>
     
     <properties>
@@ -50,32 +50,38 @@
     </properties>
    
     <dependencies>
-    	<!-- Social Sensor -->
+    	<!-- MKLAB projects -->
         <dependency>
-            <groupId>eu.socialsensor</groupId>
-            <artifactId>socialsensor-framework-common</artifactId>
-            <version>0.2.2-SNAPSHOT</version>
+            <groupId>gr.iti.mklab</groupId>
+            <artifactId>mklab-framework-common</artifactId>
+            <version>0.1-SNAPSHOT</version>
         </dependency>
-      	<dependency>
-        	<groupId>eu.socialsensor</groupId>
-        	<artifactId>geo-util</artifactId>
-        	<version>0.1-SNAPSHOT</version>
-        </dependency>
+        
         <dependency>
-  			<groupId>eu.socialsensor</groupId>
-  			<artifactId>socialmedia-abstractions</artifactId>
-  			<version>0.2-SNAPSHOT</version>
+  			<groupId>gr.iti.mklab</groupId>
+  			<artifactId>mklab-socialmedia-abstractions</artifactId>
+  			<version>0.1-SNAPSHOT</version>
 		</dependency>
+		
         <dependency>
-            <groupId>eu.socialsensor</groupId>
-            <artifactId>socialsensor-framework-client</artifactId>
-            <version>0.2.2-SNAPSHOT</version>
+            <groupId>gr.iti.mklab</groupId>
+            <artifactId>mklab-framework-client</artifactId>
+            <version>0.1-SNAPSHOT</version>
         </dependency>
-        <dependency>
-        	<groupId>eu.socialsensor</groupId>
-			<artifactId>socialsensor-query-builder</artifactId>
-			<version>0.2-SNAPSHOT</version>
-        </dependency>
+        
+       	<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>4.10.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analyzers-common</artifactId>
+			<version>4.10.2</version>
+		</dependency>
+
+
         <dependency>
         	<groupId>com.thinkaurelius.titan</groupId>
         	<artifactId>titan-hbase</artifactId>
@@ -104,13 +110,7 @@
         	<artifactId>langdetect</artifactId>
         	<version>1.1-20120112</version>
         </dependency>
-        <!--
-        <dependency>
-        	<groupId>org.log4mongo</groupId>
-        	<artifactId>log4mongo-java</artifactId>
-        	<version>0.7.4</version>
-        </dependency>
-        -->
+
     </dependencies>
     
 	<repositories>
