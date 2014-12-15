@@ -13,9 +13,8 @@ import java.util.concurrent.LinkedBlockingDeque;
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.NamedEntity;
 import gr.iti.mklab.framework.common.domain.dysco.Dysco;
-import gr.iti.mklab.framework.common.domain.Entity;
-import gr.iti.mklab.framework.common.domain.Entity.Type;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.util.DateUtil;
@@ -105,9 +104,9 @@ public abstract class SearchHandler extends Thread {
 			feeds.add(feed);
 		}
 		
-		List<Entity> entities = dysco.getEntities();
-		for(Entity entity : entities) {
-			if(entity.getType().equals(Type.LOCATION))
+		List<NamedEntity> entities = dysco.getEntities();
+		for(NamedEntity entity : entities) {
+			if(entity.getType().equals(NamedEntity.Type.LOCATION))
 				continue;
 			
 			UUID UUid = UUID.randomUUID(); 
@@ -115,7 +114,7 @@ public abstract class SearchHandler extends Thread {
 			feeds.add(feed);
 		}
 		
-		Map<String, Double> hashtags = dysco.getHashtags();
+		Map<String, Double> hashtags = dysco.getTags();
 		for(Entry<String, Double> entry : hashtags.entrySet()) {
 			
 			String hashtag = entry.getKey();

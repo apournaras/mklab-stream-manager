@@ -16,7 +16,7 @@ public class StdoutStorage implements Storage {
 
 	@Override
 	public void store(Item update) throws IOException {
-		System.out.println(update.toJSONString());	
+		System.out.println(update.toString());	
 	}
 	
 	
@@ -49,7 +49,7 @@ public class StdoutStorage implements Storage {
 
 	@Override
 	public void update(Item update) throws IOException {
-		System.out.println(update.toJSONString());
+		System.out.println(update.toString());
 	}
 	
 	@Override

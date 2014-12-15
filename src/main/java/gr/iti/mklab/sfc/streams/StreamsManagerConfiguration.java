@@ -11,19 +11,18 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.mongodb.morphia.dao.BasicDAO;
+import org.mongodb.morphia.query.Query;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import gr.iti.mklab.framework.client.mongo.MongoHandler;
+import gr.iti.mklab.framework.client.mongo.DAOFactory;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
-import gr.iti.mklab.framework.common.factories.ObjectFactory;
 
 public class StreamsManagerConfiguration extends Configuration {
 	
@@ -133,35 +132,29 @@ public class StreamsManagerConfiguration extends Configuration {
 	
 	public static StreamsManagerConfiguration readFromMongo(String host, String dbName, String collectionName) 
 			throws Exception {
-		MongoHandler mongo = new MongoHandler(host, dbName, collectionName, null);
 		
-		String json = mongo.findOne();
-		Gson gson = new GsonBuilder()
-        	.excludeFieldsWithoutExposeAnnotation()
-        	.create();
-		StreamsManagerConfiguration config = gson.fromJson(json, StreamsManagerConfiguration.class);
-        return config;
+		DAOFactory daoFactory = new DAOFactory();
+		BasicDAO<StreamsManagerConfiguration, String> dao = daoFactory.getDAO(host, dbName, StreamsManagerConfiguration.class);
+	
+		Query<StreamsManagerConfiguration> q = dao.createQuery();
+		StreamsManagerConfiguration config = dao.findOne(q);
+		return config;
 	}
 	
 	public void readItemsFromMongo(String host, String dbName, String collection, List<Item> mongoItems) throws Exception{
-		MongoHandler mongo = new MongoHandler(host, dbName, collection, null);
-		List<String> jsonItems = mongo.findMany(-1);
+		DAOFactory daoFactory = new DAOFactory();
+		BasicDAO<Item, String> dao = daoFactory.getDAO(host, dbName, Item.class);
 	
-		for(String json : jsonItems){
-			
-			Item item = ObjectFactory.create(json);
-			
-			mongoItems.add(item);
-			
-		}
-		
+		mongoItems.addAll(dao.find().asList());
 	}
 	
 	public void saveToMongo(String host, String dbName, String collectionName) 
 			throws Exception {
-		MongoHandler mongo = new MongoHandler(host, dbName, collectionName, null);
 		
-		mongo.insert(this);
+		DAOFactory daoFactory = new DAOFactory();
+		BasicDAO<StreamsManagerConfiguration, String> dao = daoFactory.getDAO(host, dbName, StreamsManagerConfiguration.class);
+	
+		dao.save(this);
 		
 	}
 	

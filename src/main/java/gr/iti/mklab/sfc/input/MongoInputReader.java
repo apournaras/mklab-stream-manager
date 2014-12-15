@@ -13,8 +13,6 @@ import java.util.UUID;
 
 import gr.iti.mklab.framework.client.dao.AccountDAO;
 import gr.iti.mklab.framework.client.dao.RssSourceDAO;
-import gr.iti.mklab.framework.client.dao.impl.AccountDAOImpl;
-import gr.iti.mklab.framework.client.dao.impl.RssSourceDAOImpl;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
@@ -200,15 +198,12 @@ public class MongoInputReader implements InputReader {
 		List<Account> sources = new ArrayList<Account>();
 		List<String> rssSources = new ArrayList<String>();
 		
-		AccountDAO sourceDao = new AccountDAOImpl(host, db, newsHoundsCollection);
-		RssSourceDAO rssSourceDao = new RssSourceDAOImpl(host, db, rssSourcesCollection);
-		
 		if(streamType.equals("RSS")) {
-			rssSources.addAll(rssSourceDao.getRssSources());
+			//rssSources.addAll(rssSourceDao.getRssSources());
 		}
 		else {
-			List<Account> streamSources = sourceDao.findTopAccounts(75000, Source.valueOf(streamType));
-			sources.addAll(streamSources);
+			//List<Account> streamSources = sourceDao.findTopAccounts(75000, Source.valueOf(streamType));
+			//sources.addAll(streamSources);
 		}
 		
 		// extract keywords

@@ -105,18 +105,16 @@ public class SolrStorage implements Storage {
 		if(solrMediaHandler != null) {
 			
 			for(MediaItem mediaItem : item.getMediaItems()) {
-				if(!solrMediaHandler.isIndexed(mediaItem.getId())) {
-					solrMediaHandler.insertMediaItem(mediaItem);
-				}
-				//else {
-				//	solrMediaHandler.insertMediaItem(mi);
-				//}
+				
+				solrMediaHandler.insert(mediaItem);
+				//solrMediaHandler.insertMediaItem(mi);
+				
 			}
 		}
 		if(solrWebpageHandler != null) {
 			List<WebPage> webPages = item.getWebPages();
 			if(webPages != null) {
-				solrWebpageHandler.insertWebPages(webPages);
+				solrWebpageHandler.insert(webPages);
 			}
 		}
 		
@@ -140,7 +138,6 @@ public class SolrStorage implements Storage {
 		
 		if(itemsCollection != null) {
 			try {
-				solrItemHandler.checkServerStatus();
 				return true;
 			} 
 			catch (Exception e) {
@@ -151,7 +148,6 @@ public class SolrStorage implements Storage {
 		
 		if(mediaItemsCollection != null) {
 			try {
-				solrMediaHandler.checkServerStatus();
 				return true;
 			} 
 			catch (Exception e) {

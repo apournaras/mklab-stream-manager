@@ -14,7 +14,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.Item;
-import gr.iti.mklab.framework.common.domain.Query;
 import gr.iti.mklab.framework.common.domain.dysco.Dysco;
 
 
@@ -65,22 +64,7 @@ public class QueryExpander extends Thread {
 						}
 						
 						completed.add(dyscoId);
-
-						List<Query> queries = dysco.getSolrQueries();
-						Integer expandedQueries = 0;
-						for(Query q : queries) {
-							if(q.getIsFromExpansion()) {
-								expandedQueries++;
-							}
-						}
 						
-						if(expandedQueries > 0) {
-							logger.info("Number of additional queries for Trending DySco: " + dysco.getId() + " is " + expandedQueries);
-							dyscosToUpdate.add(dysco);
-						}
-						else {
-							logger.info("No queries to update for " + dyscoId);
-						}
 					}
 					else if(response.isCancelled()) {
 						completed.add(dyscoId);

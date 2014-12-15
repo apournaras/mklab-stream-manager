@@ -71,7 +71,7 @@ public class RedisStorage implements Storage {
 			if(itemsChannel != null) {
 				items++;
 				synchronized(jedis) {
-					jedis.publish(itemsChannel, item.toJSONString());
+					jedis.publish(itemsChannel, item.toString());
 				}
 			}
 		
@@ -79,7 +79,7 @@ public class RedisStorage implements Storage {
 				for(MediaItem mediaItem : item.getMediaItems()) {
 					mItems++;
 					synchronized(jedis) {
-						jedis.publish(mediaItemsChannel, mediaItem.toJSONString());
+						jedis.publish(mediaItemsChannel, mediaItem.toString());
 					}
 				}
 			}
@@ -88,7 +88,7 @@ public class RedisStorage implements Storage {
 				for(WebPage webPage : item.getWebPages()) {
 					wPages++;
 					synchronized(jedis) {
-						jedis.publish(webPagesChannel, webPage.toJSONString());
+						jedis.publish(webPagesChannel, webPage.toString());
 					}
 				}
 			}

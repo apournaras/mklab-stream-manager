@@ -192,10 +192,7 @@ public class SocialMediaSearcher extends Thread {
 			}
 			else {
 				try {
-					Dysco previousDysco = solrdyscoHandler.get(dyscoToUpdate.getId());
-					previousDysco.getSolrQueries().clear();
-					previousDysco.setSolrQueries(dyscoToUpdate.getSolrQueries());
-					solrdyscoHandler.insert(previousDysco);
+					solrdyscoHandler.insert(dyscoToUpdate);
 				
 					logger.info("Dysco: " + dyscoToUpdate.getId() + " is updated");
 				}

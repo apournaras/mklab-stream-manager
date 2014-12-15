@@ -45,7 +45,7 @@ public class FlatFileStorage implements Storage {
 	public void store(Item item){
 		items++;
 		if (out != null) {
-			out.println(item.toJSONString());
+			out.println(item.toString());
 			out.flush();
 			
 		}
@@ -88,7 +88,7 @@ public class FlatFileStorage implements Storage {
 	public void update(Item update) throws IOException {
 		items++;
 		if (out != null) {
-			out.println(update.toJSONString());
+			out.println(update.toString());
 			out.flush();
 		}
 		if(items%1000==0) {

@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import gr.iti.mklab.framework.common.domain.Location;
-import gr.iti.mklab.framework.common.domain.Query;
 import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.dysco.Dysco;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
@@ -49,13 +48,13 @@ public class DyscoInputReader implements InputReader {
 		//standard for trending dysco 
 		Set<String> queryKeywords = new HashSet<String>();
 	
-		List<Query> solrQueries = dysco.getSolrQueries();
-		if(solrQueries != null) {
-			for(Query solrQuery : solrQueries){
-				String queryName = solrQuery.getName();
-				queryKeywords.add(queryName);
-			}
-		}
+		//List<Query> solrQueries = dysco.getSolrQueries();
+		//if(solrQueries != null) {
+		//	for(Query solrQuery : solrQueries){
+		//		String queryName = solrQuery.getName();
+		//		queryKeywords.add(queryName);
+		//	}
+		//}
 		
 		if(!queryKeywords.isEmpty()) {
 			inputDataPerType.put(FeedType.KEYWORDS, queryKeywords);

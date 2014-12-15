@@ -146,7 +146,7 @@ public abstract class Stream {//implements Runnable {
 				catch(Exception e) {
 					logger.error("Exception for feed " + feed.getId() + " of type " + feed.getFeedtype() + " from "
 							+ getName());
-					logger.error("Feed: " + feed.toJSONString());
+					logger.error("Feed: " + feed.toString());
 					logger.error(e.getMessage());
 				}
 			}
