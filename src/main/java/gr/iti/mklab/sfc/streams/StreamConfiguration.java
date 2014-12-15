@@ -1,6 +1,6 @@
 package gr.iti.mklab.sfc.streams;
 
-import gr.iti.mklab.framework.common.domain.Configuration;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.sfc.streams.management.StorageHandler;
 
 /**

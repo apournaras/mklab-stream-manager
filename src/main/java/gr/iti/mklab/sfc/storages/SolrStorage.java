@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
 import gr.iti.mklab.framework.client.search.solr.SolrItemHandler;
 import gr.iti.mklab.framework.client.search.solr.SolrMediaItemHandler;
 import gr.iti.mklab.framework.client.search.solr.SolrWebPageHandler;
-import gr.iti.mklab.framework.common.domain.Configuration;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.WebPage;

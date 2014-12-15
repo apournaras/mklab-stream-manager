@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import gr.iti.mklab.framework.common.domain.Configuration;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.sfc.streams.StreamsManagerConfiguration;
 

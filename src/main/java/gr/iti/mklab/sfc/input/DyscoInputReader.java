@@ -9,13 +9,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import gr.iti.mklab.framework.common.domain.Keyword;
 import gr.iti.mklab.framework.common.domain.Location;
 import gr.iti.mklab.framework.common.domain.Query;
 import gr.iti.mklab.framework.common.domain.Account;
-import gr.iti.mklab.framework.common.domain.dysco.CustomDysco;
 import gr.iti.mklab.framework.common.domain.dysco.Dysco;
-import gr.iti.mklab.framework.common.domain.dysco.Dysco.DyscoType;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
@@ -33,7 +30,6 @@ import gr.iti.mklab.framework.common.util.DateUtil;
 public class DyscoInputReader implements InputReader {
 	
 	private Dysco dysco;
-	private CustomDysco customDysco;
 	
 	private List<Feed> feeds = new ArrayList<Feed>();
 	
@@ -42,10 +38,6 @@ public class DyscoInputReader implements InputReader {
 	
 	public DyscoInputReader(Dysco dysco) {
 		this.dysco = dysco;
-
-		if(dysco.getDyscoType().equals(DyscoType.CUSTOM)) {
-			this.customDysco = (CustomDysco) dysco;
-		}
 	}
 	
 	@Override
@@ -55,68 +47,13 @@ public class DyscoInputReader implements InputReader {
 		this.date = dateUtil.addDays(dysco.getCreationDate(), -2);
 		
 		//standard for trending dysco 
-		Set<Keyword> queryKeywords = new HashSet<Keyword>();
+		Set<String> queryKeywords = new HashSet<String>();
 	
 		List<Query> solrQueries = dysco.getSolrQueries();
-		
-		if(customDysco != null) {
-			
-			this.date = dateUtil.addDays(new Date(), -5);
-			
-			List<Account> querySources = new ArrayList<Account>();
-			List<Location> queryLocations = new ArrayList<Location>();
-			List<String> queryLists = new ArrayList<String>();
-			
-			List<String> twitterUsers = customDysco.getTwitterUsers();
-			List<String> mentionedUsers = customDysco.getMentionedUsers();
-			List<String> listsOfUsers = customDysco.getListsOfUsers();
-			List<Location> locations = customDysco.getNearLocations();	
-			
-			if(twitterUsers != null) {
-				for(String user : twitterUsers) {
-					Account source = new Account(user, 0f);
-					source.setNetwork("Twitter");
-					querySources.add(source);
-				}
-			}
-			
-			if(mentionedUsers != null) {
-				for(String user : mentionedUsers) {
-					Keyword key = new Keyword(user);
-					queryKeywords.add(key);
-				}
-			}
-			
-			if(listsOfUsers != null) {
-				for(String list : listsOfUsers) {
-					queryLists.add(list);
-				}
-			}
-			if(locations != null) {
-				for(Location location : locations) {
-					queryLocations.add(location);
-				}
-			}
-			
-			if(!querySources.isEmpty()) {
-				inputDataPerType.put(FeedType.ACCOUNT, querySources);
-			}
-			
-			if(!queryLocations.isEmpty()) {
-				inputDataPerType.put(FeedType.LOCATION, queryLocations);
-			}
-			
-			if(!queryLists.isEmpty()) {
-				inputDataPerType.put(FeedType.LIST, queryLists);
-			}
-		}
-		
 		if(solrQueries != null) {
 			for(Query solrQuery : solrQueries){
 				String queryName = solrQuery.getName();
-				
-				Keyword keyword = new Keyword(queryName);
-				queryKeywords.add(keyword);
+				queryKeywords.add(queryName);
 			}
 		}
 		
@@ -151,8 +88,8 @@ public class DyscoInputReader implements InputReader {
 					break;
 				case KEYWORDS : 
 					@SuppressWarnings("unchecked")
-					Set<Keyword> keywords = (Set<Keyword>) inputData.get(feedType);
-					for(Keyword keyword : keywords) {
+					Set<String> keywords = (Set<String>) inputData.get(feedType);
+					for(String keyword : keywords) {
 						String feedID = UUID.randomUUID().toString();
 						KeywordsFeed keywordsFeed = new KeywordsFeed(keyword, date, feedID);
 						feeds.add(keywordsFeed);

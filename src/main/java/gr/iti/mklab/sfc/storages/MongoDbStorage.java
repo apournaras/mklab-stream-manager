@@ -20,7 +20,7 @@ import gr.iti.mklab.framework.client.dao.impl.MediaSharesDAOImpl;
 import gr.iti.mklab.framework.client.dao.impl.StreamUserDAOImpl;
 import gr.iti.mklab.framework.client.dao.impl.WebPageDAOImpl;
 import gr.iti.mklab.framework.client.mongo.MongoHandler;
-import gr.iti.mklab.framework.common.domain.Configuration;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.StreamUser;

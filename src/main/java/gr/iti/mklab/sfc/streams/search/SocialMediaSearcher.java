@@ -16,7 +16,6 @@ import gr.iti.mklab.framework.client.search.solr.SolrDyscoHandler;
 import gr.iti.mklab.framework.common.domain.Message;
 import gr.iti.mklab.framework.common.domain.Message.Action;
 import gr.iti.mklab.framework.common.domain.dysco.Dysco;
-import gr.iti.mklab.framework.common.domain.dysco.Dysco.DyscoType;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
 import gr.iti.mklab.sfc.streams.StreamException;
@@ -329,18 +328,10 @@ public class SocialMediaSearcher extends Thread {
 				    				logger.error("Invalid dysco request: Dysco " + dyscoId + " does not exist!");
 				    				continue;
 				    			}
-							
-				    			DyscoType dyscoType = dysco.getDyscoType();
-							
-				    			if(dyscoType.equals(DyscoType.TRENDING)) {
-				    				trendingSearchHandler.addDysco(dysco);
-				    			}
-				    			else if(dyscoType.equals(DyscoType.CUSTOM)) {
-				    				customSearchHandler.addDysco(dysco);
-				    			}
-				    			else {
-				    				logger.error("Unsupported dysco type " + dyscoType + " - Cannot be processed from MediaSearcher");
-				    			}
+
+				    			trendingSearchHandler.addDysco(dysco);
+				    			//customSearchHandler.addDysco(dysco);
+
 				    			continue;
 				    		case UPDATE:
 				    			logger.info("Dysco with id: " + dyscoId + " needs update");

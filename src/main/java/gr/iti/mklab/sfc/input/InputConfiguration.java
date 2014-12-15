@@ -1,6 +1,6 @@
 package gr.iti.mklab.sfc.input;
 
-import gr.iti.mklab.framework.common.domain.Configuration;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 
 import java.io.File;
 import java.io.IOException;

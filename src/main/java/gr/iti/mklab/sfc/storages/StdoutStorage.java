@@ -1,6 +1,6 @@
 package gr.iti.mklab.sfc.storages;
 
-import gr.iti.mklab.framework.common.domain.Configuration;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
 
 import java.io.IOException;

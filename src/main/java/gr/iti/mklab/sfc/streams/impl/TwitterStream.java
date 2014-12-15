@@ -67,5 +67,6 @@ public class TwitterStream extends Stream {
 	public String getName() {
 		return "Twitter";
 	}
+	
 }
 

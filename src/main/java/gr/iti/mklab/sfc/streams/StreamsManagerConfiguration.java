@@ -22,7 +22,7 @@ import com.google.gson.annotations.SerializedName;
 
 import gr.iti.mklab.framework.client.mongo.MongoHandler;
 import gr.iti.mklab.framework.common.domain.Item;
-import gr.iti.mklab.framework.common.domain.Configuration;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.factories.ObjectFactory;
 
 public class StreamsManagerConfiguration extends Configuration {

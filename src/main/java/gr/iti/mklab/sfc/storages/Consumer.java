@@ -1,14 +1,11 @@
 package gr.iti.mklab.sfc.storages;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.Item;
-import gr.iti.mklab.sfc.streams.filters.ItemFilter;
-import gr.iti.mklab.sfc.streams.processors.Processor;
 
 /**
  * Class for storing items to databases
@@ -30,14 +27,9 @@ public class Consumer extends Thread {
 	
 	private BlockingQueue<Item> queue;
 	
-	private Collection<ItemFilter> filters;
-	private Collection<Processor> processors;
-	
-	public Consumer(BlockingQueue<Item> queue, Storage store, Collection<ItemFilter> filters, Collection<Processor> processors) {
+	public Consumer(BlockingQueue<Item> queue, Storage store) {
 		this.store = store;
 		this.queue = queue;
-		this.filters = filters;
-		this.processors = processors;
 	}
 	
 	/**
@@ -78,16 +70,6 @@ public class Consumer extends Thread {
 	 */
 	private void process(Item item) throws IOException {
 		if (store != null) {
-			
-			for(ItemFilter filter : filters) {
-				if(!filter.accept(item)) {
-					return;
-				}
-			}
-			
-			for(Processor processor : processors) {
-				processor.process(item);	
-			}
 			
 			store.store(item);
 			//store.update(item);

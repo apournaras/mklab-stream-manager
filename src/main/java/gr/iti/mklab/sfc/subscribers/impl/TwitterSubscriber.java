@@ -32,7 +32,6 @@ import twitter4j.conf.ConfigurationBuilder;
 import gr.iti.mklab.framework.abstractions.socialmedia.items.TwitterItem;
 import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.Item;
-import gr.iti.mklab.framework.common.domain.Keyword;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
@@ -124,15 +123,8 @@ public class TwitterSubscriber extends Subscriber {
 			
 			for(Feed feed : feeds) {
 				if(feed.getFeedtype().equals(FeedType.KEYWORDS)) {
-					if(((KeywordsFeed) feed).getKeyword() != null) {
-						keys.add(((KeywordsFeed) feed).getKeyword().getName());
-					}
-					else {
-						for(Keyword keyword : ((KeywordsFeed) feed).getKeywords()) {
-							keys.add(keyword.getName());
-						}
-					}
-						
+					KeywordsFeed keywordFeed = (KeywordsFeed) feed;
+					keys.addAll(keywordFeed.getKeywords());
 				}
 				else if(feed.getFeedtype().equals(FeedType.ACCOUNT)) {
 					Account source = ((AccountFeed)feed).getAccount();		

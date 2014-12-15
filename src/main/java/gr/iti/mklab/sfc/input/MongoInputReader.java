@@ -12,10 +12,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import gr.iti.mklab.framework.client.dao.AccountDAO;
-import gr.iti.mklab.framework.client.dao.KeywordDAO;
 import gr.iti.mklab.framework.client.dao.RssSourceDAO;
 import gr.iti.mklab.framework.client.dao.impl.AccountDAOImpl;
-import gr.iti.mklab.framework.client.dao.impl.KeywordDAOImpl;
 import gr.iti.mklab.framework.client.dao.impl.RssSourceDAOImpl;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
@@ -24,8 +22,7 @@ import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.common.domain.feeds.URLFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed.FeedType;
 import gr.iti.mklab.framework.common.domain.Account;
-import gr.iti.mklab.framework.common.domain.Configuration;
-import gr.iti.mklab.framework.common.domain.Keyword;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Location;
 import gr.iti.mklab.framework.common.domain.Source;
 
@@ -54,7 +51,6 @@ public class MongoInputReader implements InputReader {
 	private String db = null;
 	private String newsHoundsCollection = null;
 	private String expertsCollection = null;
-	private String keywordsCollection;
 	
 	private String streamType = null;
 	
@@ -84,7 +80,6 @@ public class MongoInputReader implements InputReader {
 		this.newsHoundsCollection = storage_config.getParameter(MongoInputReader.SOURCES_COLLECTION, "Sources");
 		this.rssSourcesCollection = storage_config.getParameter(MongoInputReader.RSS_SOURCES_COLLECTION, "RssSources");
 		this.expertsCollection = storage_config.getParameter(MongoInputReader.EXPERTS_COLLECTION,"Experts");
-		this.keywordsCollection = storage_config.getParameter(MongoInputReader.KEYWORDS_COLLECTION, "Keywords");
 		
 	}
 	
@@ -130,9 +125,8 @@ public class MongoInputReader implements InputReader {
 						@SuppressWarnings("unchecked")
 						List<Account> sources = (List<Account>) inputData.get(feedType);
 						for(Account source : sources) {
-							String feedID = source.getNetwork() + "#" + source.getName(); //UUID.randomUUID().toString();
-							AccountFeed sourceFeed = new AccountFeed(source, sinceDate, feedID);
-							sourceFeed.setLabel(source.getList());				
+							String feedID = source.getSource() + "#" + source.getName(); //UUID.randomUUID().toString();
+							AccountFeed sourceFeed = new AccountFeed(source, sinceDate, feedID);			
 							feeds.add(sourceFeed);
 						}
 						break;
@@ -149,11 +143,10 @@ public class MongoInputReader implements InputReader {
 				
 					case KEYWORDS : 
 						@SuppressWarnings("unchecked")
-						List<Keyword> keywords = (List<Keyword>) inputData.get(feedType);
-						for(Keyword keyword : keywords) {
+						List<String> keywords = (List<String>) inputData.get(feedType);
+						for(String keyword : keywords) {
 							String feedID = UUID.randomUUID().toString();
 							KeywordsFeed keywordsFeed = new KeywordsFeed(keyword, sinceDate, feedID);
-							keywordsFeed.setLabel(keyword.getLabel());
 							feeds.add(keywordsFeed);
 						}
 						break;
@@ -209,7 +202,6 @@ public class MongoInputReader implements InputReader {
 		
 		AccountDAO sourceDao = new AccountDAOImpl(host, db, newsHoundsCollection);
 		RssSourceDAO rssSourceDao = new RssSourceDAOImpl(host, db, rssSourcesCollection);
-		KeywordDAO keywordDao = new KeywordDAOImpl(host,db,keywordsCollection);
 		
 		if(streamType.equals("RSS")) {
 			rssSources.addAll(rssSourceDao.getRssSources());
@@ -220,13 +212,7 @@ public class MongoInputReader implements InputReader {
 		}
 		
 		// extract keywords
-		List<Keyword> keywords;
-		if(streamType.equals("RSS")) {
-			keywords = new ArrayList<Keyword>();
-		}
-		else {
-			keywords = keywordDao.findKeywords(Source.valueOf(streamType));
-		}
+		List<String> keywords = new ArrayList<String>();
 		
 		if(!keywords.isEmpty()) {
 			inputDataPerType.put(FeedType.KEYWORDS, keywords);

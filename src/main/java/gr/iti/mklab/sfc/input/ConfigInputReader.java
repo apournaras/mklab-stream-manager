@@ -14,8 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import gr.iti.mklab.framework.common.domain.Configuration;
-import gr.iti.mklab.framework.common.domain.Keyword;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Location;
 import gr.iti.mklab.framework.common.domain.Source;
 import gr.iti.mklab.framework.common.domain.Account;
@@ -42,7 +41,7 @@ public class ConfigInputReader implements InputReader{
 	
 	private Set<String> streams = null;
 	
-	private Source streamType = null;
+	private Source source = null;
 	
 	private Configuration stream_config = null;
 	
@@ -63,21 +62,21 @@ public class ConfigInputReader implements InputReader{
 			List<Feed> feedsPerStream = new ArrayList<Feed>();
 			
 			if(stream.equals("Twitter"))
-				this.streamType = Source.Twitter;
+				this.source = Source.Twitter;
 			else if(stream.equals("Facebook"))
-				this.streamType = Source.Facebook;
+				this.source = Source.Facebook;
 			else if(stream.equals("Flickr"))
-				this.streamType = Source.Flickr;
+				this.source = Source.Flickr;
 			else if(stream.equals("GooglePlus"))
-				this.streamType = Source.GooglePlus;
+				this.source = Source.GooglePlus;
 			else if(stream.equals("Instagram"))
-				this.streamType = Source.Instagram;
+				this.source = Source.Instagram;
 			else if(stream.equals("Tumblr"))
-				this.streamType = Source.Tumblr;
+				this.source = Source.Tumblr;
 			else if(stream.equals("Topsy"))
-				this.streamType = Source.Topsy;
+				this.source = Source.Topsy;
 			else if(stream.equals("Youtube"))
-				this.streamType = Source.Youtube;
+				this.source = Source.Youtube;
 			
 			Map<FeedType,Object> inputData = getData();
 			
@@ -88,7 +87,7 @@ public class ConfigInputReader implements InputReader{
 					@SuppressWarnings("unchecked")
 					List<Account> sources = (List<Account>) inputData.get(feedType);
 					for(Account source : sources){
-						source.setNetwork(streamType.toString());
+						source.setSource(source.toString());
 						String feedID = UUID.randomUUID().toString();
 						AccountFeed sourceFeed = new AccountFeed(source, sinceDate, feedID);
 						feedsPerStream.add(sourceFeed);
@@ -96,8 +95,8 @@ public class ConfigInputReader implements InputReader{
 					break;
 				case KEYWORDS : 
 					@SuppressWarnings("unchecked")
-					List<Keyword> keywords = (List<Keyword>) inputData.get(feedType);
-					for(Keyword keyword : keywords){
+					List<String> keywords = (List<String>) inputData.get(feedType);
+					for(String keyword : keywords){
 						String feedID = UUID.randomUUID().toString();
 						KeywordsFeed keywordsFeed = new KeywordsFeed(keyword,sinceDate,feedID);
 						feedsPerStream.add(keywordsFeed);
@@ -132,7 +131,7 @@ public class ConfigInputReader implements InputReader{
 	public Map<FeedType, Object> getData(){
 		Map<FeedType,Object> inputDataPerType = new HashMap<FeedType,Object>();
 		
-		this.stream_config = config.getStreamInputConfig(streamType.toString());
+		this.stream_config = config.getStreamInputConfig(source.toString());
 	
 		String value;
 		
@@ -181,7 +180,9 @@ public class ConfigInputReader implements InputReader{
 		    }
 			
 			for(String user : users) {
-				sources.add(new Account(user, 0.0f)); 	
+				Account account = new Account();
+				account.setName(user);
+				sources.add(account); 	
 			}
 			
 		}
@@ -196,12 +197,16 @@ public class ConfigInputReader implements InputReader{
 				String[] users = value.split(",");
 			
 				for(String user : users) {
-					sources.add(new Account(user, 0.0f)); 	
+					Account account = new Account();
+					account.setName(user);
+					sources.add(account); 	
 				}
 			}
 			else{
 				String user = value;
-				sources.add(new Account(user, 0.0f)); 	
+				Account account = new Account();
+				account.setName(user);
+				sources.add(account); 	
 			}
 		}
 	
@@ -209,14 +214,14 @@ public class ConfigInputReader implements InputReader{
 			inputDataPerType.put(FeedType.ACCOUNT, sources);
 		
 		//keywords
-		List<Keyword> keywords = new ArrayList<Keyword>();
+		List<String> keywords = new ArrayList<String>();
 		
 		value = stream_config.getParameter(KEYWORDS);
 		if (value != null && !value.equals("")) {
 			String[] tokens = value.split(",");
 			
 			for(String token : tokens) {
-				keywords.add(new Keyword(token.toLowerCase()));
+				keywords.add(token.toLowerCase());
 			}
 		}
 		

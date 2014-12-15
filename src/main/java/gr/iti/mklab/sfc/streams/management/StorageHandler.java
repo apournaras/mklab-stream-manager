@@ -10,15 +10,13 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.log4j.Logger;
 
-import gr.iti.mklab.framework.common.domain.Configuration;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.sfc.storages.Consumer;
 import gr.iti.mklab.sfc.storages.MultipleStorages;
 import gr.iti.mklab.sfc.storages.Storage;
 import gr.iti.mklab.sfc.streams.StreamException;
 import gr.iti.mklab.sfc.streams.StreamsManagerConfiguration;
-import gr.iti.mklab.sfc.streams.filters.ItemFilter;
-import gr.iti.mklab.sfc.streams.processors.Processor;
 
 /**
  * @brief  Thread-safe class for managing the storage of items to databases 
@@ -43,9 +41,6 @@ public class StorageHandler {
 	
 	private List<Storage> workingStorages = new ArrayList<Storage>();
 	
-	private List<ItemFilter> filters = new ArrayList<ItemFilter>();
-	private List<Processor> processors = new ArrayList<Processor>();
-	
 	private StorageStatusThread statusThread;
 	
 	private Map<String, Boolean> workingStatus = new HashMap<String, Boolean>();
@@ -64,13 +59,7 @@ public class StorageHandler {
 		
 		consumers = new ArrayList<Consumer>(numberOfConsumers);
 		
-		try {
-			createFilters();
-			logger.info(filters.size() + " filters initialized!");
-			
-			createProcessors();
-			logger.info(processors.size() + " processors initialized!");
-			
+		try {	
 			store = initStorage(config);	
 		} catch (StreamException e) {
 			e.printStackTrace();
@@ -126,7 +115,7 @@ public class StorageHandler {
 	public void start() {
 		
 		for(int i=0; i<numberOfConsumers; i++) {
-			Consumer consumer = new Consumer(queue, store, filters, processors);
+			Consumer consumer = new Consumer(queue, store);
 			consumer.setName("Consumer_" + i);
 			consumers.add(consumer);
 		}
@@ -190,41 +179,6 @@ public class StorageHandler {
 		}
 		
 		return storage;
-	}
-	
-	private void createFilters() throws StreamException {
-		for (String filterId : config.getFilterIds()) {
-			try {
-				Configuration fconfig = config.getFilterConfig(filterId);
-				String className = fconfig.getParameter(Configuration.CLASS_PATH);
-				Constructor<?> constructor = Class.forName(className).getConstructor(Configuration.class);
-				ItemFilter filterInstance = (ItemFilter) constructor.newInstance(fconfig);
-			
-				filters.add(filterInstance);
-			}
-			catch(Exception e) {
-				e.printStackTrace();
-				logger.error("Error during filter " + filterId + "initialization", e);
-			}
-		}
-	}
-	
-	private void createProcessors() throws StreamException {
-		for (String processorId : config.getProcessorsIds()) {
-			try {
-					
-				Configuration pconfig = config.getProcessorConfig(processorId);
-				String className = pconfig.getParameter(Configuration.CLASS_PATH);
-				Constructor<?> constructor = Class.forName(className).getConstructor(Configuration.class);
-				Processor processorInstance = (Processor) constructor.newInstance(pconfig);
-			
-				processors.add(processorInstance);
-			}
-			catch(Exception e) {
-				e.printStackTrace();
-				logger.error("Error during processor " + processorId + " initialization", e);
-			}
-		}
 	}
 	
 	/**
@@ -321,10 +275,6 @@ public class StorageHandler {
 				logger.info("Queue size: " + queue.size());
 				logger.info("Handle rate: " + (items-p)/((T1-T)/60000) + " items/min");
 				logger.info("Mean handle rate: " + (items)/((T1-T0)/60000) + " items/min");
-				
-				for(ItemFilter filter : filters) {
-					logger.info(filter.name() + ": " + filter.status());
-				}
 				
 				T = System.currentTimeMillis();
 				p = items;

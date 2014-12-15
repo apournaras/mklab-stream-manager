@@ -13,7 +13,6 @@ import java.util.concurrent.LinkedBlockingDeque;
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.Item;
-import gr.iti.mklab.framework.common.domain.Keyword;
 import gr.iti.mklab.framework.common.domain.dysco.Dysco;
 import gr.iti.mklab.framework.common.domain.Entity;
 import gr.iti.mklab.framework.common.domain.Entity.Type;
@@ -102,8 +101,7 @@ public abstract class SearchHandler extends Thread {
 				continue;
 			
 			UUID UUid = UUID.randomUUID(); 
-			Keyword keyword = new Keyword(text);
-			KeywordsFeed feed = new KeywordsFeed(keyword, dateToRetrieve, UUid.toString());
+			KeywordsFeed feed = new KeywordsFeed(text, dateToRetrieve, UUid.toString());
 			feeds.add(feed);
 		}
 		
@@ -113,8 +111,7 @@ public abstract class SearchHandler extends Thread {
 				continue;
 			
 			UUID UUid = UUID.randomUUID(); 
-			Keyword keyword = new Keyword(entity.getName());
-			KeywordsFeed feed = new KeywordsFeed(keyword, dateToRetrieve, UUid.toString());
+			KeywordsFeed feed = new KeywordsFeed(entity.getName(), dateToRetrieve, UUid.toString());
 			feeds.add(feed);
 		}
 		
@@ -128,8 +125,7 @@ public abstract class SearchHandler extends Thread {
 				continue;
 			
 			UUID UUid = UUID.randomUUID(); 
-			Keyword keyword = new Keyword(hashtag);
-			KeywordsFeed feed = new KeywordsFeed(keyword, dateToRetrieve, UUid.toString());
+			KeywordsFeed feed = new KeywordsFeed(hashtag, dateToRetrieve, UUid.toString());
 			feeds.add(feed);
 		}
 
@@ -167,7 +163,7 @@ public abstract class SearchHandler extends Thread {
 					searchForDysco(dysco);
 				}
 				catch(Exception e) {
-					logger.error("Error during searching for dysco: " + dysco.getId() + " of type: " + dysco.getDyscoType());
+					logger.error("Error during searching for dysco: " + dysco.getId());
 					logger.error("Exception: " + e.getMessage());
 				}
 			}
