@@ -2,6 +2,7 @@ package gr.iti.mklab.sfc.streams.management;
 
 import gr.iti.mklab.framework.common.domain.Message;
 import gr.iti.mklab.framework.common.domain.Message.Action;
+import gr.iti.mklab.framework.common.factories.ObjectFactory;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -85,7 +86,7 @@ public class MediaSearcherDistributor {
 			while(true) {
 				try {
 					String msg = _queue.take();
-					Message dyscoMessage = Message.create(msg);
+					Message dyscoMessage = ObjectFactory.createMessage(msg);
 					
 					boolean isConnected = true;
 					try {

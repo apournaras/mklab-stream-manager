@@ -17,12 +17,12 @@ import java.util.UUID;
 import gr.iti.mklab.framework.common.domain.Configuration;
 import gr.iti.mklab.framework.common.domain.Keyword;
 import gr.iti.mklab.framework.common.domain.Location;
-import gr.iti.mklab.framework.common.domain.SocialNetwork;
+import gr.iti.mklab.framework.common.domain.Source;
 import gr.iti.mklab.framework.common.domain.Account;
+import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.common.domain.feeds.SourceFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed.FeedType;
 
 /**
@@ -42,7 +42,7 @@ public class ConfigInputReader implements InputReader{
 	
 	private Set<String> streams = null;
 	
-	private SocialNetwork streamType = null;
+	private Source streamType = null;
 	
 	private Configuration stream_config = null;
 	
@@ -63,33 +63,34 @@ public class ConfigInputReader implements InputReader{
 			List<Feed> feedsPerStream = new ArrayList<Feed>();
 			
 			if(stream.equals("Twitter"))
-				this.streamType = SocialNetwork.Twitter;
+				this.streamType = Source.Twitter;
 			else if(stream.equals("Facebook"))
-				this.streamType = SocialNetwork.Facebook;
+				this.streamType = Source.Facebook;
 			else if(stream.equals("Flickr"))
-				this.streamType = SocialNetwork.Flickr;
+				this.streamType = Source.Flickr;
 			else if(stream.equals("GooglePlus"))
-				this.streamType = SocialNetwork.GooglePlus;
+				this.streamType = Source.GooglePlus;
 			else if(stream.equals("Instagram"))
-				this.streamType = SocialNetwork.Instagram;
+				this.streamType = Source.Instagram;
 			else if(stream.equals("Tumblr"))
-				this.streamType = SocialNetwork.Tumblr;
+				this.streamType = Source.Tumblr;
 			else if(stream.equals("Topsy"))
-				this.streamType = SocialNetwork.Topsy;
+				this.streamType = Source.Topsy;
 			else if(stream.equals("Youtube"))
-				this.streamType = SocialNetwork.Youtube;
+				this.streamType = Source.Youtube;
 			
 			Map<FeedType,Object> inputData = getData();
 			
 			for(FeedType feedType : inputData.keySet()){
-				switch(feedType){
-				case SOURCE :
+				switch(feedType) {
+				
+				case ACCOUNT :
 					@SuppressWarnings("unchecked")
 					List<Account> sources = (List<Account>) inputData.get(feedType);
 					for(Account source : sources){
 						source.setNetwork(streamType.toString());
 						String feedID = UUID.randomUUID().toString();
-						SourceFeed sourceFeed = new SourceFeed(source,sinceDate,feedID);
+						AccountFeed sourceFeed = new AccountFeed(source, sinceDate, feedID);
 						feedsPerStream.add(sourceFeed);
 					}
 					break;
@@ -168,16 +169,13 @@ public class ConfigInputReader implements InputReader{
 		            }
 		        }
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}finally {
 		        try {
 					br.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 		    }
@@ -208,7 +206,7 @@ public class ConfigInputReader implements InputReader{
 		}
 	
 		if(!sources.isEmpty())
-			inputDataPerType.put(FeedType.SOURCE, sources);
+			inputDataPerType.put(FeedType.ACCOUNT, sources);
 		
 		//keywords
 		List<Keyword> keywords = new ArrayList<Keyword>();

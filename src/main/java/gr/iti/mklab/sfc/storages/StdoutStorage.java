@@ -33,23 +33,14 @@ public class StdoutStorage implements Storage {
 		return true;
 	}
 
-
 	@Override
 	public void close() {
 		
 	}
 	
-
 	@Override
 	public void updateTimeslot() {
 	}
-	
-	@Override
-	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
-	
-		return true;
-	}
-
 	
 	@Override
 	public boolean checkStatus() {

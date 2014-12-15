@@ -1,10 +1,9 @@
 package gr.iti.mklab.sfc.streams.impl;
 
-
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
-import gr.iti.mklab.framework.common.domain.SocialNetwork;
+import gr.iti.mklab.framework.common.domain.Source;
 import gr.iti.mklab.framework.retrievers.impl.FacebookRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
@@ -18,7 +17,7 @@ import gr.iti.mklab.sfc.streams.StreamException;
  */
 public class FacebookStream extends Stream {
 	
-	public static SocialNetwork SOURCE = SocialNetwork.Facebook;
+	public static Source SOURCE = Source.Facebook;
 	
 	public int maxFBRequests = 600;
 	public long minInterval = 600000;

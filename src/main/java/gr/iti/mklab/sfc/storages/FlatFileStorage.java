@@ -70,7 +70,6 @@ public class FlatFileStorage implements Storage {
 			out = new PrintWriter(new BufferedWriter(new FileWriter(storeFile, false)));
 			return true;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			return false;
 		}
 	}
@@ -105,11 +104,6 @@ public class FlatFileStorage implements Storage {
 	@Override
 	public String getStorageName(){
 		return this.storageName;
-	}
-	
-	@Override
-	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
-		return true;
 	}
 	
 }

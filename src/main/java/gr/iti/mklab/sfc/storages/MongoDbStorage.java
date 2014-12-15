@@ -411,7 +411,6 @@ public class MongoDbStorage implements Storage {
 					if(tempUser == null) {
 						tempUser = new StreamUser();
 						tempUser.setId(user.getId());
-						tempUser.setImageUrl(user.getImageUrl());
 						tempUser.setProfileImage(user.getProfileImage());
 						tempUser.setName(user.getName());
 						tempUser.setLastUpdated(user.getLastUpdated());
@@ -471,11 +470,6 @@ public class MongoDbStorage implements Storage {
 			logger.error(e);
 			return false;
 		}
-	}
-	
-	@Override
-	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException {
-		return true;
 	}
 	
 	@Override

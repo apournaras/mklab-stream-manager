@@ -3,7 +3,7 @@ package gr.iti.mklab.sfc.streams.impl;
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
-import gr.iti.mklab.framework.common.domain.SocialNetwork;
+import gr.iti.mklab.framework.common.domain.Source;
 import gr.iti.mklab.framework.retrievers.impl.GooglePlusRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
@@ -16,7 +16,7 @@ import gr.iti.mklab.sfc.streams.StreamException;
  * @email  ailiakop@iti.gr
  */
 public class GooglePlusStream extends Stream {
-	public static final SocialNetwork SOURCE = SocialNetwork.GooglePlus;
+	public static final Source SOURCE = Source.GooglePlus;
 	
 	private Logger logger = Logger.getLogger(GooglePlusStream.class);
 	

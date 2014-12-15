@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import gr.iti.mklab.framework.common.domain.Configuration;
-import gr.iti.mklab.framework.common.domain.NewsFeedSource;
+import gr.iti.mklab.framework.common.domain.Source;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.URLFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed.FeedType;
@@ -34,7 +34,7 @@ public class FileInputReader implements InputReader{
 	
 	private Set<String> streams = null;
 	
-	private NewsFeedSource streamType = null;
+	private Source streamType = null;
 	
 	private Configuration stream_config = null;
 	
@@ -88,7 +88,7 @@ public class FileInputReader implements InputReader{
 			List<Feed> feedsPerStream = new ArrayList<Feed>();
 			
 			if(stream.equals("RSS"))
-				this.streamType = NewsFeedSource.RSS;
+				this.streamType = Source.RSS;
 			
 			this.stream_config = config.getStreamInputConfig(streamType.toString());
 			

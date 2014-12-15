@@ -132,11 +132,6 @@ public class TitanGraphDbStorage implements Storage {
 	}
 
 	@Override
-	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException {
-		return true;
-	}
-
-	@Override
 	public boolean checkStatus() {
 		if(titanGraph.isOpen()) {
 			return true;

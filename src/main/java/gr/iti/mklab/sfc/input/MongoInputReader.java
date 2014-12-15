@@ -17,19 +17,17 @@ import gr.iti.mklab.framework.client.dao.RssSourceDAO;
 import gr.iti.mklab.framework.client.dao.impl.AccountDAOImpl;
 import gr.iti.mklab.framework.client.dao.impl.KeywordDAOImpl;
 import gr.iti.mklab.framework.client.dao.impl.RssSourceDAOImpl;
+import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.common.domain.feeds.SourceFeed;
 import gr.iti.mklab.framework.common.domain.feeds.URLFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed.FeedType;
 import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.Configuration;
 import gr.iti.mklab.framework.common.domain.Keyword;
 import gr.iti.mklab.framework.common.domain.Location;
-import gr.iti.mklab.framework.common.domain.NewsFeedSource;
-import gr.iti.mklab.framework.common.domain.SocialNetwork;
-
+import gr.iti.mklab.framework.common.domain.Source;
 
 /**
  * @brief The class responsible for the creation of input feeds from
@@ -98,28 +96,28 @@ public class MongoInputReader implements InputReader {
 			List<Feed> feeds = new ArrayList<Feed>();
 			
 			if(stream.equals("Twitter")) {
-				this.streamType = SocialNetwork.Twitter.name();
+				this.streamType = Source.Twitter.name();
 			}
 			else if(stream.equals("Facebook")) {
-				this.streamType = SocialNetwork.Facebook.name();
+				this.streamType = Source.Facebook.name();
 			}
 			else if(stream.equals("Flickr")) {
-				this.streamType = SocialNetwork.Flickr.name();
+				this.streamType = Source.Flickr.name();
 			}
 			else if(stream.equals("GooglePlus")) {
-				this.streamType = SocialNetwork.GooglePlus.name();
+				this.streamType = Source.GooglePlus.name();
 			}
 			else if(stream.equals("Instagram")) {
-				this.streamType = SocialNetwork.Instagram.name();
+				this.streamType = Source.Instagram.name();
 			}
 			else if(stream.equals("Tumblr")) {
-				this.streamType = SocialNetwork.Tumblr.name();
+				this.streamType = Source.Tumblr.name();
 			}
 			else if(stream.equals("Youtube")) {
-				this.streamType = SocialNetwork.Youtube.name();
+				this.streamType = Source.Youtube.name();
 			}
 			else if(stream.equals("RSS")) {
-				this.streamType = NewsFeedSource.RSS.name();
+				this.streamType = Source.RSS.name();
 			}
 	
 			Map<FeedType, Object> inputData = getData();
@@ -127,12 +125,13 @@ public class MongoInputReader implements InputReader {
 			for(FeedType feedType : inputData.keySet()) {
 
 				switch(feedType) {
-					case SOURCE :
+				
+					case ACCOUNT :
 						@SuppressWarnings("unchecked")
 						List<Account> sources = (List<Account>) inputData.get(feedType);
 						for(Account source : sources) {
 							String feedID = source.getNetwork() + "#" + source.getName(); //UUID.randomUUID().toString();
-							SourceFeed sourceFeed = new SourceFeed(source, sinceDate, feedID);
+							AccountFeed sourceFeed = new AccountFeed(source, sinceDate, feedID);
 							sourceFeed.setLabel(source.getList());				
 							feeds.add(sourceFeed);
 						}
@@ -216,7 +215,7 @@ public class MongoInputReader implements InputReader {
 			rssSources.addAll(rssSourceDao.getRssSources());
 		}
 		else {
-			List<Account> streamSources = sourceDao.findTopAccounts(75000, SocialNetwork.valueOf(streamType));
+			List<Account> streamSources = sourceDao.findTopAccounts(75000, Source.valueOf(streamType));
 			sources.addAll(streamSources);
 		}
 		
@@ -226,7 +225,7 @@ public class MongoInputReader implements InputReader {
 			keywords = new ArrayList<Keyword>();
 		}
 		else {
-			keywords = keywordDao.findKeywords(SocialNetwork.valueOf(streamType));
+			keywords = keywordDao.findKeywords(Source.valueOf(streamType));
 		}
 		
 		if(!keywords.isEmpty()) {
@@ -234,7 +233,7 @@ public class MongoInputReader implements InputReader {
 		}
 		
 		if(!sources.isEmpty()) {
-			inputDataPerType.put(FeedType.SOURCE, sources);
+			inputDataPerType.put(FeedType.ACCOUNT, sources);
 		}
 		
 		if(!rssSources.isEmpty()) {

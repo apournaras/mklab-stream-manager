@@ -117,12 +117,6 @@ public class Neo4jGraphDbStorage implements Storage {
 	}
 
 	@Override
-	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException {
-		// TODO Auto-generated method stub
-		return true;
-	}
-
-	@Override
 	public boolean checkStatus() {
 		// TODO Auto-generated method stub
 		return true;

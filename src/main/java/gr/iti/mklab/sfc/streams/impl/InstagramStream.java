@@ -2,7 +2,7 @@ package gr.iti.mklab.sfc.streams.impl;
 
 import org.apache.log4j.Logger;
 
-import gr.iti.mklab.framework.common.domain.SocialNetwork;
+import gr.iti.mklab.framework.common.domain.Source;
 import gr.iti.mklab.framework.retrievers.impl.InstagramRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
@@ -19,7 +19,7 @@ public class InstagramStream extends Stream {
 	
 	private Logger logger = Logger.getLogger(InstagramStream.class);
 	
-	public static final SocialNetwork SOURCE = SocialNetwork.Instagram;
+	public static final Source SOURCE = Source.Instagram;
 
 
 	@Override

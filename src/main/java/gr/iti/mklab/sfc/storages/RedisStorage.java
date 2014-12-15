@@ -170,12 +170,6 @@ public class RedisStorage implements Storage {
 	}
 	
 	@Override
-	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException{
-		// Not supported
-		return true;
-	}
-	
-	@Override
 	public String getStorageName(){
 		return this.storageName;
 	}

@@ -193,10 +193,10 @@ public class SocialMediaSearcher extends Thread {
 			}
 			else {
 				try {
-					Dysco previousDysco = solrdyscoHandler.findDyscoLight(dyscoToUpdate.getId());
+					Dysco previousDysco = solrdyscoHandler.get(dyscoToUpdate.getId());
 					previousDysco.getSolrQueries().clear();
 					previousDysco.setSolrQueries(dyscoToUpdate.getSolrQueries());
-					solrdyscoHandler.insertDysco(previousDysco);
+					solrdyscoHandler.insert(previousDysco);
 				
 					logger.info("Dysco: " + dyscoToUpdate.getId() + " is updated");
 				}
@@ -313,7 +313,7 @@ public class SocialMediaSearcher extends Thread {
 				}
 				else {
 					try {
-						String dyscoId = message.getDyscoId();    	
+						String dyscoId = message.getId();    	
 						
 						Action action = message.getAction();
 				    	switch(action) {
@@ -322,7 +322,7 @@ public class SocialMediaSearcher extends Thread {
 				    		
 				    			Dysco dysco = null;
 				    			synchronized(solrDyscoHandler) {
-				    				dysco = solrDyscoHandler.findDyscoLight(dyscoId);
+				    				dysco = solrDyscoHandler.get(dyscoId);
 				    			}
 					    	
 				    			if(dysco == null) {

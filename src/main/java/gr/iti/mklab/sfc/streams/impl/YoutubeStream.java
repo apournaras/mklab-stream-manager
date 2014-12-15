@@ -3,12 +3,11 @@ package gr.iti.mklab.sfc.streams.impl;
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
-import gr.iti.mklab.framework.common.domain.SocialNetwork;
+import gr.iti.mklab.framework.common.domain.Source;
 import gr.iti.mklab.framework.retrievers.impl.YoutubeRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
 import gr.iti.mklab.sfc.streams.StreamException;
-
 
 /**
  * Class responsible for setting up the connection to Google API
@@ -18,7 +17,7 @@ import gr.iti.mklab.sfc.streams.StreamException;
  */
 public class YoutubeStream extends Stream {
 
-	public static SocialNetwork SOURCE = SocialNetwork.Youtube;
+	public static Source SOURCE = Source.Youtube;
 	
 	private Logger logger = Logger.getLogger(YoutubeStream.class);
 	
@@ -45,7 +44,6 @@ public class YoutubeStream extends Stream {
 		this.clientId = config.getParameter(CLIENT_ID);
 		this.developerKey = config.getParameter(KEY);
 		String maxResults = config.getParameter(MAX_RESULTS);
-		String maxRequests = config.getParameter(MAX_REQUESTS);
 		String maxRunningTime = config.getParameter(MAX_RUNNING_TIME);
 		
 		if (clientId == null || developerKey == null) {

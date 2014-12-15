@@ -98,18 +98,7 @@ public class MultipleStorages implements Storage {
 				}
 			}
 		}
-	}
-	
-	@Override
-	public boolean deleteItemsOlderThan(long dateThreshold) throws IOException {
-		for(Storage storage : storages) {
-			if(!storage.deleteItemsOlderThan(dateThreshold)){
-				return false;
-			}
-		}
-		return true;
-	}
-	
+	}	
 	
 	@Override
 	public boolean delete(String id) throws IOException {

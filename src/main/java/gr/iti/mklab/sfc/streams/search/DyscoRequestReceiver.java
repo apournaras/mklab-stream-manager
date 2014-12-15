@@ -1,6 +1,7 @@
 package gr.iti.mklab.sfc.streams.search;
 
 import gr.iti.mklab.framework.common.domain.Message;
+import gr.iti.mklab.framework.common.factories.ObjectFactory;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -45,7 +46,7 @@ import redis.clients.jedis.JedisPubSub;
 	    	
 	    	logger.info("Received dysco request: " + message);
 	    	try {
-	    		Message dyscoMessage = Message.create(message);
+	    		Message dyscoMessage = ObjectFactory.createMessage(message);
 				messages.put(dyscoMessage);
 			} catch (Exception e) {
 				logger.error("Receiver exception: " + e.getMessage());

@@ -3,7 +3,7 @@ package gr.iti.mklab.sfc.streams.impl;
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
-import gr.iti.mklab.framework.common.domain.SocialNetwork;
+import gr.iti.mklab.framework.common.domain.Source;
 import gr.iti.mklab.framework.retrievers.impl.TwitterRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
@@ -18,7 +18,7 @@ import gr.iti.mklab.sfc.streams.StreamException;
  */
 public class TwitterStream extends Stream {
 	
-	public static SocialNetwork SOURCE = SocialNetwork.Twitter;
+	public static Source SOURCE = Source.Twitter;
 	
 	private Logger  logger = Logger.getLogger(TwitterStream.class);
 

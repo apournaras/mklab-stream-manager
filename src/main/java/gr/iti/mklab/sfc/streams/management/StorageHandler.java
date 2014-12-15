@@ -1,6 +1,5 @@
 package gr.iti.mklab.sfc.streams.management;
 
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -156,18 +155,6 @@ public class StorageHandler {
 	
 	public void delete(Item item) {
 		queue.add(item);	
-	}
-	
-	/**
-	 * Deletes items older than a specific date
-	 * @param dateThreshold
-	 */
-	public void deleteItemsOlderThan(long dateThreshold) {
-		try {
-			store.deleteItemsOlderThan(dateThreshold);
-		} catch (IOException e) {
-			logger.error(e);
-		}
 	}
 	
 	/**

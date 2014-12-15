@@ -16,11 +16,11 @@ import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.dysco.CustomDysco;
 import gr.iti.mklab.framework.common.domain.dysco.Dysco;
 import gr.iti.mklab.framework.common.domain.dysco.Dysco.DyscoType;
+import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.ListFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.common.domain.feeds.SourceFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed.FeedType;
 import gr.iti.mklab.framework.common.util.DateUtil;
 
@@ -99,7 +99,7 @@ public class DyscoInputReader implements InputReader {
 			}
 			
 			if(!querySources.isEmpty()) {
-				inputDataPerType.put(FeedType.SOURCE, querySources);
+				inputDataPerType.put(FeedType.ACCOUNT, querySources);
 			}
 			
 			if(!queryLocations.isEmpty()) {
@@ -140,12 +140,12 @@ public class DyscoInputReader implements InputReader {
 		
 		for(FeedType feedType : inputData.keySet()) {
 			switch(feedType) {
-				case SOURCE :
+				case ACCOUNT :
 					@SuppressWarnings("unchecked")
 					List<Account> sources = (List<Account>) inputData.get(feedType);
 					for(Account source : sources) {
 						String feedID = UUID.randomUUID().toString();
-						SourceFeed sourceFeed = new SourceFeed(source, date, feedID);
+						AccountFeed sourceFeed = new AccountFeed(source, date, feedID);
 						feeds.add(sourceFeed);
 					}
 					break;

@@ -33,10 +33,10 @@ import gr.iti.mklab.framework.abstractions.socialmedia.items.TwitterItem;
 import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.Keyword;
+import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.common.domain.feeds.SourceFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed.FeedType;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
 import gr.iti.mklab.sfc.streams.StreamException;
@@ -134,8 +134,8 @@ public class TwitterSubscriber extends Subscriber {
 					}
 						
 				}
-				else if(feed.getFeedtype().equals(FeedType.SOURCE)) {
-					Account source = ((SourceFeed) feed).getAccount();		
+				else if(feed.getFeedtype().equals(FeedType.ACCOUNT)) {
+					Account source = ((AccountFeed)feed).getAccount();		
 					if(source.getId() == null) {
 						try {
 							users.add(source.getName());
@@ -367,7 +367,7 @@ public class TwitterSubscriber extends Subscriber {
 						String id = Long.toString(statusDeletionNotice.getStatusId());
 						Item update = new Item();
 						update.setId(id);
-						update.setStreamId("Twitter");
+						update.setSource("Twitter");
 						
 						delete(update);
 					}

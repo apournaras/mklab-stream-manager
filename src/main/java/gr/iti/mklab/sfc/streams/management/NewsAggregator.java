@@ -209,7 +209,6 @@ public class NewsAggregator {
 					currentTime = System.currentTimeMillis();
 				}
 				
-				streamHandler.deleteItemsOlderThan(dateThreshold);
 				lastCheck = System.currentTimeMillis();
 			}
 			
