@@ -1,7 +1,7 @@
 package gr.iti.mklab.sfc.streams.impl;
 
 import gr.iti.mklab.framework.common.domain.Source;
-import gr.iti.mklab.framework.retrievers.impl.RSSRetriever;
+import gr.iti.mklab.framework.retrievers.impl.RssRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
 
@@ -10,13 +10,13 @@ import gr.iti.mklab.sfc.streams.StreamConfiguration;
  * @author ailiakop
  * @email  ailiakop@iti.gr
  */
-public class RSSStream extends Stream {
+public class RssStream extends Stream {
 	
 	public static Source SOURCE = Source.RSS;
 	
 	@Override
 	public void open(StreamConfiguration config) {
-		retriever = new RSSRetriever();
+		retriever = new RssRetriever();
 	}
 
 	@Override

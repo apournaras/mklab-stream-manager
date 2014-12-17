@@ -14,8 +14,8 @@ import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.dysco.Dysco;
 import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
+import gr.iti.mklab.framework.common.domain.feeds.GroupFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
-import gr.iti.mklab.framework.common.domain.feeds.ListFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
 import gr.iti.mklab.framework.common.domain.feeds.Feed.FeedType;
 import gr.iti.mklab.framework.common.util.DateUtil;
@@ -103,12 +103,12 @@ public class DyscoInputReader implements InputReader {
 						feeds.add(locationFeed);
 					}
 					break;
-				case LIST :
+				case GROUP :
 					@SuppressWarnings("unchecked")
 					List<String> lists = (List<String>) inputData.get(feedType);
 					for(String list : lists) {
 						String feedID = UUID.randomUUID().toString();
-						ListFeed listFeed = new ListFeed(list, date, feedID);
+						GroupFeed listFeed = new GroupFeed(list, date, feedID);
 						feeds.add(listFeed);
 					}
 				default:

@@ -23,7 +23,7 @@ public interface InputReader {
 	 * Creates the mapping of the input feeds to each stream 
 	 * @return the map of the created feeds to each stream
 	 */
-	public Map<String,List<Feed>> createFeedsPerStream();
+	public Map<String, List<Feed>> createFeedsPerStream();
 	
 	/**
 	 * Creates the feeds for all streams together
