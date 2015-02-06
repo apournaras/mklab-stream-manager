@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
+import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.impl.YoutubeRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
@@ -55,8 +56,9 @@ public class YoutubeStream extends Stream {
 		credentials.setKey(developerKey);
 		credentials.setClientId(clientId);
 		
-		retriever = new YoutubeRetriever(credentials, Integer.parseInt(maxResults),
-				Long.parseLong(maxRunningTime));
+		RateLimitsMonitor rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxResults), Long.parseLong(maxRunningTime));
+		
+		retriever = new YoutubeRetriever(credentials, rateLimitsMonitor);
 
 	}
 	

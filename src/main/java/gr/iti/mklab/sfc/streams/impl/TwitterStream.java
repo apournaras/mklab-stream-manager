@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
+import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.impl.TwitterRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
@@ -60,7 +61,9 @@ public class TwitterStream extends Stream {
 		credentials.setAccessToken(oAuthAccessToken);
 		credentials.setAccessTokenSecret(oAuthAccessTokenSecret);
 		
-		retriever = new TwitterRetriever(credentials, Integer.parseInt(maxRequests), Long.parseLong(maxRunningTime));	
+		RateLimitsMonitor rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxRequests), Long.parseLong(maxRunningTime));
+		
+		retriever = new TwitterRetriever(credentials, rateLimitsMonitor);	
 	}
 	
 	@Override

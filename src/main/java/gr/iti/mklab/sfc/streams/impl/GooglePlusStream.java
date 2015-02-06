@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
+import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.impl.GooglePlusRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
@@ -44,8 +45,9 @@ public class GooglePlusStream extends Stream {
 		Credentials credentials = new Credentials();
 		credentials.setKey(key);
 		
-		retriever = new GooglePlusRetriever(credentials, 
-				Integer.parseInt(maxResults), Long.parseLong(maxRunningTime));
+		RateLimitsMonitor rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxResults), Long.parseLong(maxRunningTime));
+		
+		retriever = new GooglePlusRetriever(credentials, rateLimitsMonitor);
 		
 	}
 	

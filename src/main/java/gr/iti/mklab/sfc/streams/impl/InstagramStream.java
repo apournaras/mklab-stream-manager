@@ -2,7 +2,9 @@ package gr.iti.mklab.sfc.streams.impl;
 
 import org.apache.log4j.Logger;
 
+import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
+import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.impl.InstagramRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
@@ -44,7 +46,14 @@ public class InstagramStream extends Stream {
 			throw new StreamException("Stream requires authentication.");
 		}
 		
-		retriever = new InstagramRetriever(key, secret, token);
+		Credentials credentials = new Credentials();
+		credentials.setKey(key);
+		credentials.setSecret(secret);
+		credentials.setAccessToken(token);
+		
+		RateLimitsMonitor rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxRequests), Long.parseLong(maxRunningTime));
+		
+		retriever = new InstagramRetriever(credentials, rateLimitsMonitor);
 	
 	}
 

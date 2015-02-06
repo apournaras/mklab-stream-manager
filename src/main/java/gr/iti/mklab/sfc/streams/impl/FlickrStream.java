@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
+import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.impl.FlickrRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
@@ -49,7 +50,9 @@ public class FlickrStream extends Stream {
 		credentials.setKey(key);
 		credentials.setSecret(secret);
 		
-		retriever = new FlickrRetriever(credentials, Integer.parseInt(maxResults), Long.parseLong(maxRequests));
+		RateLimitsMonitor rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxResults), Long.parseLong(maxRequests));
+		
+		retriever = new FlickrRetriever(credentials, rateLimitsMonitor);
 		
 	}
 	

@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
+import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.impl.TumblrRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
@@ -50,7 +51,9 @@ public class TumblrStream extends Stream {
 		credentials.setKey(consumerKey);
 		credentials.setSecret(consumerSecret);
 		
-		retriever = new TumblrRetriever(consumerKey, consumerSecret);
+		RateLimitsMonitor rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxRequests), Long.parseLong(maxRunningTime));
+		
+		retriever = new TumblrRetriever(credentials, rateLimitsMonitor);
 		
 	}
 

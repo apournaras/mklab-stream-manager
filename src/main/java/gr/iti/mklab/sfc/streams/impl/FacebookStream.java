@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
+import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
 import gr.iti.mklab.framework.retrievers.impl.FacebookRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamConfiguration;
@@ -55,7 +56,9 @@ public class FacebookStream extends Stream {
 		Credentials credentials = new Credentials();
 		credentials.setAccessToken(accessToken);
 		
-		retriever = new FacebookRetriever(credentials, maxRequests, minInterval);	
+		RateLimitsMonitor rateLimitsMonitor = new RateLimitsMonitor(maxRequests, minInterval);
+		
+		retriever = new FacebookRetriever(credentials, rateLimitsMonitor);	
 
 	}
 
