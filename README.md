@@ -39,4 +39,4 @@ Stream Manager project is dependent to other three SocialSensor projects :
 <h3><u>Contact for further details about the project</u></h3>
 
 
-Aikaterini Iliakopoulou (ailiakop@iti.gr), Manos Schinas (manosetro@iti.gr), Symeon Papadopoulos (papadop@iti.gr)
+Manos Schinas (manosetro@iti.gr), Symeon Papadopoulos (papadop@iti.gr)
