@@ -4,17 +4,18 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.retrievers.impl.InstagramRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
-import gr.iti.mklab.sfc.streams.StreamConfiguration;
 import gr.iti.mklab.sfc.streams.StreamException;
+import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
 
 /**
  * Class responsible for setting up the connection to Instagram API
  * for retrieving relevant Instagram content.
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * 
+ * @author manosetro
+ * @email  manosetro@iti.gr
  */
 
 public class InstagramStream extends Stream {
@@ -25,7 +26,7 @@ public class InstagramStream extends Stream {
 
 
 	@Override
-	public void open(StreamConfiguration config) throws StreamException {
+	public void open(Configuration config) throws StreamException {
 		logger.info("#Instagram : Open stream");
 		
 		if (config == null) {
@@ -51,9 +52,9 @@ public class InstagramStream extends Stream {
 		credentials.setSecret(secret);
 		credentials.setAccessToken(token);
 		
-		RateLimitsMonitor rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxRequests), Long.parseLong(maxRunningTime));
+		rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxRequests), Long.parseLong(maxRunningTime));
 		
-		retriever = new InstagramRetriever(credentials, rateLimitsMonitor);
+		retriever = new InstagramRetriever(credentials);
 	
 	}
 

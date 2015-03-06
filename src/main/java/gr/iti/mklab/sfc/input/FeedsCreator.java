@@ -1,123 +1,70 @@
 package gr.iti.mklab.sfc.input;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.mongodb.morphia.dao.BasicDAO;
+import org.mongodb.morphia.query.QueryResults;
+
+import gr.iti.mklab.framework.client.mongo.DAOFactory;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
-import gr.iti.mklab.framework.common.domain.dysco.Dysco;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
-
-
 /**
- * @brief  The class is responsible for the creation of input feeds
- * that can result either from a configuration file input, 
- * a storage input(currently only mongo db is supported), a DySco or a txt file. 
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * @brief The class responsible for the creation of input feeds from mongodb storage
+ * 
+ * @author manosetro
+ * @email  manosetro@iti.gr
  */
 public class FeedsCreator {
 	
-	private InputReader reader = null;
-	private InputConfiguration config = null;
-	private Dysco dysco = null;
+	protected static final String SINCE = "since";
 	
-	public <T> FeedsCreator(DataInputType dataInputType, T inputData) {
+	protected static final String HOST = "host";
+	protected static final String DB = "database";
+	
+	private String host = null;
+	private String db = null;
+	
+	private BasicDAO<Feed, String> feedsDao;
+	
+	public FeedsCreator(Configuration config) throws Exception {
+		this.host = config.getParameter(HOST);
+		this.db = config.getParameter(DB);
 		
-		switch(dataInputType) {
-			case CONFIG_FILE:
-				this.config = (InputConfiguration) inputData;
-				if(this.config == null) {
-					System.out.println("Input Configuration is not set");
-					return;
-				}
-				
-				Set<String> streamInputs = config.getStreamInputIds();
-				if(!streamInputs.isEmpty()) {
-					reader = new ConfigInputReader(config);
-				}
-				else {
-					System.err.println("Streams need to be configured");
-					return;
-				}
-				break;
-			case TXT_FILE:
-				
-				this.config = (InputConfiguration) inputData;
-				if(this.config == null) {
-					System.out.println("Input Configuration is not set");
-					return;
-				}
-				
-				Set<String> newsCollectors = config.getStreamInputIds();
-				if(!newsCollectors.isEmpty()) {
-					reader = new FileInputReader(config);
-				}
-				else {
-					System.err.println("News Collectors need to be configured");
-					return;
-				}
-				break;
-			case MONGO_STORAGE:
-				this.config = (InputConfiguration) inputData;
-				
-				if(this.config == null) {
-					System.out.println("Input Configuration is not set");
-					return;
-				}
-				
-				Set<String> storageInputs = config.getStorageInputIds();
-				if(!storageInputs.isEmpty()) {
-					for(String storageId : storageInputs) {
-						if(storageId.equals("Mongodb")) {
-							Configuration m_conf = config.getStorageInputConfig("Mongodb");
-							if(m_conf != null) {
-								reader = new MongoInputReader(m_conf);
-							}
-						}
-					}
-				}
-				else {
-					System.err.println("Storage needs to be configured");
-					return;
-				}
-				
-				break;
-				
-			case DYSCO:
-				this.dysco = (Dysco) inputData;
-				reader = new DyscoInputReader(this.dysco);
-				break;
+		DAOFactory daoFactory = new DAOFactory();
+		feedsDao = daoFactory.getDAO(host, db, Feed.class);
+	}
+	
+	public Map<String, Set<Feed>> createFeedsPerSource() {
+	
+		Map<String, Set<Feed>> feedsPerSource = new HashMap<String, Set<Feed>>();
+		
+		Set<Feed> allFeeds = createFeeds();
+		for(Feed feed : allFeeds) {
+			String source = feed.getSource();
+			Set<Feed> feeds = feedsPerSource.get(source);
+			if(feeds == null) {
+				feeds = new HashSet<Feed>();
+				feedsPerSource.put(source, feeds);
+			}	
+			feeds.add(feed);
 		}
-	}
-	
-	/**
-	 * Returns the input feeds created mapped to each stream 
-	 * @return A map of the input feeds to each stream
-	 */
-	public Map<String,List<Feed>> getQueryPerStream(){
-		if(reader == null)
-			return null;
 		
-		return reader.createFeedsPerStream();
-	}
-	
-	/**
-	 * Returns the input feeds created for all streams together
-	 * @return the input feeds
-	 */
-	public List<Feed> getQuery(){
-		if(reader == null)
-			return null;
-		
-		return reader.createFeeds();
-	}
-	
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		
+		return feedsPerSource;
 	}
 
+	public Set<Feed> createFeeds() {
+		QueryResults<Feed> result = feedsDao.find();
+		List<Feed> feeds = result.asList();
+		
+		return new HashSet<Feed>(feeds);
+	}
+	
+	public static void main(String...args) {
+		
+	}
+	
 }

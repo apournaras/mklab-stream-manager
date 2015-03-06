@@ -123,12 +123,6 @@ public class Neo4jGraphDbStorage implements Storage {
 	}
 
 	@Override
-	public void updateTimeslot() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void close() {
 //		resource.delete();
 	}

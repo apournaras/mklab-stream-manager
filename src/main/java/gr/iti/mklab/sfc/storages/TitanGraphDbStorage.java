@@ -109,12 +109,6 @@ public class TitanGraphDbStorage implements Storage {
 	}
 
 	@Override
-	public void updateTimeslot() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void close() {
 		titanGraph.shutdown();
 	}

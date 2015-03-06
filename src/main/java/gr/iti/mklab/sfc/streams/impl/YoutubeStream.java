@@ -4,17 +4,18 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.retrievers.impl.YoutubeRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
-import gr.iti.mklab.sfc.streams.StreamConfiguration;
 import gr.iti.mklab.sfc.streams.StreamException;
+import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
 
 /**
  * Class responsible for setting up the connection to Google API
  * for retrieving relevant YouTube content.
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * 
+ * @author manosetro
+ * @email  manosetro@iti.gr
  */
 public class YoutubeStream extends Stream {
 
@@ -24,17 +25,14 @@ public class YoutubeStream extends Stream {
 	
 	private String clientId;
 	private String developerKey;
-
 	
 	@Override
 	public void close() throws StreamException {
-		if(monitor != null)
-			monitor.stopMonitor();
 		logger.info("#YouTube : Close stream");
 	}
 	
 	@Override
-	public void open(StreamConfiguration config) throws StreamException {
+	public void open(Configuration config) throws StreamException {
 		logger.info("#YouTube : Open stream");
 		
 		if (config == null) {
@@ -56,9 +54,9 @@ public class YoutubeStream extends Stream {
 		credentials.setKey(developerKey);
 		credentials.setClientId(clientId);
 		
-		RateLimitsMonitor rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxResults), Long.parseLong(maxRunningTime));
+		rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxResults), Long.parseLong(maxRunningTime));
 		
-		retriever = new YoutubeRetriever(credentials, rateLimitsMonitor);
+		retriever = new YoutubeRetriever(credentials);
 
 	}
 	

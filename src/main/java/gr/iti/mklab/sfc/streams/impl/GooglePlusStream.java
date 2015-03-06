@@ -4,19 +4,21 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.retrievers.impl.GooglePlusRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
-import gr.iti.mklab.sfc.streams.StreamConfiguration;
 import gr.iti.mklab.sfc.streams.StreamException;
+import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
 
 /**
  * Class responsible for setting up the connection to Google API
  * for retrieving relevant Google+ content.
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * 
+ * @author manosetro
+ * @email  manosetro@iti.gr
  */
 public class GooglePlusStream extends Stream {
+	
 	public static final Source SOURCE = Source.GooglePlus;
 	
 	private Logger logger = Logger.getLogger(GooglePlusStream.class);
@@ -24,7 +26,7 @@ public class GooglePlusStream extends Stream {
 	private String key;
 
 	@Override
-	public void open(StreamConfiguration config) throws StreamException {
+	public void open(Configuration config) throws StreamException {
 		logger.info("#GooglePlus : Open stream");
 		
 		if (config == null) {
@@ -45,9 +47,9 @@ public class GooglePlusStream extends Stream {
 		Credentials credentials = new Credentials();
 		credentials.setKey(key);
 		
-		RateLimitsMonitor rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxResults), Long.parseLong(maxRunningTime));
+		rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxResults), Long.parseLong(maxRunningTime));
 		
-		retriever = new GooglePlusRetriever(credentials, rateLimitsMonitor);
+		retriever = new GooglePlusRetriever(credentials);
 		
 	}
 	

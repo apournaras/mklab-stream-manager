@@ -4,17 +4,18 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.retrievers.impl.FlickrRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
-import gr.iti.mklab.sfc.streams.StreamConfiguration;
 import gr.iti.mklab.sfc.streams.StreamException;
+import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
 
 /**
  * Class responsible for setting up the connection to Flickr API
  * for retrieving relevant Flickr content.
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * 
+ * @author manosetro
+ * @email  manosetro@iti.gr
  */
 public class FlickrStream extends Stream {
 
@@ -27,7 +28,7 @@ public class FlickrStream extends Stream {
 
 	
 	@Override
-	public void open(StreamConfiguration config) throws StreamException {
+	public void open(Configuration config) throws StreamException {
 		logger.info("#Flickr : Open stream");
 		
 		if (config == null) {
@@ -50,10 +51,9 @@ public class FlickrStream extends Stream {
 		credentials.setKey(key);
 		credentials.setSecret(secret);
 		
-		RateLimitsMonitor rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxResults), Long.parseLong(maxRequests));
+		rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxResults), Long.parseLong(maxRequests));
 		
-		retriever = new FlickrRetriever(credentials, rateLimitsMonitor);
-		
+		retriever = new FlickrRetriever(credentials);
 	}
 	
 	@Override

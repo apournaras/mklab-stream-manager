@@ -1,6 +1,6 @@
 package gr.iti.mklab.sfc.subscribers;
 
-import java.util.List;
+import java.util.Set;
 
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.sfc.streams.Stream;
@@ -20,7 +20,7 @@ public abstract class Subscriber extends Stream {
 	 * @param feed
 	 * @throws StreamException
 	 */
-	public abstract void subscribe(List<Feed> feeds) throws StreamException;
+	public abstract void subscribe(Set<Feed> feeds) throws StreamException;
 
 	public abstract void stop();
 

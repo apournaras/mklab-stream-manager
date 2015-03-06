@@ -4,17 +4,18 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
-import gr.iti.mklab.framework.retrievers.RateLimitsMonitor;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.retrievers.impl.FacebookRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
-import gr.iti.mklab.sfc.streams.StreamConfiguration;
 import gr.iti.mklab.sfc.streams.StreamException;
+import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
 
 /**
  * Class responsible for setting up the connection to Facebook API
  * for retrieving relevant Facebook content.
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * 
+ * @author manosetro
+ * @email  manosetro@iti.gr
  */
 public class FacebookStream extends Stream {
 	
@@ -26,7 +27,7 @@ public class FacebookStream extends Stream {
 	private Logger  logger = Logger.getLogger(FacebookStream.class);	
 	
 	@Override
-	public synchronized void open(StreamConfiguration config) throws StreamException {
+	public synchronized void open(Configuration config) throws StreamException {
 		logger.info("#Facebook : Open stream");
 		
 		if (config == null) {
@@ -36,30 +37,30 @@ public class FacebookStream extends Stream {
 		
 		
 		String accessToken = config.getParameter(ACCESS_TOKEN);
-		String app_id = config.getParameter(APP_ID);
-		String app_secret = config.getParameter(APP_SECRET);
+		String key = config.getParameter(KEY);
+		String secret = config.getParameter(SECRET);
 		
 		int maxRequests = Integer.parseInt(config.getParameter(MAX_REQUESTS));
 		
 		if(maxRequests > maxFBRequests)
 			maxRequests = maxFBRequests;   
 		
-		if (accessToken == null && app_id == null && app_secret == null) {
+		if (accessToken == null && key == null && secret == null) {
 			logger.error("#Facebook : Stream requires authentication.");
 			throw new StreamException("Stream requires authentication.");
 		}
 		
 		
-		if(accessToken == null)
-			accessToken = app_id+"|"+app_secret;
+		if(accessToken == null) {
+			accessToken = key + "|" + secret;
+		}
 		
 		Credentials credentials = new Credentials();
 		credentials.setAccessToken(accessToken);
 		
-		RateLimitsMonitor rateLimitsMonitor = new RateLimitsMonitor(maxRequests, minInterval);
+		rateLimitsMonitor = new RateLimitsMonitor(maxRequests, minInterval);
 		
-		retriever = new FacebookRetriever(credentials, rateLimitsMonitor);	
-
+		retriever = new FacebookRetriever(credentials);	
 	}
 
 	@Override

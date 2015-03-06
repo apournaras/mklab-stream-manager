@@ -1,23 +1,20 @@
-package gr.iti.mklab.sfc.streams.management;
+package gr.iti.mklab.sfc.management;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
-import gr.iti.mklab.sfc.input.DataInputType;
-import gr.iti.mklab.sfc.input.FeedsCreator;
-import gr.iti.mklab.sfc.input.InputConfiguration;
 import gr.iti.mklab.sfc.streams.Stream;
-import gr.iti.mklab.sfc.streams.StreamConfiguration;
 import gr.iti.mklab.sfc.streams.StreamException;
 import gr.iti.mklab.sfc.streams.StreamsManagerConfiguration;
 import gr.iti.mklab.sfc.streams.monitors.StreamsMonitor;
@@ -25,8 +22,9 @@ import gr.iti.mklab.sfc.streams.monitors.StreamsMonitor;
 /**
  * Class responsible for storing items from news sources, such as 
  * News Websites (BBC,CNN,CBS,Reuters) - Currently supports only RSS Feeds
- * @author ailiakop
- * @email ailiakop@iti.gr
+ * 
+ * @author manosetro
+ * @email manosetro@iti.gr
  */
 public class NewsAggregator {
 	
@@ -38,24 +36,22 @@ public class NewsAggregator {
 	
 	private Map<String, Stream> streams = null;
 	private StreamsManagerConfiguration config = null;
-	private InputConfiguration input_config = null;
 	private StorageHandler streamHandler;
 	private StreamsMonitor monitor;
 	private NewsAggregatorState newsAggregatorState = NewsAggregatorState.CLOSE;
 	
 	private Eliminator eliminator;
 	
-	private List<Feed> feeds = new ArrayList<Feed>();
+	private Set<Feed> feeds = new HashSet<Feed>();
 	
-	public NewsAggregator(StreamsManagerConfiguration config, InputConfiguration input_config) throws StreamException{
+	public NewsAggregator(StreamsManagerConfiguration config) throws StreamException{
 		
-		if (config == null || input_config == null) {
+		if (config == null) {
 			throw new StreamException("News Aggregator's configuration must be specified");
 		}
 		
 		//Set the configuration files
 		this.config = config;
-		this.input_config = input_config;
 		
 		//Set up the Streams
 		initStreams();
@@ -87,14 +83,14 @@ public class NewsAggregator {
 			streamHandler.start();	
 			logger.info("Store Manager is ready to store.");
 
-			FeedsCreator feedsCreator = new FeedsCreator(DataInputType.TXT_FILE, input_config);
-			Map<String, List<Feed>> results = feedsCreator.getQueryPerStream();
+			//FeedsCreator feedsCreator = new FeedsCreator(DataInputType.TXT_FILE);
+			Map<String, Set<Feed>> results = null;//feedsCreator.getQueryPerStream();
 			
 			//Start the Streams
 			for (String streamId : streams.keySet()) {
 				
 				logger.info("NewsAggregator - Start Stream : " + streamId);
-				StreamConfiguration sconfig = config.getStreamConfig(streamId);
+				Configuration sconfig = config.getStreamConfig(streamId);
 				Stream stream = streams.get(streamId);
 				stream.setHandler(streamHandler);
 				stream.open(sconfig);
@@ -112,12 +108,9 @@ public class NewsAggregator {
 				}
 				
 				monitor.addStream(streamId, stream, feeds);
-				monitor.startStream(streamId);
 			}
 			
-			if(monitor != null && monitor.getNumberOfStreamFetchTasks() > 0) {
-				monitor.startReInitializer();
-			}
+			monitor.startStreams();
 			
 			eliminator = new Eliminator(this);
 			eliminator.start();
@@ -139,9 +132,9 @@ public class NewsAggregator {
 		
 		try{
 			for (String streamId : config.getStreamIds()){
-				StreamConfiguration sconfig = config.getStreamConfig(streamId);
-				streams.put(streamId,(Stream)Class.forName(sconfig.getParameter(StreamConfiguration.CLASS_PATH)).newInstance());
-				
+				Configuration sconfig = config.getStreamConfig(streamId);
+				Stream stream = (Stream)Class.forName(sconfig.getParameter(Configuration.CLASS_PATH)).newInstance();
+				streams.put(streamId, stream);
 			}
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -261,10 +254,9 @@ public class NewsAggregator {
 				streamConfigFile = new File(args[0]);
 			}
 			
-			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(streamConfigFile);		
-			InputConfiguration input_config = InputConfiguration.readFromFile(streamConfigFile);		
+			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(streamConfigFile);				
 			
-			NewsAggregator newsAggregator = new NewsAggregator(config, input_config);
+			NewsAggregator newsAggregator = new NewsAggregator(config);
 			newsAggregator.open();
 		
 		} catch (ParserConfigurationException e) {

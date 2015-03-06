@@ -80,11 +80,6 @@ public class FlatFileStorage implements Storage {
 	}
 
 	@Override
-	public void updateTimeslot() {
-
-	}
-
-	@Override
 	public void update(Item update) throws IOException {
 		items++;
 		if (out != null) {

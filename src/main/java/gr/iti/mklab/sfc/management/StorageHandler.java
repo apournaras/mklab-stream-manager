@@ -1,4 +1,4 @@
-package gr.iti.mklab.sfc.streams.management;
+package gr.iti.mklab.sfc.management;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ public class StorageHandler {
 	
 	private List<Storage> workingStorages = new ArrayList<Storage>();
 	
-	private StorageStatusThread statusThread;
+	//private StorageStatusThread statusThread;
 	
 	private Map<String, Boolean> workingStatus = new HashMap<String, Boolean>();
 	private int items = 0;
@@ -66,9 +66,8 @@ public class StorageHandler {
 			logger.error(e);
 		}
 		
-		this.statusThread = new StorageStatusThread(this);
-		
-		this.statusThread.start();
+		//this.statusThread = new StorageStatusThread(this);	
+		//this.statusThread.start();
 		
 	}
 	
@@ -143,7 +142,7 @@ public class StorageHandler {
 	
 	
 	public void delete(Item item) {
-		queue.add(item);	
+		//queue.add(item);	
 	}
 	
 	/**
@@ -191,10 +190,10 @@ public class StorageHandler {
 		store.close();
 		
 		state = StorageHandlerState.CLOSE;
-		do {
-			statusThread.interrupt();
-		}
-		while(statusThread.isAlive());
+		//do {
+		//	statusThread.interrupt();
+		//}
+		//while(statusThread.isAlive());
 	}
 	
 	/**

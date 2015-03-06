@@ -150,15 +150,6 @@ public class MultipleStorages implements Storage {
 	}
 
 	@Override
-	public void updateTimeslot() {
-		synchronized(storages) {
-			for(Storage storage : storages) {
-				storage.updateTimeslot();
-			}
-		}
-	}
-
-	@Override
 	public boolean checkStatus() {
 		boolean status = true;
 		for(Storage storage : storages) {

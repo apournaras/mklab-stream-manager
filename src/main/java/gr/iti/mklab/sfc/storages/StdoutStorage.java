@@ -39,10 +39,6 @@ public class StdoutStorage implements Storage {
 	}
 	
 	@Override
-	public void updateTimeslot() {
-	}
-	
-	@Override
 	public boolean checkStatus() {
 		return true;
 	}

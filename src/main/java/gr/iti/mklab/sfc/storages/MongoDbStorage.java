@@ -3,24 +3,18 @@ package gr.iti.mklab.sfc.storages;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 import org.mongodb.morphia.dao.BasicDAO;
+import org.mongodb.morphia.query.Query;
 
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 
-import gr.iti.mklab.framework.client.dao.ItemDAO;
-import gr.iti.mklab.framework.client.dao.MediaItemDAO;
-import gr.iti.mklab.framework.client.dao.MediaSharesDAO;
-import gr.iti.mklab.framework.client.dao.StreamUserDAO;
-import gr.iti.mklab.framework.client.dao.WebPageDAO;
 import gr.iti.mklab.framework.client.mongo.DAOFactory;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
-import gr.iti.mklab.framework.common.domain.MediaShare;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.WebPage;
 
@@ -29,142 +23,37 @@ import gr.iti.mklab.framework.common.domain.WebPage;
  * 
  * @author manosetro
  * @email  manosetro@iti.gr
- * 
- * @author ailiakop
- * @email  ailiakop@iti.gr
  *
  */
 public class MongoDbStorage implements Storage {
 
 	private static String HOST = "mongodb.host";
 	private static String DB = "mongodb.database";
-
-	private static String ITEMS_DATABASE = "mongodb.items.database";
-	private static String ITEMS_COLLECTION = "mongodb.items.collection";
-	
-	private static String MEDIA_ITEMS_DATABASE = "mongodb.mediaitems.database";
-	private static String MEDIA_ITEMS_COLLECTION = "mongodb.mediaitems.collection";
-	
-	private static String MEDIA_SHARES_DATABASE = "mongodb.mediashares.database";
-	private static String MEDIA_SHARES_COLLECTION = "mongodb.mediashares.collection";
-	
-	private static String USERS_DATABASE = "mongodb.streamusers.database";
-	private static String USERS_COLLECTION = "mongodb.streamusers.collection";
-	
-	private static String WEBPAGES_DATABASE = "mongodb.webpages.database";
-	private static String WEBPAGES_COLLECTION = "mongodb.webpages.collection";
 	
 	private Logger logger = Logger.getLogger(MongoDbStorage.class);
-	
-	private long totalTime = 0l;
-	
-	/**
-	 * @param args
-	 * @throws IOException 
-	 */
-	public static void main(String[] args) throws IOException {
-	 
-	}
 	
 	private String storageName = "Mongodb";
 	
 	private String host;
 	private String database;
 	
-	private String itemsDbName;
-	private String itemsCollectionName;
-	
-	private String mediaItemsDbName;
-	private String mediaItemsCollectionName;
-	
-	private String mediaSharesDbName;
-	private String mediaSharesCollectionName;
-	
-	private String streamUsersDbName;
-	private String streamUsersCollectionName;
-	
-	private String webPageDbName;
-	private String webPageCollectionName;
-	
 	private BasicDAO<Item, String> itemDAO = null;
 	private BasicDAO<MediaItem, String> mediaItemDAO = null;
-	private BasicDAO<MediaShare, String> mediaSharesDAO = null;
 	private BasicDAO<StreamUser, String> streamUserDAO = null;
 	private BasicDAO<WebPage, String> webPageDAO = null;
 	
 	private Integer items = 0, mediaItems = 0, wPages = 0, users = 0;
 	private Integer itemInsertions = 0, mediaItemInsertions = 0, wPageInsertions = 0, userInsertions = 0;
-	private Integer pItems = 0;
-	
-	private long t;
 	
 	private HashMap<String, Integer> webpagesSharesMap;
 	private HashMap<String, Integer> mediaItemsSharesMap;
 	private HashMap<String, Item> itemsMap;
 	private HashMap<String, StreamUser> usersMap;
 	
-	private UpdaterTask updaterTask;
-	
 	public MongoDbStorage(Configuration config) {	
 		this.host = config.getParameter(MongoDbStorage.HOST);
 		this.database = config.getParameter(MongoDbStorage.DB);
-		
-		this.itemsDbName = config.getParameter(MongoDbStorage.ITEMS_DATABASE);
-		this.itemsCollectionName = config.getParameter(MongoDbStorage.ITEMS_COLLECTION);
-		
-		this.mediaItemsDbName = config.getParameter(MongoDbStorage.MEDIA_ITEMS_DATABASE);
-		this.mediaItemsCollectionName = config.getParameter(MongoDbStorage.MEDIA_ITEMS_COLLECTION);
-		
-		this.mediaSharesDbName = config.getParameter(MongoDbStorage.MEDIA_SHARES_DATABASE);
-		this.mediaSharesCollectionName = config.getParameter(MongoDbStorage.MEDIA_SHARES_COLLECTION);
-		
-		this.streamUsersDbName = config.getParameter(MongoDbStorage.USERS_DATABASE);
-		this.streamUsersCollectionName = config.getParameter(MongoDbStorage.USERS_COLLECTION);
-		
-		this.webPageDbName = config.getParameter(MongoDbStorage.WEBPAGES_DATABASE);
-		this.webPageCollectionName = config.getParameter(MongoDbStorage.WEBPAGES_COLLECTION);
 	
-		this.itemsMap = new HashMap<String, Item>();
-		this.usersMap = new HashMap<String, StreamUser>();
-		this.webpagesSharesMap = new HashMap<String, Integer>();
-		this.mediaItemsSharesMap = new HashMap<String, Integer>();
-	}
-	
-	public MongoDbStorage(String hostname, String itemsDbName, String itemsCollectionName, String mediaItemsDbName, 
-			String mediaItemsCollectionName, String streamUsersDbName, String streamUsersCollectionName, 
-			String webPageDbName, String webPageCollectionName) {	
-		
-		this.host = hostname;
-		
-		this.itemsDbName = itemsDbName;
-		this.itemsCollectionName = itemsCollectionName;
-		
-		this.mediaItemsDbName = mediaItemsDbName;
-		this.mediaItemsCollectionName = mediaItemsCollectionName;
-		
-		this.streamUsersDbName = streamUsersDbName;
-		this.streamUsersCollectionName = streamUsersCollectionName;
-		
-		this.webPageDbName = webPageDbName; 
-		this.webPageCollectionName = webPageCollectionName; 
-		
-		this.itemsMap = new HashMap<String, Item>();
-		this.usersMap = new HashMap<String, StreamUser>();
-		this.webpagesSharesMap = new HashMap<String, Integer>();
-		this.mediaItemsSharesMap = new HashMap<String, Integer>();
-	}
-	
-	public MongoDbStorage(String hostname, String database, String itemsCollectionName,
-			String mediaItemsCollectionName, String streamUsersCollectionName, String webPageCollectionName) {	
-		
-		this.host = hostname;
-		this.database = database;
-		
-		this.itemsCollectionName = itemsCollectionName;
-		this.mediaItemsCollectionName = mediaItemsCollectionName;
-		this.streamUsersCollectionName = streamUsersCollectionName;
-		this.webPageCollectionName = webPageCollectionName; 
-		
 		this.itemsMap = new HashMap<String, Item>();
 		this.usersMap = new HashMap<String, StreamUser>();
 		this.webpagesSharesMap = new HashMap<String, Integer>();
@@ -173,21 +62,15 @@ public class MongoDbStorage implements Storage {
 	
 	@Override
 	public void close() {
-		while(updaterTask.isAlive()) {
-			updaterTask.stopTask();
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				logger.error(e);
-			}
-		}
+		
 	}
 
 	@Override
 	public boolean delete(String id) throws IOException {
 		WriteResult result = itemDAO.deleteById(id);
-		if(result.getN() > 0)
+		if(result.getN() > 0) {
 			return true;
+		}
 		
 		return false;
 	}
@@ -196,70 +79,22 @@ public class MongoDbStorage implements Storage {
 	public boolean open() {
 		
 		logger.info("Open MongoDB storage <host: " + host + ">");
-
-		this.t = System.currentTimeMillis();
 		
 		DAOFactory daoFactory = new DAOFactory();
 		if(database != null) {
 			try {
-				if(itemsCollectionName != null) {
-					itemDAO = daoFactory.getDAO(host, database, Item.class);
-				}
-				
-				if(mediaItemsCollectionName != null) {
-					this.mediaItemDAO = daoFactory.getDAO(host, database, MediaItem.class);
-				}
-			
-				if(mediaSharesCollectionName != null) {
-					this.mediaSharesDAO = daoFactory.getDAO(host, database, MediaShare.class);
-				}
-			
-				if(streamUsersCollectionName != null) {
-					this.streamUserDAO = daoFactory.getDAO(host, database, StreamUser.class);
-				}
-				
-				if(webPageCollectionName != null) {
-					this.webPageDAO = daoFactory.getDAO(host, database, WebPage.class);
-				}
+				itemDAO = daoFactory.getDAO(host, database, Item.class);
+				mediaItemDAO = daoFactory.getDAO(host, database, MediaItem.class);
+				streamUserDAO = daoFactory.getDAO(host, database, StreamUser.class);
+				webPageDAO = daoFactory.getDAO(host, database, WebPage.class);
 				
 			} catch (Exception e) {
 				logger.error("MongoDB Storage failed to open!");
 				logger.error(e);
+				e.printStackTrace();
 				return false;
 			}
 		}
-		else {
-			try {
-				if(itemsCollectionName != null && itemsDbName != null) {
-					itemDAO = daoFactory.getDAO(host, itemsDbName, Item.class);
-				}
-				
-				if(mediaItemsCollectionName != null && mediaItemsDbName != null) {
-					mediaItemDAO = daoFactory.getDAO(host, mediaItemsDbName, MediaItem.class);
-				}
-			
-				if(mediaSharesCollectionName != null && mediaSharesDbName != null) {
-					mediaSharesDAO = daoFactory.getDAO(host, mediaSharesDbName, MediaShare.class);
-				}
-				
-				if(streamUsersCollectionName != null && streamUsersDbName != null) {
-					streamUserDAO = daoFactory.getDAO(host, streamUsersDbName, StreamUser.class);
-				}
-				
-				if(webPageCollectionName != null && webPageDbName != null) {
-					webPageDAO = daoFactory.getDAO(host, webPageDbName, WebPage.class);
-				}
-				
-			} catch (Exception e) {
-				logger.error("MongoDB Storage failed to open!");
-				logger.error(e);
-				return false;
-			}
-		}
-		
-		updaterTask = new UpdaterTask();
-		updaterTask.setName("UpdaterTask");
-		updaterTask.start();
 		
 		return true;
 	}
@@ -269,14 +104,13 @@ public class MongoDbStorage implements Storage {
 	public void store(Item item) {
 		
 		try {
-			long time = System.currentTimeMillis();
 			// Handle Items
 			String itemId = item.getId();
 			
 			boolean itemExists = false;
 			synchronized(itemsMap) {
-				
-				itemExists = itemsMap.containsKey(itemId) || itemDAO.exists(itemDAO.createQuery().filter("id", itemId));
+				Query<Item> q = itemDAO.createQuery().filter("id", itemId);
+				itemExists = itemsMap.containsKey(itemId) || itemDAO.exists(q);
 			}
 			
 			items++;
@@ -346,11 +180,6 @@ public class MongoDbStorage implements Storage {
 								mediaItemsSharesMap.put(mediaItemId, ++shares);
 							}
 						}
-					
-						if(mediaSharesDAO != null) {
-							//mediaSharesDAO.addMediaShare(mediaItem.getId(), mediaItem.getRef(), 
-							//	mediaItem.getPublicationTime(), mediaItem.getUserId());
-						}
 					}
 				}
 				
@@ -384,11 +213,6 @@ public class MongoDbStorage implements Storage {
 							}
 						}
 					}
-				}
-			}
-			else {
-				synchronized(itemsMap) {
-					itemsMap.put(item.getId(), item);
 				}
 			}
 			
@@ -425,8 +249,6 @@ public class MongoDbStorage implements Storage {
 				}
 			}
 			
-			totalTime += (System.currentTimeMillis() - time);
-			
 		}
 		catch(MongoException e) {
 			e.printStackTrace();
@@ -442,11 +264,6 @@ public class MongoDbStorage implements Storage {
 	}
 	
 	@Override
-	public void updateTimeslot() {
-		
-	}
-	
-	@Override
 	public boolean checkStatus() {
 		return true;
 	}
@@ -456,6 +273,7 @@ public class MongoDbStorage implements Storage {
 		return this.storageName;
 	}
 	
+	/*
 	private class UpdaterTask extends Thread {
 
 		private long timeout = 10 * 60 * 1000;
@@ -548,4 +366,6 @@ public class MongoDbStorage implements Storage {
 		}
 		
 	}
+	*/
+	
 }

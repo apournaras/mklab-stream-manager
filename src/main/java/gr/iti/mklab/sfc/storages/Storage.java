@@ -47,11 +47,6 @@ public interface Storage {
 	public boolean checkStatus();
 	
 	/**
-	 * Update timeslot
-	 */
-	public void updateTimeslot();
-	
-	/**
 	 * Close the store
 	 */
 	public void close();

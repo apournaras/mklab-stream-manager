@@ -105,13 +105,7 @@ public class RedisStorage implements Storage {
 		// Not supported.
 		return false;
 	}
-	
-	
 
-	@Override
-	public void updateTimeslot() {
-		// Not supported.
-	}
 
 	@Override
 	public void close() {

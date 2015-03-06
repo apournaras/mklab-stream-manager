@@ -1,47 +1,49 @@
 package gr.iti.mklab.sfc.streams;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.retrievers.Retriever;
-import gr.iti.mklab.sfc.streams.management.StorageHandler;
-import gr.iti.mklab.sfc.streams.monitors.FeedsMonitor;
-
+import gr.iti.mklab.sfc.management.StorageHandler;
+import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
 
 /**
  * Class responsible for handling the stream of information regarding 
  * a social network or a news feed source.
  * It is responsible for the configuration of the connection to the selected API
  * and the retrieval/storing of relevant content.
+ * 
  * @author manosetro
  * @email  manosetro@iti.gr
- * @author ailiakop
- * @email  ailiakop@iti.gr
  *
  */
-public abstract class Stream {//implements Runnable {
+public abstract class Stream {
 
 	protected static final String KEY = "Key";
 	protected static final String SECRET = "Secret";
 	protected static final String ACCESS_TOKEN = "AccessToken";
 	protected static final String ACCESS_TOKEN_SECRET = "AccessTokenSecret";
 	protected static final String CLIENT_ID = "ClientId";
-	protected static final String APP_ID = "AppId";
-	protected static final String APP_SECRET = "AppSecret";
 	
 	protected static final String MAX_RESULTS = "maxResults";
 	protected static final String MAX_REQUESTS = "maxRequests";
 	protected static final String MAX_RUNNING_TIME = "maxRunningTime";
 	
-	protected FeedsMonitor monitor;
+	//protected FeedsMonitor monitor;
+	
 	protected BlockingQueue<Feed> feedsQueue;
 	protected Retriever retriever = null;
 	protected StorageHandler handler;
+	
+	protected RateLimitsMonitor rateLimitsMonitor;
 	
 	private Logger  logger = Logger.getLogger(Stream.class);
 	
@@ -52,7 +54,7 @@ public abstract class Stream {//implements Runnable {
 	 * @throws StreamException
 	 *      In any case of error during stream open
 	 */
-	public abstract void open(StreamConfiguration config) throws StreamException;
+	public abstract void open(Configuration config) throws StreamException;
 	
 	/**
 	 * Closes a stream 
@@ -61,10 +63,10 @@ public abstract class Stream {//implements Runnable {
 	 */
 	public void close() throws StreamException {
 	
-		if(monitor != null) {
-			logger.info("Stop monitor");
-			monitor.stopMonitor();
-		}
+		//if(monitor != null) {
+		//	logger.info("Stop monitor");
+		//	monitor.stopMonitor();
+		//}
 		
 		if(retriever != null) {
 			logger.info("Stop retriever");
@@ -83,17 +85,17 @@ public abstract class Stream {//implements Runnable {
 		this.handler = handler;
 	}
 	
-	/**
-	 * Sets the feeds monitor for the stream
-	 * @return
-	 */
-	public boolean setMonitor() {
-		if(retriever == null)
-			return false;
-		
-		monitor = new FeedsMonitor(retriever);
-		return true;
-	}
+//	/**
+//	 * Sets the feeds monitor for the stream
+//	 * @return
+//	 */
+//	public boolean setMonitor() {
+//		if(retriever == null)
+//			return false;
+//		
+//		//monitor = new FeedsMonitor(retriever);
+//		return true;
+//	}
 	
 	/**
 	 * Sets the users list that will be used to retrieve from the stream (utilized for Twitter Stream)
@@ -127,7 +129,7 @@ public abstract class Stream {//implements Runnable {
 	 * @param feeds
 	 * @throws StreamException
 	 */
-	public synchronized List<Item> poll(List<Feed> feeds) throws StreamException {
+	public synchronized List<Item> poll(Collection<Feed> feeds) throws StreamException {
 		List<Item> retrievedItems = new ArrayList<Item>();
 		if(retriever != null) {
 		
@@ -136,22 +138,24 @@ public abstract class Stream {//implements Runnable {
 				return retrievedItems;
 			}
 			
-			//logger.info(getName() + ": poll for " + feeds.size() + " feeds");
-			for(Feed feed : feeds) {
+			Iterator<Feed> it = feeds.iterator();
+			while(it.hasNext()) {
+				Feed feed = it.next();
 				try {
 					List<Item> items = retriever.retrieve(feed);
 					store(items);
 					retrievedItems.addAll(items);
 				}
 				catch(Exception e) {
-					logger.error("Exception for feed " + feed.getId() + " of type " + feed.getFeedtype() + " from "
-							+ getName());
-					logger.error("Feed: " + feed.toString());
+					e.printStackTrace();
+					logger.error("Exception for feed " + feed.getId() + " of type " + feed.getClass() + " from " + getName());
 					logger.error(e.getMessage());
 				}
 			}
-			
-			//logger.info("Retrieved items for " + getName() + " are : " + retrievedItems.size());
+			logger.info("Retrieved items for " + getName() + " are : " + retrievedItems.size());
+		}
+		else {
+			throw new StreamException("Retriever is null for " + getName());
 		}
 		return retrievedItems;
 		
@@ -166,7 +170,6 @@ public abstract class Stream {//implements Runnable {
 	public synchronized List<Item> poll(Feed feed) throws StreamException {
 		List<Item> retrievedItems = new ArrayList<Item>();
 		if(retriever != null) {
-		
 			if(feed == null) {
 				logger.error("Feeds is null in poll method.");
 				return retrievedItems;
@@ -178,11 +181,11 @@ public abstract class Stream {//implements Runnable {
 				retrievedItems.addAll(items);
 			}
 			catch(Exception e) {
-				logger.error("Exception for feed " + feed.getId() + " of type " + feed.getFeedtype());
+				logger.error("Exception for feed " + feed.getId() + " of type " + feed.getClass());
 				logger.error(e.getMessage());
 			}
 			
-			//logger.info("Retrieved items for " + getName() + " are : " + retrievedItems.size());
+			logger.info("Retrieved items for " + getName() + " are : " + retrievedItems.size());
 		}
 		return retrievedItems;
 	}

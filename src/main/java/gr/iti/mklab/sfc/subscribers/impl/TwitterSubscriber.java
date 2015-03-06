@@ -10,13 +10,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import twitter4j.FilterQuery;
-import twitter4j.Paging;
-import twitter4j.Query;
-import twitter4j.QueryResult;
 import twitter4j.ResponseList;
 import twitter4j.StallWarning;
 import twitter4j.Status;
@@ -27,17 +23,14 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.User;
-import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 import gr.iti.mklab.framework.abstractions.socialmedia.items.TwitterItem;
-import gr.iti.mklab.framework.common.domain.Account;
 import gr.iti.mklab.framework.common.domain.Item;
-import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
+import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
+import gr.iti.mklab.framework.common.domain.feeds.AccountFeed;
 import gr.iti.mklab.framework.common.domain.feeds.KeywordsFeed;
 import gr.iti.mklab.framework.common.domain.feeds.LocationFeed;
-import gr.iti.mklab.framework.common.domain.feeds.Feed.FeedType;
-import gr.iti.mklab.sfc.streams.StreamConfiguration;
 import gr.iti.mklab.sfc.streams.StreamException;
 import gr.iti.mklab.sfc.subscribers.Subscriber;
 
@@ -45,7 +38,6 @@ import gr.iti.mklab.sfc.subscribers.Subscriber;
  * Class for retrieving real-time Twitter content by subscribing on Twitter Streaming API. 
  * Twitter content can be based on keywords,twitter users or locations or be 
  * a random sampling (1%) of currently posted statuses. 
- * The retrieval process takes place through Twitter API (twitter4j)
  * 
  * @author Manos Schinas
  * @email  manosetro@iti.gr
@@ -54,10 +46,6 @@ import gr.iti.mklab.sfc.subscribers.Subscriber;
 public class TwitterSubscriber extends Subscriber {
 	
 	private Logger  logger = Logger.getLogger(TwitterSubscriber.class);
-	
-	public static long FILTER_EDIT_WAIT_TIME = 1000;
-	
-	private long lastFilterInitTime = System.currentTimeMillis();
 	
 	private BlockingQueue<Status> queue = new LinkedBlockingQueue<Status>();
 	
@@ -92,7 +80,7 @@ public class TwitterSubscriber extends Subscriber {
 
 	}
 	
-	private AccessLevel accessLevel = AccessLevel.EXTENDED;
+	private AccessLevel accessLevel = AccessLevel.PUBLIC;
 	private StatusListener listener = null;
 	
 	private twitter4j.TwitterStream twitterStream  = null;
@@ -103,45 +91,40 @@ public class TwitterSubscriber extends Subscriber {
 
 	private ExecutorService executorService;
 	
-	
 	public TwitterSubscriber() {
 	
 	}
 	
 	@Override
-	public synchronized void subscribe(List<Feed> feeds) throws StreamException {
+	public synchronized void subscribe(Set<Feed> feeds) throws StreamException {
 		
 		if (twitterStream == null) {
 			logger.error("Stream is closed");
 			throw new StreamException("Stream is closed", null);
 		} 
 		else {
-			List<String> keys = new ArrayList<String>();
+			
+			List<String> keywordsList = new ArrayList<String>();
 			Set<String> users = new HashSet<String>();
 			Set<Long> userids = new HashSet<Long>();
 			List<double[]> locs = new ArrayList<double[]>();
 			
+			logger.info(feeds.size() + " feeds to track");
 			for(Feed feed : feeds) {
-				if(feed.getFeedtype().equals(FeedType.KEYWORDS)) {
+				if(KeywordsFeed.class.isInstance(feed)) {
 					KeywordsFeed keywordFeed = (KeywordsFeed) feed;
-					keys.addAll(keywordFeed.getKeywords());
+					keywordsList.addAll(keywordFeed.getKeywords());	
 				}
-				else if(feed.getFeedtype().equals(FeedType.ACCOUNT)) {
-					Account source = ((AccountFeed)feed).getAccount();		
-					if(source.getId() == null) {
-						try {
-							users.add(source.getName());
-						}
-						catch(Exception e) {
-							logger.error(e.getMessage());
-							continue;
-						}
+				else if(AccountFeed.class.isInstance(feed)) {
+					AccountFeed accountFeed = (AccountFeed) feed;	
+					if(accountFeed.getId() == null) {
+						users.add(accountFeed.getUsername());
 					}
 					else {
-						userids.add(Long.parseLong(source.getId()));
+						userids.add(Long.parseLong(accountFeed.getId()));
 					}
 				}
-				else if(feed.getFeedtype().equals(FeedType.LOCATION)) {
+				else if(LocationFeed.class.isInstance(feed)) {
 					double[] location = new double[2];
 					
 					location[0] = ((LocationFeed) feed).getLocation().getLatitude();
@@ -150,15 +133,14 @@ public class TwitterSubscriber extends Subscriber {
 				}
 			}
 			
-			Set<Long> temp = getUserIds(users);
-			userids.addAll(temp);
+			userids.addAll(getUserIds(users));
 			
-			String[] keywords = new String[keys.size()];
+			String[] keywords = new String[keywordsList.size()];
 			long[] follows = new long[Math.min(userids.size(), accessLevel.filterMaxFollows)];
 			double[][] locations = new double[locs.size()][2];
 			
-			for(int i=0; i<keys.size(); i++) {
-				keywords[i] = keys.get(i);
+			for(int i=0; i<keywordsList.size(); i++) {
+				keywords[i] = keywordsList.get(i);
 				if(i >= accessLevel.filterMaxKeywords) {
 					break;
 				}
@@ -185,24 +167,10 @@ public class TwitterSubscriber extends Subscriber {
 			}
 
 			FilterQuery filterQuery = getFilterQuery(keywords, follows, locations);
-			if (filterQuery != null) {
-				
-				//getPastTweets(keywords, follows);
-				
-				if (System.currentTimeMillis() - lastFilterInitTime < FILTER_EDIT_WAIT_TIME) {
-                     try {
-                    	 logger.info("Wait for " + FILTER_EDIT_WAIT_TIME + " msecs to edit filter");
-                    	 wait(FILTER_EDIT_WAIT_TIME);
-					} catch (InterruptedException e) {
-						logger.error(e.getMessage());
-					}
-				}
-				lastFilterInitTime = System.currentTimeMillis();
-				
+			if (filterQuery != null) {			
 				logger.info("Start tracking from twitter stream");
 				twitterStream.shutdown();
-				twitterStream.filter(filterQuery);
-			
+				twitterStream.filter(filterQuery);	
 			}
 			else {
 				logger.info("Start sampling from twitter stream");
@@ -210,66 +178,6 @@ public class TwitterSubscriber extends Subscriber {
 			}
 		}
 		
-	}
-	
-	
-	public void getPastTweets(String[] keywords, long[] userids) {
-		int maxReq  = 450;
-		
-		int totalRequests = 0;
-		
-		List<Status> tweets = new ArrayList<Status>();
-		if(keywords != null && keywords.length>0) {
-			Query query = new Query();
-			query.setQuery(StringUtils.join(keywords, " OR "));
-			query.setCount(100);
-			do {
-				System.out.println(query.toString());
-				QueryResult resp;
-				try {
-					totalRequests++;
-					resp = twitterApi.search(query);
-					tweets.addAll(resp.getTweets());
-					query = resp.nextQuery();
-				} catch (TwitterException e) { 
-					e.printStackTrace();
-					break;
-				}
-
-			} while(query != null && totalRequests < maxReq);
-		}
-
-		if(userids != null) {
-			int mapPagesPerUser = maxReq / userids.length;
-			for(long userid : userids) {
-				try {
-					int page = 1, count = 100;
-					Paging paging = new Paging(page, count);
-					while(true) {
-						totalRequests++;
-						ResponseList<Status> timeline = twitterApi.getUserTimeline(userid, paging);
-						tweets.addAll(timeline);
-
-						System.out.println(paging.toString() + " => " + tweets.size());
-						paging.setPage(++page);
-						paging.setCount(100);
-						
-						if(timeline.size()<count || page>mapPagesPerUser 
-								|| totalRequests>maxReq) {
-							break;
-						}
-
-					}
-
-				} catch (TwitterException e) {
-					logger.error(e);
-					break;
-				}
-			}
-			for(Status status : tweets) {
-				listener.onStatus(status);
-			}
-		}
 	}
 	
 	private Set<Long> getUserIds(Collection<String> followsUsernames) {
@@ -379,7 +287,6 @@ public class TwitterSubscriber extends Subscriber {
 			@Override
 			public void onException(Exception ex) {
 				synchronized(this) {
-					ex.printStackTrace();
 					logger.error("Internal stream error occured: " + ex.getMessage());
 				}
 			}
@@ -413,7 +320,7 @@ public class TwitterSubscriber extends Subscriber {
 		FilterQuery query = new FilterQuery();
 		boolean empty = true;
 		if (keywords != null && keywords.length > 0) {
-			logger.info(follows.length + " keywords to track.");
+			logger.info(keywords.length + " keywords to track.");
 			query = query.track(keywords);
 			empty = false;
 		}
@@ -439,7 +346,7 @@ public class TwitterSubscriber extends Subscriber {
 	}
 
 	@Override
-	public void open(StreamConfiguration config) throws StreamException {
+	public void open(Configuration config) throws StreamException {
 
 		if (twitterStream != null) {
 			logger.error("#Twitter : Stream is already opened");
@@ -478,7 +385,7 @@ public class TwitterSubscriber extends Subscriber {
 			.setOAuthConsumerSecret(oAuthConsumerSecret)
 			.setOAuthAccessToken(oAuthAccessToken)
 			.setOAuthAccessTokenSecret(oAuthAccessTokenSecret);
-		Configuration conf = cb.build();
+		twitter4j.conf.Configuration conf = cb.build();
 		
 		this.executorService = Executors.newFixedThreadPool(numberOfConsumers);
 		for(int i=0; i<numberOfConsumers; i++) {
@@ -519,16 +426,8 @@ public class TwitterSubscriber extends Subscriber {
 						}
 						continue;
 					}
-					
-					
-					// Update original tweet in case of retweets
-					Status retweetedStatus = status.getRetweetedStatus();
-					if(retweetedStatus != null) {
-						TwitterItem originalItem = new TwitterItem(retweetedStatus);
-						store(originalItem);
-					}
 
-					TwitterItem item = new TwitterItem(status);
+					Item item = new TwitterItem(status);
 					store(item);
 					
 				} catch (Exception e) {

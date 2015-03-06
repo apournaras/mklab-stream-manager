@@ -8,14 +8,18 @@ import org.apache.log4j.Logger;
 import gr.iti.mklab.framework.client.search.solr.SolrItemHandler;
 import gr.iti.mklab.framework.client.search.solr.SolrMediaItemHandler;
 import gr.iti.mklab.framework.client.search.solr.SolrWebPageHandler;
+import gr.iti.mklab.framework.client.search.solr.beans.ItemBean;
+import gr.iti.mklab.framework.client.search.solr.beans.MediaItemBean;
+import gr.iti.mklab.framework.client.search.solr.beans.WebPageBean;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.WebPage;
 
 /**
- * Class for storing items to solr
- * @author manosetro
+ * Class for indexing items to solr
+ * 
+ * @author Manos Schinas
  * @email  manosetro@iti.gr
  *
  */
@@ -99,22 +103,26 @@ public class SolrStorage implements Storage {
 		}
 		
 		if(solrItemHandler != null) {
-			solrItemHandler.insert(item);
+			ItemBean itemBean = new ItemBean(item);
+			solrItemHandler.insert(itemBean);
 		}
 		
 		if(solrMediaHandler != null) {
 			
 			for(MediaItem mediaItem : item.getMediaItems()) {
-				
-				solrMediaHandler.insert(mediaItem);
-				//solrMediaHandler.insertMediaItem(mi);
-				
+				MediaItemBean mediaItemBean = new MediaItemBean(mediaItem);
+				solrMediaHandler.insert(mediaItemBean);
 			}
 		}
+		
 		if(solrWebpageHandler != null) {
 			List<WebPage> webPages = item.getWebPages();
 			if(webPages != null) {
-				solrWebpageHandler.insert(webPages);
+				for(WebPage webPage : webPages) {
+					WebPageBean webpageBean = new WebPageBean(webPage);
+					solrWebpageHandler.insert(webpageBean);
+				}
+				
 			}
 		}
 		
@@ -162,11 +170,6 @@ public class SolrStorage implements Storage {
 
 	@Override
 	public void close() {
-
-	}
-
-	@Override
-	public void updateTimeslot() {
 
 	}
 	

@@ -9,9 +9,9 @@
 	
     <name>mklab-stream-manager</name>
     <url>https://github.com/MKLab-ITI/mklab-stream-manager</url>
-    <description>
-    	Monitors a set of social streams (e.g. Twitter status updates) and collects the incoming content.
+    <description> Monitors a set of social streams (e.g. Twitter status updates) and collects the incoming content.
     </description>
+    
   	<parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -23,11 +23,6 @@
             <id>manosetro</id>
             <name>Manos Schinas</name>
             <email>manosetro@iti.gr</email>
-        </developer>
-        <developer>
-            <id>matzika</id>
-            <name>Katerina Iliakopoulou</name>
-            <email>ailiakop@iti.gr</email>
         </developer>
     </developers>
     
@@ -54,19 +49,19 @@
         <dependency>
             <groupId>gr.iti.mklab</groupId>
             <artifactId>mklab-framework-common</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.2-SNAPSHOT</version>
         </dependency>
         
         <dependency>
   			<groupId>gr.iti.mklab</groupId>
   			<artifactId>mklab-socialmedia-abstractions</artifactId>
-  			<version>0.1-SNAPSHOT</version>
+  			<version>0.2-SNAPSHOT</version>
 		</dependency>
 		
         <dependency>
             <groupId>gr.iti.mklab</groupId>
             <artifactId>mklab-framework-client</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.2-SNAPSHOT</version>
         </dependency>
         
        	<dependency>
@@ -193,37 +188,7 @@
                             </transformers>
                         </configuration>
                     </execution>
-                    <!--  -->
-                 	<execution>
-                 		<id>SocialMediaSearcher</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                        	<finalName>SocialMediaSearcher</finalName>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>                                       
-                                    </excludes>
-                                </filter>		
-                            </filters>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <manifestEntries>
-                                        <Main-Class>eu.socialsensor.sfc.streams.search.SocialMediaSearcher</Main-Class>
-                                        <Build-Number>123</Build-Number>
-                                    </manifestEntries>
-                                </transformer>
-                            </transformers>
-                        </configuration>
-                    </execution>
-                    
-                </executions>
+            	</executions>
             </plugin>
       
         </plugins>
