@@ -1,14 +1,13 @@
 package gr.iti.mklab.sfc.streams;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.Date;
 
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
+import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.Retriever;
 import gr.iti.mklab.sfc.management.StorageHandler;
 import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
@@ -40,7 +39,7 @@ public abstract class Stream {
 	
 	//protected BlockingQueue<Feed> feedsQueue;
 	protected Retriever retriever = null;
-	protected StorageHandler handler;
+	protected StorageHandler handler = null;
 	
 	protected RateLimitsMonitor rateLimitsMonitor;
 	
@@ -80,76 +79,32 @@ public abstract class Stream {
 	
 	/**
 	 * Searches with the wrapper of the stream for a particular
-	 * set of feeds (feeds can be KeywordsFeed, AccountFeed, LocationFeeds, GroupFeed or RssFeed)
-	 * 
-	 * @param Collection<Feed> feeds
-	 * 
-	 * @return List<Item> items
-	 * @throws StreamException
-	 */
-	public synchronized List<Item> poll(Collection<Feed> feeds) throws StreamException {
-		
-		List<Item> retrievedItems = new ArrayList<Item>();
-		if(retriever != null) {
-		
-			if(feeds == null) {
-				logger.error("Feeds is null in poll method.");
-				return retrievedItems;
-			}
-			if(feeds.isEmpty()) {
-				return retrievedItems;
-			}
-			
-			int numOfFeeds = feeds.size();
-			int requestsPerFeed = this.maxRequests / numOfFeeds;
-			
-			for(Feed feed : feeds) {
-				try {
-					List<Item> items = retriever.retrieve(feed, requestsPerFeed);
-					retrievedItems.addAll(items);
-					if(handler != null) {
-						for(Item item : items) {
-							handler.update(item);
-						}
-					}
-				}
-				catch(Exception e) {
-					logger.error("Exception for feed " + feed.getId() + " of type " + feed.getClass() + " from " + getName());
-					logger.error(e.getMessage());
-				}
-			}
-			logger.info("Retrieved items for " + getName() + " are : " + retrievedItems.size());
-		}
-		else {
-			throw new StreamException("Retriever is null for " + getName());
-		}
-		
-		return retrievedItems;
-		
-	}
-	
-	/**
-	 * Searches with the wrapper of the stream for a particular
 	 * feed (feed can be keywordsFeeds, userFeeds, locationFeeds, listFeeds or URLFeeds)
 	 * @param feeds
 	 * @throws StreamException
 	 */
-	public synchronized List<Item> poll(Feed feed) throws StreamException {
-		List<Item> retrievedItems = new ArrayList<Item>();
+	public synchronized Response poll(Feed feed, int requests) throws StreamException {
+		Response response = new Response(); 
 		if(retriever != null) {
 			if(feed == null) {
 				logger.error("Feeds is null in poll method.");
-				return retrievedItems;
+				return response;
 			}
-			
+		
 			try {
-				List<Item> items = retriever.retrieve(feed);
-				retrievedItems.addAll(items);
-				
+				response = retriever.retrieve(feed, requests);
+
 				if(handler != null) {
-					for(Item item : items) {
-						handler.update(item);
+					long sinceDate = 0l;
+					for(Item item : response.getItems()) {
+						if(sinceDate < item.getPublicationTime()) {
+							sinceDate = item.getPublicationTime();
+						}
+						handler.handle(item);
 					}
+					
+					// Set new since date 
+					feed.setSinceDate(new Date(sinceDate));
 				}
 			}
 			catch(Exception e) {
@@ -157,13 +112,13 @@ public abstract class Stream {
 				logger.error(e.getMessage());
 			}
 			
-			logger.info("Retrieved items for " + getName() + " are : " + retrievedItems.size());
+			logger.info("Retrieved items for " + getName() + " are : " + response.getNumberOfItems());
 		}
 		else {
 			throw new StreamException("Retriever is null for " + getName());
 		}
 		
-		return retrievedItems;
+		return response;
 	}
 	
 	/**

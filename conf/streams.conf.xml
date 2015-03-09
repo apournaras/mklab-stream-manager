@@ -106,20 +106,21 @@
          	<Parameter name="Secret"><![CDATA[S5otYAVwCqp6o8uDd5kjHiM9k3dicSfcNXjHnGPX4A]]></Parameter>
          	<Parameter name="AccessToken"><![CDATA[204974667-KFelb0g7mdYybIqixNE623rwqAYfP2f5V4ZFNxfN]]></Parameter>
          	<Parameter name="AccessTokenSecret"><![CDATA[ry9z4PpgRMiWb2AKjDCpvJBukxItUtZTctO4YEvzzY]]></Parameter>
-         	<Parameter name="maxRequests"><![CDATA[150]]></Parameter>	<!-- Max number of requests per time window -->
+         	<Parameter name="maxRequests"><![CDATA[180]]></Parameter>	<!-- Max number of requests per time window -->
          	<Parameter name="timeWindow"><![CDATA[15]]></Parameter>		<!-- Time window in minutes -->		
   		</Stream>
       
-		<!--  Facebook Stream Handler --> 
+		<!--  Facebook Stream Handler 
   		<Stream id="Facebook">
       		<Parameter name="Classpath">
       			<![CDATA[gr.iti.mklab.sfc.streams.impl.FacebookStream]]>
       		</Parameter>
           	<Parameter name="AccessToken"><![CDATA[260504214011769|964663756aa84795ad1b37c2c3d86bf9]]></Parameter>
-           	<Parameter name="maxRequests"><![CDATA[100]]></Parameter>	<!-- Max number of requests per time window -->
-         	<Parameter name="timeWindow"><![CDATA[10]]></Parameter>		<!-- Time window in minutes -->		
+           	<Parameter name="maxRequests"><![CDATA[100]]></Parameter>
+         	<Parameter name="timeWindow"><![CDATA[10]]></Parameter>		
         </Stream>        
-               
+       	-->
+                
      	<!-- YouTube Handler 
      	<Stream id="Youtube">
       		<Parameter name="Classpath">

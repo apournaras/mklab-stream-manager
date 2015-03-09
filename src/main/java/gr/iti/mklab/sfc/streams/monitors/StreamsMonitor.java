@@ -154,17 +154,21 @@ public class StreamsMonitor implements Runnable {
 			for(String streamId : streamsFetchTasks.keySet()) {
 				StreamFetchTask task = streamsFetchTasks.get(streamId);
 				
-				if(task.shouldRun()) {
+				List<Feed> feeds = task.getFeedsToPoll();
+				if(!feeds.isEmpty()) {
 					Future<Integer> response = responses.get(streamId);
 					if(response == null || response.isDone()) {
-						Future<Integer> future = executor.submit(task);
-						responses.put(streamId, future);
+						Future<Integer> futureResponse = executor.submit(task);
+						responses.put(streamId, futureResponse);
+					}
+					else {
+						logger.info(streamId + " is running");
 					}
 				}
 			}
 			
 			try {
-				Thread.sleep(10000);
+				Thread.sleep(2000);
 			} catch (InterruptedException e) {
 				return;
 			}

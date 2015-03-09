@@ -78,7 +78,7 @@ public class StorageHandler {
 		}
 	}
 
-	public void update(Item item) {
+	public void handle(Item item) {
 		try {
 			queue.add(item);
 		}
@@ -87,9 +87,9 @@ public class StorageHandler {
 		}
 	}
 
-	public void updates(Item[] items) {
+	public void handle(Item[] items) {
 		for (Item item : items) {
-			update(item);
+			handle(item);
 		}
 	}
 	

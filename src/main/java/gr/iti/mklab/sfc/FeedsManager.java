@@ -20,7 +20,6 @@ import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamException;
 import gr.iti.mklab.sfc.streams.StreamsManagerConfiguration;
 import gr.iti.mklab.sfc.streams.monitors.StreamsMonitor;
-import gr.iti.mklab.sfc.subscribers.Subscriber;
 
 /**
  * Class for retrieving content according to  keywords - user - location feeds from social networks.
@@ -30,16 +29,15 @@ import gr.iti.mklab.sfc.subscribers.Subscriber;
  * @email  manosetro@iti.gr
  * 
  */
-public class StreamsManager implements Runnable {
+public class FeedsManager implements Runnable {
 	
-	public final Logger logger = Logger.getLogger(StreamsManager.class);
+	public final Logger logger = Logger.getLogger(FeedsManager.class);
 	
 	enum ManagerState {
 		OPEN, CLOSE
 	}
 
 	private Map<String, Stream> streams = null;
-	private Map<String, Subscriber> subscribers = null;
 	
 	private StreamsManagerConfiguration config = null;
 	private StorageHandler storageHandler;
@@ -51,7 +49,7 @@ public class StreamsManager implements Runnable {
 	private FeedsCreator feedsCreator;
 	private Set<Feed> feeds = new HashSet<Feed>();
 
-	public StreamsManager(StreamsManagerConfiguration config) throws StreamException {
+	public FeedsManager(StreamsManagerConfiguration config) throws StreamException {
 
 		if (config == null) {
 			throw new StreamException("Manager's configuration must be specified");
@@ -59,9 +57,6 @@ public class StreamsManager implements Runnable {
 		
 		//Set the configuration files
 		this.config = config;
-		
-		//Set up the Subscribers
-		initSubscribers();
 		
 		//Set up the Streams
 		initStreams();
@@ -97,20 +92,6 @@ public class StreamsManager implements Runnable {
 			logger.info("Storage Manager is ready to store.");
 			
 			feedsCreator = new FeedsCreator(config.getInputConfig());
-			Map<String, Set<Feed>> feedsPerSource =  feedsCreator.createFeedsPerSource();
-			
-			//Start the Subscribers
-			for(String subscriberId : subscribers.keySet()) {
-				logger.info("Stream Manager - Start Subscriber : " + subscriberId);
-				Configuration srconfig = config.getSubscriberConfig(subscriberId);
-				Subscriber subscriber = subscribers.get(subscriberId);
-				
-				subscriber.setHandler(storageHandler);
-				subscriber.open(srconfig);
-				
-				Set<Feed> sourceFeed = feedsPerSource.get(subscriberId);
-				subscriber.subscribe(sourceFeed);
-			}
 			
 			//Start the Streams
 			for (String streamId : streams.keySet()) {
@@ -170,32 +151,16 @@ public class StreamsManager implements Runnable {
 		try {
 			for (String streamId : config.getStreamIds()) {
 				Configuration sconfig = config.getStreamConfig(streamId);
-				Stream stream = (Stream)Class.forName(sconfig.getParameter(Configuration.CLASS_PATH)).newInstance();
+				
+				String streamName = sconfig.getParameter(Configuration.CLASS_PATH);
+				Stream stream = (Stream)Class.forName(streamName).newInstance();
+				
 				streams.put(streamId, stream);
-			}
-		}catch(Exception e) {
-			e.printStackTrace();
-			throw new StreamException("Error during streams initialization", e);
-		}
-	}
-	
-	/**
-	 * Initializes the streams apis, that implement subscriber channels, that are going to be searched for 
-	 * relevant content
-	 * @throws StreamException
-	 */
-	private void initSubscribers() throws StreamException {
-		subscribers = new HashMap<String, Subscriber>();
-		try {
-			for (String subscriberId : config.getSubscriberIds()) {
-				Configuration sconfig = config.getSubscriberConfig(subscriberId);
-				Subscriber subscriber = (Subscriber) Class.forName(sconfig.getParameter(Configuration.CLASS_PATH)).newInstance();
-				subscribers.put(subscriberId, subscriber);
 			}
 		}
 		catch(Exception e) {
 			e.printStackTrace();
-			throw new StreamException("Error during Subscribers initialization", e);
+			throw new StreamException("Error during streams initialization", e);
 		}
 	}
 
@@ -251,8 +216,8 @@ public class StreamsManager implements Runnable {
 			}
 			
 			try {
-				// Check for new feeds every 5 seconds
-				Thread.sleep(5000);
+				// Check for new feeds every one minute
+				Thread.sleep(60000);
 			} catch (InterruptedException e) {
 				logger.error(e.getMessage());
 			}
@@ -262,7 +227,7 @@ public class StreamsManager implements Runnable {
 	
 	public static void main(String[] args) {
 		
-		Logger logger = Logger.getLogger(StreamsManager.class);
+		Logger logger = Logger.getLogger(FeedsManager.class);
 		
 		File streamConfigFile;
 		if(args.length != 1 ) {
@@ -272,15 +237,13 @@ public class StreamsManager implements Runnable {
 			streamConfigFile = new File(args[0]);
 		}
 		
-		StreamsManager manager = null;
+		FeedsManager manager = null;
 		try {
 			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(streamConfigFile);		
 	        
 			
-			manager = new StreamsManager(config);
+			manager = new FeedsManager(config);
 			manager.open();
-			
-			Runtime.getRuntime().addShutdownHook(new Shutdown(manager));
 			
 			Thread thread = new Thread(manager);
 			thread.start();

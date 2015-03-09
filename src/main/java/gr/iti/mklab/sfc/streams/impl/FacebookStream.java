@@ -1,7 +1,5 @@
 package gr.iti.mklab.sfc.streams.impl;
 
-import java.util.List;
-
 import org.apache.log4j.Logger;
 import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.query.Query;
@@ -12,6 +10,7 @@ import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.Source;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
+import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.framework.retrievers.Retriever;
 import gr.iti.mklab.framework.retrievers.impl.FacebookRetriever;
 import gr.iti.mklab.sfc.streams.Stream;
@@ -80,9 +79,9 @@ public class FacebookStream extends Stream {
 		Feed feed = dao.findOne(q);
 		
 		System.out.println(feed.toString());
-		List<Item> items = retriever.retrieve(feed, 2);
+		Response response = retriever.retrieve(feed, 2);
 		
-		for(Item item : items) {
+		for(Item item : response.getItems()) {
 			System.out.println(item.toString());
 		}
 	}

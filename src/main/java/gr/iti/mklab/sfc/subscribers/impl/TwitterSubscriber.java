@@ -429,7 +429,7 @@ public class TwitterSubscriber extends Subscriber {
 					Item item = new TwitterItem(status);
 					
 					if(handler != null) {
-						handler.update(item);
+						handler.handle(item);
 					}
 				} catch (Exception e) {
 					logger.error("Error during stream consumption.", e);

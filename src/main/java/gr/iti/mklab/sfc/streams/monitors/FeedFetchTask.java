@@ -39,7 +39,7 @@ public class FeedFetchTask implements Runnable {
 	public void run() {
 		System.out.println("Feed Task that handles Feed : "+feed.getId()+" starts retrieving");
 		try {
-			retrievedItems = retriever.retrieve(feed).size();
+			retrievedItems = retriever.retrieve(feed).getNumberOfItems();
 		} catch (Exception e) {
 			
 		}

@@ -225,11 +225,11 @@ public class MongoDbStorage implements Storage {
 				
 				String userId = user.getId();
 				boolean userExists = false;
-				synchronized(usersMap) {
-					userExists = usersMap.containsKey(userId);
-				}
+				//synchronized(usersMap) {
+				//	userExists = usersMap.containsKey(userId);
+				//}
 				
-				if(!userExists) {
+				//if(!userExists) {
 					// save stream user
 					userInsertions++;
 					streamUserDAO.save(user);
@@ -245,7 +245,7 @@ public class MongoDbStorage implements Storage {
 					}
 					tempUser.incItems(1);
 					tempUser.incMentions(1L);
-				}
+				//}
 			}
 			
 		}
