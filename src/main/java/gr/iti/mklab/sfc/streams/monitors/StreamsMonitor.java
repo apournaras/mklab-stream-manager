@@ -3,8 +3,6 @@ package gr.iti.mklab.sfc.streams.monitors;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -24,15 +22,11 @@ import gr.iti.mklab.sfc.streams.Stream;
  */
 public class StreamsMonitor implements Runnable {
 	
-	// 30 minutes
-	private static final long DEFAULT_REQUEST_PERIOD = 1 * 15 * 60000; 
-	
 	public final Logger logger = Logger.getLogger(StreamsMonitor.class);
 
 	private ExecutorService executor;
 	
 	private Map<String, Stream> streams = new HashMap<String, Stream>();
-	private Map<String, Set<Feed>> feedsPerStream = new HashMap<String, Set<Feed>>();
 	
 	private Map<String, StreamFetchTask> streamsFetchTasks = new HashMap<String, StreamFetchTask>();
 	
@@ -51,9 +45,9 @@ public class StreamsMonitor implements Runnable {
 	 * Adds the streams to the monitor
 	 * @param streams
 	 */
-	public void addStreams(Map<String, Stream> streams) {
-		for(Entry<String, Stream> streamEntry : streams.entrySet()) {
-			addStream(streamEntry.getKey(), streamEntry.getValue());
+	public void addStreams(List<Stream> streams) {
+		for(Stream stream : streams) {
+			addStream(stream);
 		}
 	}
 
@@ -62,23 +56,20 @@ public class StreamsMonitor implements Runnable {
 	 * @param streamId
 	 * @param stream
 	 */
-	public void addStream(String streamId, Stream stream) {
+	public void addStream(Stream stream) {
+		
+		String streamId = stream.getName(); 
 		this.streams.put(streamId, stream);
-	}
-	
-	/**
-	 * Adds a stream to the monitor mapped to its id and the feeds that
-	 * will be used to retrieve relevant content from the aforementioned
-	 * stream. Request time refers to the time period the stream will 
-	 * serve search requests. 
-	 * 
-	 * @param streamId
-	 * @param stream
-	 * @param feeds
-	 */
-	public void addStream(String streamId, Stream stream, Set<Feed> feeds) {
-		this.streams.put(streamId, stream);
-		this.feedsPerStream.put(streamId, feeds);
+		
+		try {
+			logger.info("Start " + streamId + " Fetch Task");
+			StreamFetchTask streamTask = new StreamFetchTask(stream);
+			
+			streamsFetchTasks.put(streamId, streamTask);
+		} catch (Exception e) {
+			logger.error(e);
+		}
+		
 	}
 	
 	public Stream getStream(String streamId) {
@@ -129,35 +120,11 @@ public class StreamsMonitor implements Runnable {
 	}
 	
 	/**
-	 * Starts searching into the specific stream by assigning its feeds to stream fetch tasks and
-	 * executing them.
-	 * @param streamId
-	 */
-	private void startStream(String streamId) {
-		
-		if(!streams.containsKey(streamId)) {
-			logger.error("Stream " + streamId + " needs to be added to the monitor first");
-			return;
-		}
-		
-		try {			
-			logger.info("Start " + streamId + " Fetch Task");
-			StreamFetchTask streamTask = new StreamFetchTask(streams.get(streamId));
-			streamsFetchTasks.put(streamId, streamTask);
-		} catch (Exception e) {
-			logger.error(e);
-		}
-	}
-
-	/**
 	 * Starts the retrieval process for all streams. Each stream is served
 	 * by a different thread->StreamFetchTask
 	 * @param 
 	 */
-	public void startStreams() {
-		for(String streamId : streams.keySet()) {
-			startStream(streamId);
-		}
+	public void start() {
 		executor.submit(this);
 	}
 	
@@ -187,14 +154,12 @@ public class StreamsMonitor implements Runnable {
 			for(String streamId : streamsFetchTasks.keySet()) {
 				StreamFetchTask task = streamsFetchTasks.get(streamId);
 				
-				if((System.currentTimeMillis() - task.getLastRuntime()) < DEFAULT_REQUEST_PERIOD) {
-					continue;
-				}
-				
-				Future<Integer> response = responses.get(streamId);
-				if(response == null || response.isDone()) {
-					Future<Integer> future = executor.submit(task);
-					responses.put(streamId, future);
+				if(task.shouldRun()) {
+					Future<Integer> response = responses.get(streamId);
+					if(response == null || response.isDone()) {
+						Future<Integer> future = executor.submit(task);
+						responses.put(streamId, future);
+					}
 				}
 			}
 			

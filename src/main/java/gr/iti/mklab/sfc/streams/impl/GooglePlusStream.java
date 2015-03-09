@@ -36,9 +36,6 @@ public class GooglePlusStream extends Stream {
 		
 		key = config.getParameter(KEY);
 		
-		String maxResults = config.getParameter(MAX_RESULTS);
-		String maxRunningTime = config.getParameter(MAX_RUNNING_TIME);
-		
 		if (key == null) {
 			logger.error("#GooglePlus : Stream requires authentication.");
 			throw new StreamException("Stream requires authentication.");
@@ -47,14 +44,16 @@ public class GooglePlusStream extends Stream {
 		Credentials credentials = new Credentials();
 		credentials.setKey(key);
 		
-		rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxResults), Long.parseLong(maxRunningTime));
+		maxRequests = Integer.parseInt(config.getParameter(MAX_REQUESTS));
+		timeWindow = Long.parseLong(config.getParameter(TIME_WINDOW));
 		
+		rateLimitsMonitor = new RateLimitsMonitor(maxRequests, timeWindow);
 		retriever = new GooglePlusRetriever(credentials);
 		
 	}
 	
 	@Override
 	public String getName() {
-		return "GooglePlus";
+		return SOURCE.name();
 	}
 }

@@ -7,8 +7,9 @@ import gr.iti.mklab.sfc.streams.Stream;
 
 /**
  * Class responsible for setting up the connection for retrieving RSS feeds.
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * 
+ * @author Manos
+ * @email  manosetro@iti.gr
  */
 public class RssStream extends Stream {
 	
@@ -21,7 +22,7 @@ public class RssStream extends Stream {
 
 	@Override
 	public String getName() {
-		return "RSS";
+		return SOURCE.name();
 	}
 
 }

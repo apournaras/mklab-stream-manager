@@ -71,7 +71,6 @@ public class MongoDbStorage implements Storage {
 		if(result.getN() > 0) {
 			return true;
 		}
-		
 		return false;
 	}
 	

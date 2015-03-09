@@ -10,8 +10,10 @@ import gr.iti.mklab.framework.retrievers.Retriever;
 
 /**
  * A feed task that supports a retrieval process for one input feed. 
- * @author manosetro
+ * 
+ * @author Manos Schinas
  * @email manosetro@iti.gr
+ * 
  */
 public class FeedFetchTask implements Runnable {
 
@@ -20,13 +22,7 @@ public class FeedFetchTask implements Runnable {
 	
 	public TimeUnit timeUnit = MILLISECONDS;
 	private long rate = 30 * 60 * 1000; 			// Request rate: 30 minutes by default  
-//	private long updatesRate = 60 * 60 * 1000;		// Updates rate: 1 hour by default  
-	
-//	private Date requestSince = new Date();			// Current date by default
-//	private Date updateSince = new Date();			// Current date by default
-	
-//	private long lastUpdateTime = 0;
-//	private long lastRequestTime = 0;
+
 	private Feed feed;
 	private Integer retrievedItems;
 	
@@ -49,7 +45,6 @@ public class FeedFetchTask implements Runnable {
 		}
 		System.out.println("Feed Task that handles Feed : "+feed.getId()+" done retrieving");
 		completed = true;
-		
 	}
 	
 	public Integer getRetrievedItems() {

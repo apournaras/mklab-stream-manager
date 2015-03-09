@@ -12,7 +12,7 @@ import com.sun.jersey.api.client.WebResource;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
 
-public class Neo4jGraphDbStorage implements Storage {
+public class Neo4jStorage implements Storage {
 	
 	private static String HOST = "neo4j.host";
 	
@@ -40,18 +40,18 @@ public class Neo4jGraphDbStorage implements Storage {
 	WebResource resource;
 	ClientResponse response;
 	
-	public Neo4jGraphDbStorage(Configuration config) {
+	public Neo4jStorage(Configuration config) {
 		
-		this.host = config.getParameter(Neo4jGraphDbStorage.HOST);
+		this.host = config.getParameter(HOST);
 		
-		this.nodeUserLabel = config.getParameter(Neo4jGraphDbStorage.NODE_USER_LABEL);
-		this.nodeUserId = config.getParameter(Neo4jGraphDbStorage.NODE_USER_ID);
+		this.nodeUserLabel = config.getParameter(NODE_USER_LABEL);
+		this.nodeUserId = config.getParameter(NODE_USER_ID);
 		
-		this.relationshipReTweets = config.getParameter(Neo4jGraphDbStorage.RELATIONSHIP_RETWEETS);
-		this.relationshipMentions = config.getParameter(Neo4jGraphDbStorage.RELATIONSHIP_MENTIONS);
+		this.relationshipReTweets = config.getParameter(RELATIONSHIP_RETWEETS);
+		this.relationshipMentions = config.getParameter(RELATIONSHIP_MENTIONS);
 		
-		this.relationshipPropertyTimestamp = config.getParameter(Neo4jGraphDbStorage.RELATIONSHIP_PROPERTY_TIMESTAMP);
-		this.relationshipPropertyTweedId = config.getParameter(Neo4jGraphDbStorage.RELATIONSHIP_PROPERTY_TWEETID);
+		this.relationshipPropertyTimestamp = config.getParameter(RELATIONSHIP_PROPERTY_TIMESTAMP);
+		this.relationshipPropertyTweedId = config.getParameter(RELATIONSHIP_PROPERTY_TWEETID);
 	}
 
 	@Override
@@ -72,8 +72,7 @@ public class Neo4jGraphDbStorage implements Storage {
 		String userId = item.getUserId().split("#")[1];
 		String tweetId = item.getId().split("#")[1];
 		long timestamp = item.getPublicationTime();
-//		String title = item.getTitle();
-		
+
 		try {
 			getOrCreateVertex(userId, nodeUserId);
 			//handle mentions

@@ -264,12 +264,11 @@ public class TwitterSubscriber extends Subscriber {
 			public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
 					try {
 						deletion++;
-						String id = Long.toString(statusDeletionNotice.getStatusId());
-						Item update = new Item();
-						update.setId(id);
-						update.setSource("Twitter");
+						String id = "Twitter#" + statusDeletionNotice.getStatusId();
 						
-						delete(update);
+						if(handler != null) {
+							handler.delete(id);
+						}
 					}
 					catch(Exception e) {
 						logger.error("Exception onDeletionNotice: ", e);
@@ -428,8 +427,10 @@ public class TwitterSubscriber extends Subscriber {
 					}
 
 					Item item = new TwitterItem(status);
-					store(item);
 					
+					if(handler != null) {
+						handler.update(item);
+					}
 				} catch (Exception e) {
 					logger.error("Error during stream consumption.", e);
 				}

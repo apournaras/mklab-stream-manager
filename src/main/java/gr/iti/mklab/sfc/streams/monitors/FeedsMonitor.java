@@ -28,6 +28,7 @@ public class FeedsMonitor {
 	
 	private Map<String, FeedFetchTask> feedFetchTasks;
 	private ScheduledExecutorService scheduler;
+	
 	private Retriever retriever;
 	
 	public FeedsMonitor(Retriever retriever) {

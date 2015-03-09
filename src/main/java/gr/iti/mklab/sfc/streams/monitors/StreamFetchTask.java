@@ -33,11 +33,6 @@ public class StreamFetchTask implements  Callable<Integer> {
 		this.stream = stream;
 	}
 	
-	public StreamFetchTask(Stream stream, Set<Feed> feeds) throws Exception {
-		this.stream = stream;
-		this.feeds.addAll(feeds);
-	}
-	
 	/**
 	 * Adds the input feeds to search for relevant content in the stream
 	 * 
@@ -48,7 +43,7 @@ public class StreamFetchTask implements  Callable<Integer> {
 	}
 	
 	/**
-	 * Adds the input feeds to search for relevant content in the stream
+	 * Remove input feed from task
 	 * 
 	 * @param Feed feed
 	 */
@@ -65,8 +60,21 @@ public class StreamFetchTask implements  Callable<Integer> {
 		this.feeds.addAll(feeds);
 	}
 
-	public long getLastRuntime() {
-		return this.lastRuntime;
+	/**
+	 * Remove input feed from task
+	 * 
+	 * @param Feed feed
+	 */
+	public void removeFeeds(List<Feed> feeds) {
+		this.feeds.removeAll(feeds);
+	}
+	
+	public boolean shouldRun() {
+		long period = stream.getTimeWindow() * 60000;
+		if((System.currentTimeMillis() - lastRuntime) > period) {  
+			return true;
+		}
+		return false;
 	}
 	
 	/**
@@ -76,9 +84,12 @@ public class StreamFetchTask implements  Callable<Integer> {
 	@Override
 	public Integer call() throws Exception {
 		try {
+			
 			if(!feeds.isEmpty()) {
+				
 				logger.info("Poll " + feeds.size() + " feeds in " + stream.getName());
 				List<Item> items = stream.poll(feeds);
+				
 				lastRuntime = System.currentTimeMillis();
 				
 				return items.size();
@@ -86,10 +97,11 @@ public class StreamFetchTask implements  Callable<Integer> {
 			else {
 				logger.info("Feeds are empty for " + stream.getName());
 			}
+			
 		} catch (Exception e) {
 			logger.error("ERROR IN STREAM FETCH TASK: " + e.getMessage());
-			
 		}	
+		
 		return 0;
 	}
 }

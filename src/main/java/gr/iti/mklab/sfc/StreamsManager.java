@@ -23,10 +23,8 @@ import gr.iti.mklab.sfc.streams.monitors.StreamsMonitor;
 import gr.iti.mklab.sfc.subscribers.Subscriber;
 
 /**
- * Class for retrieving content according to 
- * keywords - user - location feeds from social networks - Currently
- * 7 social networks are supported
- * (Twitter,Youtube,Facebook,Flickr,Instagram,Tumblr,GooglePlus)
+ * Class for retrieving content according to  keywords - user - location feeds from social networks.
+ * Currently 7 social networks are supported (Twitter,Youtube,Facebook,Flickr,Instagram,Tumblr,GooglePlus)
  * 
  * @author Manos Schinas
  * @email  manosetro@iti.gr
@@ -122,9 +120,9 @@ public class StreamsManager implements Runnable {
 				stream.setHandler(storageHandler);
 				stream.open(sconfig);
 				
-				monitor.addStream(streamId, stream);
+				monitor.addStream(stream);
 			}
-			monitor.startStreams();
+			monitor.start();
 			
 		}
 		catch(Exception e) {
@@ -169,10 +167,11 @@ public class StreamsManager implements Runnable {
 	 */
 	private void initStreams() throws StreamException {
 		streams = new HashMap<String, Stream>();
-		try{
-			for (String streamId : config.getStreamIds()){
+		try {
+			for (String streamId : config.getStreamIds()) {
 				Configuration sconfig = config.getStreamConfig(streamId);
-				streams.put(streamId,(Stream)Class.forName(sconfig.getParameter(Configuration.CLASS_PATH)).newInstance());
+				Stream stream = (Stream)Class.forName(sconfig.getParameter(Configuration.CLASS_PATH)).newInstance();
+				streams.put(streamId, stream);
 			}
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -186,7 +185,6 @@ public class StreamsManager implements Runnable {
 	 * @throws StreamException
 	 */
 	private void initSubscribers() throws StreamException {
-		
 		subscribers = new HashMap<String, Subscriber>();
 		try {
 			for (String subscriberId : config.getSubscriberIds()) {
@@ -203,6 +201,7 @@ public class StreamsManager implements Runnable {
 
 	@Override
 	public void run() {
+		
 		if(state != ManagerState.OPEN) {
 			logger.error("Streams Manager is not open!");
 			return;
@@ -231,7 +230,7 @@ public class StreamsManager implements Runnable {
 							monitor.addFeed(streamId, feed);
 						}
 						else {
-							logger.error("Stream " + streamId + " is closed");
+							logger.error("Stream " + streamId + " has not initialized");
 						}
 					}
 				}
@@ -245,7 +244,7 @@ public class StreamsManager implements Runnable {
 							monitor.addFeed(streamId, feed);
 						}
 						else {
-							logger.error("Stream " + streamId + " is closed");
+							logger.error("Stream " + streamId + " has not initialized");
 						}
 					}
 				}

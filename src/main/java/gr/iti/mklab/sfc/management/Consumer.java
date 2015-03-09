@@ -1,11 +1,13 @@
-package gr.iti.mklab.sfc.storages;
+package gr.iti.mklab.sfc.management;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.sfc.storages.Storage;
 
 /**
  * Class for storing items to databases
@@ -22,14 +24,17 @@ public class Consumer extends Thread {
 	
 	private Logger _logger = Logger.getLogger(Consumer.class);
 	
+	private static int id = 0;
+	
 	private boolean isAlive = true;
-	private Storage store = null;
+	private List<Storage> storages = null;
 	
 	private BlockingQueue<Item> queue;
 	
-	public Consumer(BlockingQueue<Item> queue, Storage store) {
-		this.store = store;
+	public Consumer(BlockingQueue<Item> queue, List<Storage> storages) {
+		this.storages = storages;
 		this.queue = queue;
+		this.setName("Consumer_" + (id++));
 	}
 	
 	/**
@@ -69,12 +74,10 @@ public class Consumer extends Thread {
 	 * @throws IOException
 	 */
 	private void process(Item item) throws IOException {
-		if (store != null) {
-			
-			store.store(item);
-			//store.update(item);
-			//store.delete(item.getId());
-
+		if (storages != null) {
+			for(Storage storage : storages) {
+				storage.store(item);
+			}
 		}
 	}
 	

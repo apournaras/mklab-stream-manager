@@ -2,9 +2,7 @@ package gr.iti.mklab.sfc.streams;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 
@@ -33,13 +31,14 @@ public abstract class Stream {
 	protected static final String ACCESS_TOKEN_SECRET = "AccessTokenSecret";
 	protected static final String CLIENT_ID = "ClientId";
 	
-	protected static final String MAX_RESULTS = "maxResults";
 	protected static final String MAX_REQUESTS = "maxRequests";
-	protected static final String MAX_RUNNING_TIME = "maxRunningTime";
+	protected static final String TIME_WINDOW = "timeWindow";
 	
-	//protected FeedsMonitor monitor;
+	// Default value 10 requests / minute
+	protected int maxRequests = 10;
+	protected long timeWindow = 1;
 	
-	protected BlockingQueue<Feed> feedsQueue;
+	//protected BlockingQueue<Feed> feedsQueue;
 	protected Retriever retriever = null;
 	protected StorageHandler handler;
 	
@@ -62,12 +61,6 @@ public abstract class Stream {
 	 *      In any case of error during stream close
 	 */
 	public void close() throws StreamException {
-	
-		//if(monitor != null) {
-		//	logger.info("Stop monitor");
-		//	monitor.stopMonitor();
-		//}
-		
 		if(retriever != null) {
 			logger.info("Stop retriever");
 			retriever.stop();
@@ -85,51 +78,17 @@ public abstract class Stream {
 		this.handler = handler;
 	}
 	
-//	/**
-//	 * Sets the feeds monitor for the stream
-//	 * @return
-//	 */
-//	public boolean setMonitor() {
-//		if(retriever == null)
-//			return false;
-//		
-//		//monitor = new FeedsMonitor(retriever);
-//		return true;
-//	}
-	
-	/**
-	 * Sets the users list that will be used to retrieve from the stream (utilized for Twitter Stream)
-	 * @param usersToLists
-	 
-	public void setUserLists(Map<String, Set<String>> usersToLists) {
-		this.usersToLists = usersToLists;
-		
-		if(usersToLists != null) {
-			Set<String> allLists = new HashSet<String>();
-			for(Set<String> lists : usersToLists.values()) {
-				allLists.addAll(lists);
-			}
-			logger.info("=============================================");
-			logger.info(usersToLists.size() + " user in " + allLists.size() + " Lists!!!");
-		}
-	}
-	*/
-	
-	/**
-	 * Returns the list of retrieved items 
-	 * @return
-	 */
-//	public synchronized List<Item> getRetrievedItems() {
-//		return retrievedItems;
-//	}
-	
 	/**
 	 * Searches with the wrapper of the stream for a particular
-	 * set of feeds (feeds can be keywordsFeeds, userFeeds, locationFeeds, listFeeds or URLFeeds)
-	 * @param feeds
+	 * set of feeds (feeds can be KeywordsFeed, AccountFeed, LocationFeeds, GroupFeed or RssFeed)
+	 * 
+	 * @param Collection<Feed> feeds
+	 * 
+	 * @return List<Item> items
 	 * @throws StreamException
 	 */
 	public synchronized List<Item> poll(Collection<Feed> feeds) throws StreamException {
+		
 		List<Item> retrievedItems = new ArrayList<Item>();
 		if(retriever != null) {
 		
@@ -137,17 +96,24 @@ public abstract class Stream {
 				logger.error("Feeds is null in poll method.");
 				return retrievedItems;
 			}
+			if(feeds.isEmpty()) {
+				return retrievedItems;
+			}
 			
-			Iterator<Feed> it = feeds.iterator();
-			while(it.hasNext()) {
-				Feed feed = it.next();
+			int numOfFeeds = feeds.size();
+			int requestsPerFeed = this.maxRequests / numOfFeeds;
+			
+			for(Feed feed : feeds) {
 				try {
-					List<Item> items = retriever.retrieve(feed);
-					store(items);
+					List<Item> items = retriever.retrieve(feed, requestsPerFeed);
 					retrievedItems.addAll(items);
+					if(handler != null) {
+						for(Item item : items) {
+							handler.update(item);
+						}
+					}
 				}
 				catch(Exception e) {
-					e.printStackTrace();
 					logger.error("Exception for feed " + feed.getId() + " of type " + feed.getClass() + " from " + getName());
 					logger.error(e.getMessage());
 				}
@@ -157,6 +123,7 @@ public abstract class Stream {
 		else {
 			throw new StreamException("Retriever is null for " + getName());
 		}
+		
 		return retrievedItems;
 		
 	}
@@ -177,8 +144,13 @@ public abstract class Stream {
 			
 			try {
 				List<Item> items = retriever.retrieve(feed);
-				store(items);
 				retrievedItems.addAll(items);
+				
+				if(handler != null) {
+					for(Item item : items) {
+						handler.update(item);
+					}
+				}
 			}
 			catch(Exception e) {
 				logger.error("Exception for feed " + feed.getId() + " of type " + feed.getClass());
@@ -187,46 +159,18 @@ public abstract class Stream {
 			
 			logger.info("Retrieved items for " + getName() + " are : " + retrievedItems.size());
 		}
+		else {
+			throw new StreamException("Retriever is null for " + getName());
+		}
+		
 		return retrievedItems;
-	}
-	
-	/**
-	 * Store a set of items in the selected databases
-	 * @param items
-	 */
-	public synchronized void store(List<Item>items) {
-		for(Item item : items) {
-			store(item);
-		}
-	}
-	
-	/**
-	 * Store an item in the selected databases
-	 * @param item
-	 */
-	public synchronized void store(Item item) {
-		
-		if(handler == null) {
-			logger.error("NULL Handler!");
-			return;
-		}
-		
-		handler.update(item);
-	}
-	
-	/**
-	 * Deletes an item from the selected databases
-	 * @param item
-	 */
-	public void delete(Item item) {
-		handler.delete(item);
 	}
 	
 	/**
 	 * Adds a feed to the stream for future searching
 	 * @param feed
 	 * @return
-	 */
+	 *
 	public boolean addFeed(Feed feed) {
 		if(feedsQueue == null) {
 			return false;
@@ -234,11 +178,13 @@ public abstract class Stream {
 		
 		return feedsQueue.offer(feed);
 	}
+	*/
+	
 	/**
 	 * Adds a set of feeds to the stream for future searching
 	 * @param feeds
 	 * @return
-	 */
+	 
 	public boolean addFeeds(List<Feed> feeds) {
 		for(Feed feed : feeds) {
 			if(!addFeed(feed)) {
@@ -247,6 +193,7 @@ public abstract class Stream {
 		}
 		return true;
 	}
+	*/
 	
 	/*
 	@Override
@@ -266,5 +213,14 @@ public abstract class Stream {
 	*/
 	
 	public abstract String getName();
+
+	public int getMaxRequests() {
+		return maxRequests;
+	}
+	
+	public long getTimeWindow() {
+		return timeWindow;
+	}
 	
 }
+

@@ -16,6 +16,7 @@ import gr.iti.mklab.framework.common.domain.Item;
  *
  */
 public class FlatFileStorage implements Storage {	
+	
 	private static String NAME = "name";
 	private static String STORAGE_FILE = "file";
 	

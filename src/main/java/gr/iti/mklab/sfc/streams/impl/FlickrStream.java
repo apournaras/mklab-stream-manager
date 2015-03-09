@@ -39,9 +39,6 @@ public class FlickrStream extends Stream {
 		key = config.getParameter(KEY);
 		secret = config.getParameter(SECRET);
 		
-		String maxResults = config.getParameter(MAX_RESULTS);
-		String maxRequests = config.getParameter(MAX_REQUESTS);
-		
 		if (key == null || secret==null) {
 			logger.error("#Flickr : Stream requires authentication.");
 			throw new StreamException("Stream requires authentication.");
@@ -51,14 +48,16 @@ public class FlickrStream extends Stream {
 		credentials.setKey(key);
 		credentials.setSecret(secret);
 		
-		rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxResults), Long.parseLong(maxRequests));
+		maxRequests = Integer.parseInt(config.getParameter(MAX_REQUESTS));
+		timeWindow = Long.parseLong(config.getParameter(TIME_WINDOW));
 		
+		rateLimitsMonitor = new RateLimitsMonitor(maxRequests, timeWindow);
 		retriever = new FlickrRetriever(credentials);
 	}
 	
 	@Override
 	public String getName() {
-		return "Flickr";
+		return SOURCE.name();
 	}
 	
 }

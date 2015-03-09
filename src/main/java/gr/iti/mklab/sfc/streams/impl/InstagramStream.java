@@ -38,10 +38,6 @@ public class InstagramStream extends Stream {
 		String secret = config.getParameter(SECRET);
 		String token = config.getParameter(ACCESS_TOKEN);
 		
-		String maxResults = config.getParameter(MAX_RESULTS);
-		String maxRequests = config.getParameter(MAX_REQUESTS);
-		String maxRunningTime = config.getParameter(MAX_RUNNING_TIME);
-		
 		if (key == null || secret == null || token == null) {
 			logger.error("#Instagram : Stream requires authentication.");
 			throw new StreamException("Stream requires authentication.");
@@ -52,17 +48,16 @@ public class InstagramStream extends Stream {
 		credentials.setSecret(secret);
 		credentials.setAccessToken(token);
 		
-		rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxRequests), Long.parseLong(maxRunningTime));
+		maxRequests = Integer.parseInt(config.getParameter(MAX_REQUESTS));
+		timeWindow = Long.parseLong(config.getParameter(TIME_WINDOW));
 		
+		rateLimitsMonitor = new RateLimitsMonitor(maxRequests, timeWindow);
 		retriever = new InstagramRetriever(credentials);
-	
 	}
-
 
 	@Override
 	public String getName() {
-		return "Instagram";
+		return SOURCE.name();
 	}
-	
 }
 

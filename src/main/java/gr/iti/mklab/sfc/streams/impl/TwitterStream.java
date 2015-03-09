@@ -44,34 +44,24 @@ public class TwitterStream extends Stream {
 			throw new StreamException("Stream requires authentication");
 		}
 		
-		/*
-		logger.info("Twitter Credentials: \n" + 
-				"\t\t\toAuthConsumerKey:  " + oAuthConsumerKey  + "\n" +
-				"\t\t\toAuthConsumerSecret:  " + oAuthConsumerSecret  + "\n" +
-				"\t\t\toAuthAccessToken:  " + oAuthAccessToken + "\n" +
-				"\t\t\toAuthAccessTokenSecret:  " + oAuthAccessTokenSecret);
-		 */
-		
 		logger.info("Initialize Twitter Retriever for REST api");
-
-		String maxRequests = config.getParameter(MAX_REQUESTS);
-		String maxRunningTime = config.getParameter(MAX_RUNNING_TIME);
-			
+	
 		Credentials credentials = new Credentials();
 		credentials.setKey(oAuthConsumerKey);
 		credentials.setSecret(oAuthConsumerSecret);
 		credentials.setAccessToken(oAuthAccessToken);
 		credentials.setAccessTokenSecret(oAuthAccessTokenSecret);
 		
-		rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxRequests), Long.parseLong(maxRunningTime));
+		maxRequests = Integer.parseInt(config.getParameter(MAX_REQUESTS));
+		timeWindow = Long.parseLong(config.getParameter(TIME_WINDOW));
 		
+		rateLimitsMonitor = new RateLimitsMonitor(maxRequests, timeWindow);
 		retriever = new TwitterRetriever(credentials);	
 	}
 	
 	@Override
 	public String getName() {
-		return "Twitter";
+		return SOURCE.name();
 	}
-	
 }
 

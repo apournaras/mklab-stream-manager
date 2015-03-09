@@ -38,10 +38,6 @@ public class TumblrStream extends Stream {
 		consumerKey = config.getParameter(KEY);
 		consumerSecret = config.getParameter(SECRET);
 		
-		String maxResults = config.getParameter(MAX_RESULTS);
-		String maxRequests = config.getParameter(MAX_REQUESTS);
-		String maxRunningTime = config.getParameter(MAX_RUNNING_TIME);
-		
 		if (consumerKey == null || consumerSecret==null) {
 			logger.error("#Tumblr : Stream requires authentication.");
 			throw new StreamException("Stream requires authentication.");
@@ -51,15 +47,17 @@ public class TumblrStream extends Stream {
 		credentials.setKey(consumerKey);
 		credentials.setSecret(consumerSecret);
 		
-		rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxRequests), Long.parseLong(maxRunningTime));
+		maxRequests = Integer.parseInt(config.getParameter(MAX_REQUESTS));
+		timeWindow = Long.parseLong(config.getParameter(TIME_WINDOW));
 		
+		rateLimitsMonitor = new RateLimitsMonitor(maxRequests, timeWindow);
 		retriever = new TumblrRetriever(credentials);
 		
 	}
 
 	@Override
 	public String getName() {
-		return "Tumblr";
+		return SOURCE.name();
 	}
 	
 }

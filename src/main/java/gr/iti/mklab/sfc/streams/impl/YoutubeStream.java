@@ -42,8 +42,6 @@ public class YoutubeStream extends Stream {
 		
 		this.clientId = config.getParameter(CLIENT_ID);
 		this.developerKey = config.getParameter(KEY);
-		String maxResults = config.getParameter(MAX_RESULTS);
-		String maxRunningTime = config.getParameter(MAX_RUNNING_TIME);
 		
 		if (clientId == null || developerKey == null) {
 			logger.error("#YouTube : Stream requires authentication.");
@@ -54,7 +52,10 @@ public class YoutubeStream extends Stream {
 		credentials.setKey(developerKey);
 		credentials.setClientId(clientId);
 		
-		rateLimitsMonitor = new RateLimitsMonitor(Integer.parseInt(maxResults), Long.parseLong(maxRunningTime));
+		maxRequests = Integer.parseInt(config.getParameter(MAX_REQUESTS));
+		timeWindow = Long.parseLong(config.getParameter(TIME_WINDOW));
+		
+		rateLimitsMonitor = new RateLimitsMonitor(maxRequests, timeWindow);
 		
 		retriever = new YoutubeRetriever(credentials);
 
@@ -62,7 +63,7 @@ public class YoutubeStream extends Stream {
 	
 	@Override
 	public String getName() {
-		return "YouTube";
+		return SOURCE.name();
 	}
 	
 }

@@ -14,6 +14,7 @@ import gr.iti.mklab.framework.common.domain.WebPage;
 
 /**
  * Class for storing items to redis store
+ * 
  * @author manosetro
  * @email  manosetro@iti.gr
  *
@@ -21,6 +22,7 @@ import gr.iti.mklab.framework.common.domain.WebPage;
 public class RedisStorage implements Storage {
 
 	private static String HOST = "redis.host";
+	
 	private static String WEBPAGES_CHANNEL = "redis.webpages.channel";
 	private static String MEDIA_CHANNEL = "redis.media.channel";
 	private static String ITEMS_CHANNEL = "redis.items.channel";
@@ -43,7 +45,6 @@ public class RedisStorage implements Storage {
 		this.itemsChannel = config.getParameter(RedisStorage.ITEMS_CHANNEL);
 		this.webPagesChannel = config.getParameter(RedisStorage.WEBPAGES_CHANNEL);
 		this.mediaItemsChannel = config.getParameter(RedisStorage.MEDIA_CHANNEL);
-		
 	}
 	
 	@Override
@@ -96,7 +97,7 @@ public class RedisStorage implements Storage {
 	}
 	
 	@Override
-	public void update(Item update) throws IOException {
+	public void update(Item item) throws IOException {
 		// Not supported.
 	}
 	
@@ -164,22 +165,8 @@ public class RedisStorage implements Storage {
 	}
 	
 	@Override
-	public String getStorageName(){
+	public String getStorageName() {
 		return this.storageName;
 	}
 
-	public static void main(String...args) {
-		System.out.println("Check Redis Storage");
-		
-		Configuration config = new Configuration();
-		config.setParameter(RedisStorage.HOST, "160.40.51.18");
-		config.setParameter(RedisStorage.ITEMS_CHANNEL, "items");
-		config.setParameter(RedisStorage.WEBPAGES_CHANNEL, "webpages");
-		config.setParameter(RedisStorage.MEDIA_CHANNEL, "media");
-		RedisStorage redis = new RedisStorage(config);
-		redis.open();
-		
-		redis.checkStatus();
-		
-	}
 }

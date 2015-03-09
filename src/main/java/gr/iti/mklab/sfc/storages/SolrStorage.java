@@ -60,14 +60,6 @@ public class SolrStorage implements Storage {
 		this.onlyOriginal = Boolean.valueOf(config.getParameter(SolrStorage.ONLY_ORIGINAL, "true"));
 	}
 	
-	public SolrItemHandler getItemHandler() {
-		return solrItemHandler;
-	}
-	
-	public SolrMediaItemHandler getMediaItemHandler() {
-		return solrMediaHandler;
-	}
-	
 	@Override
 	public boolean open(){
 		
@@ -143,7 +135,6 @@ public class SolrStorage implements Storage {
 	
 	@Override
 	public boolean checkStatus() {
-		
 		if(itemsCollection != null) {
 			try {
 				return true;

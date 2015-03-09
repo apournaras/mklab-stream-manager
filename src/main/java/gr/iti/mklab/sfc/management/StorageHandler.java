@@ -1,5 +1,6 @@
 package gr.iti.mklab.sfc.management;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,8 +13,6 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
-import gr.iti.mklab.sfc.storages.Consumer;
-import gr.iti.mklab.sfc.storages.MultipleStorages;
 import gr.iti.mklab.sfc.storages.Storage;
 import gr.iti.mklab.sfc.streams.StreamException;
 import gr.iti.mklab.sfc.streams.StreamsManagerConfiguration;
@@ -22,29 +21,23 @@ import gr.iti.mklab.sfc.streams.StreamsManagerConfiguration;
  * @brief  Thread-safe class for managing the storage of items to databases 
  * The storage may be accomplished using multiple consumer-threads.
  * 
- * @author ailiakop
- * @email  ailiakop@iti.gr
+ * @author Manos Schinas 
+ * @email  manosetro@iti.gr
  *
  */
 public class StorageHandler {
 	
 	public final Logger logger = Logger.getLogger(StorageHandler.class);
 	
-	private MultipleStorages store = null;
-	
+	// Internal queue used as a buffer of incoming items 
 	private BlockingQueue<Item> queue = new LinkedBlockingDeque<Item>();
 	
-	private StreamsManagerConfiguration config;
+	private int numberOfConsumers = 16;
+	private List<Consumer> consumers = new ArrayList<Consumer>(numberOfConsumers);
 	
-	private Integer numberOfConsumers = 16;
-	private List<Consumer> consumers;
-	
-	private List<Storage> workingStorages = new ArrayList<Storage>();
-	
-	//private StorageStatusThread statusThread;
+	private List<Storage> storages = new ArrayList<Storage>();
 	
 	private Map<String, Boolean> workingStatus = new HashMap<String, Boolean>();
-	private int items = 0;
 	
 	enum StorageHandlerState {
 		OPEN, CLOSE
@@ -53,17 +46,12 @@ public class StorageHandler {
 	private StorageHandlerState state = StorageHandlerState.CLOSE;
 	
 	public StorageHandler(StreamsManagerConfiguration config) {
-		
-		state = StorageHandlerState.OPEN;
-		this.config = config;
-		
-		consumers = new ArrayList<Consumer>(numberOfConsumers);
-		
 		try {	
-			store = initStorage(config);	
+			state = StorageHandlerState.OPEN;
+			
+			initializeStorageHandler(config);	
 		} catch (StreamException e) {
-			e.printStackTrace();
-			logger.error(e);
+			logger.error("Error during storage handler initialization: " + e.getMessage());
 		}
 		
 		//this.statusThread = new StorageStatusThread(this);	
@@ -71,40 +59,8 @@ public class StorageHandler {
 		
 	}
 	
-	public Map<String, Boolean> getWorkingDataBases() {
-		return workingStatus;
-	}
-	
-	/**
-	 * Updates the status of the working storages (working or not)
-	 * @param storageId
-	 * @param status
-	 */
-	public void updateDataBasesStatus(String storageId, boolean status) {
-		workingStatus.put(storageId, status);
-	}
-	
 	public StorageHandlerState getState() {
 		return state;
-	}
-	
-	public MultipleStorages getStorages() {
-		return store;
-	}
-	
-	/**
-	 * Removes a storage from the working storages list
-	 * @param storage
-	 */
-	public void eliminateStorage(Storage storage) {
-		store.remove(storage);
-	}
-	/**
-	 * Adds a storage to the working storages list
-	 * @param storage
-	 */
-	public void restoreStorage(Storage storage) {
-		store.register(storage);
 	}
 	
 	/**
@@ -112,10 +68,8 @@ public class StorageHandler {
 	 * items to the database.
 	 */
 	public void start() {
-		
 		for(int i=0; i<numberOfConsumers; i++) {
-			Consumer consumer = new Consumer(queue, store);
-			consumer.setName("Consumer_" + i);
+			Consumer consumer = new Consumer(queue, storages);
 			consumers.add(consumer);
 		}
 		
@@ -126,7 +80,6 @@ public class StorageHandler {
 
 	public void update(Item item) {
 		try {
-			items++;
 			queue.add(item);
 		}
 		catch(Exception e) {
@@ -141,8 +94,14 @@ public class StorageHandler {
 	}
 	
 	
-	public void delete(Item item) {
-		//queue.add(item);	
+	public void delete(String id) {
+		for(Storage storage : storages) {
+			try {
+				storage.delete(id);
+			} catch (IOException e) {
+				logger.error(e);
+			}	
+		}
 	}
 	
 	/**
@@ -151,33 +110,25 @@ public class StorageHandler {
 	 * @return
 	 * @throws StreamException
 	 */
-	private MultipleStorages initStorage(StreamsManagerConfiguration config) throws StreamException {
-		MultipleStorages storage = new MultipleStorages();
-		
+	private void initializeStorageHandler(StreamsManagerConfiguration config) throws StreamException {
 		for (String storageId : config.getStorageIds()) {
-			
 			Configuration storageConfig = config.getStorageConfig(storageId);
-			Storage storageInstance;
 			try {
 				String storageClass = storageConfig.getParameter(Configuration.CLASS_PATH);
 				Constructor<?> constructor = Class.forName(storageClass).getConstructor(Configuration.class);
-				storageInstance = (Storage) constructor.newInstance(storageConfig);
-				workingStorages.add(storageInstance);
+				Storage storageInstance = (Storage) constructor.newInstance(storageConfig);
+				storages.add(storageInstance);
+				
+				if(storageInstance.open()) {
+					workingStatus.put(storageId, true);
+				}
+				else {
+					workingStatus.put(storageId, false);	
+				}
 			} catch (Exception e) {
 				throw new StreamException("Error during storage initialization", e);
 			}
-			
-			if(storage.open(storageInstance)) {
-				workingStatus.put(storageId, true);
-				storage.register(storageInstance);
-			}
-			else {
-				workingStatus.put(storageId, false);	
-			}
-			
 		}
-		
-		return storage;
 	}
 	
 	/**
@@ -187,106 +138,10 @@ public class StorageHandler {
 		for(Consumer consumer : consumers) {
 			consumer.die();
 		}
-		store.close();
+		for(Storage storage : storages) {
+			storage.close();
+		}
 		
 		state = StorageHandlerState.CLOSE;
-		//do {
-		//	statusThread.interrupt();
-		//}
-		//while(statusThread.isAlive());
-	}
-	
-	/**
-	 * Re-initializes all databases in case of error response
-	 * @throws StreamException
-	 */
-	public void reset() throws StreamException {
-		System.out.println("Try to connect to server again - Reinitialization.... ");
-		if (this != null) {
-			this.stop();
-		}
-		
-		this.store = initStorage(config);
-		logger.info("Dumper has started - I can store items again!");
-	}
-	/**
-	 * Thread for monitoring the process of storing 
-	 * items to multiple databases. 
-	 * @author ailiakop
-	 *
-	 */
-	public class StorageStatusThread extends Thread {
-		
-		// Runs every one minute by default
-		private long sleepTime = 1 * 60000;
-		
-		private StorageHandler handler;
-		
-		public StorageStatusThread(StorageHandler handler) {
-			this.handler = handler;
-			logger.info("Status Check Thread initialized");
-			
-			this.setName("StorageStatusThread");
-		}
-		
-		public void run() {
-			
-			int p = items;
-			long T0 = System.currentTimeMillis();
-			long T = System.currentTimeMillis();
-			
-			while(handler.getState().equals(StorageHandlerState.OPEN)) {
-				
-				try {
-					Thread.sleep(sleepTime);
-				} catch (InterruptedException e) {
-					if(handler.getState().equals(StorageHandlerState.CLOSE)) {
-						logger.info("StorageStatusAgent interrupted from sleep to stop.");
-						break;
-					}
-					else {
-						logger.error("Exception in StorageStatusAgent. ", e);
-					}
-				}
-				
-				logger.info("Mean Storing Time: " + ((double)store.totalTime / (double)store.totalItems) + " msec / item");
-				
-				for(Storage storage : workingStorages) {
-					String storageId = storage.getStorageName();
-					Boolean status = storage.checkStatus();
-					
-					if(!status && handler.getWorkingDataBases().get(storageId)) {     
-						//was working and now is not responding
-						logger.info(storageId + " was working and now is not responding");
-						handler.updateDataBasesStatus(storageId, status);
-						handler.eliminateStorage(storage);
-					}
-					else if(status && !handler.getWorkingDataBases().get(storageId)) {
-						//was not working and now is working
-						logger.info(storageId + " was not working and now is working");
-						handler.updateDataBasesStatus(storageId, status);
-						handler.restoreStorage(storage);
-					}
-				}
-				
-				// Print handle rates
-				long T1 = System.currentTimeMillis();
-				logger.info("Queue size: " + queue.size());
-				logger.info("Handle rate: " + (items-p)/((T1-T)/60000) + " items/min");
-				logger.info("Mean handle rate: " + (items)/((T1-T0)/60000) + " items/min");
-				
-				T = System.currentTimeMillis();
-				p = items;
-				
-				// This should never happen
-				if(queue.size() > 500) {
-					synchronized(queue) {
-						logger.error("Queue size " + queue.size() + " > 500. Clear queue to prevent heap overflow.");
-						queue.clear();
-					}
-				}
-			}
-		
-		}	
 	}
 }
