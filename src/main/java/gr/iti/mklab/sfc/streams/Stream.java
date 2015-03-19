@@ -1,7 +1,5 @@
 package gr.iti.mklab.sfc.streams;
 
-import java.util.Date;
-
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.Item;
@@ -104,7 +102,7 @@ public abstract class Stream {
 					}
 					
 					// Set new since date 
-					feed.setSinceDate(new Date(sinceDate));
+					feed.setSinceDate(sinceDate);
 				}
 			}
 			catch(Exception e) {

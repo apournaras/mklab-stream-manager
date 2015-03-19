@@ -97,12 +97,6 @@ public class TitanGraphDbStorage implements Storage {
 	}
 
 	@Override
-	public void update(Item update) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public boolean delete(String id) throws IOException {
 		// TODO Auto-generated method stub
 		return false;

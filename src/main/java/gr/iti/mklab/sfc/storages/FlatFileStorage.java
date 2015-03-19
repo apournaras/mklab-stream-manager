@@ -81,18 +81,6 @@ public class FlatFileStorage implements Storage {
 	}
 
 	@Override
-	public void update(Item update) throws IOException {
-		items++;
-		if (out != null) {
-			out.println(update.toString());
-			out.flush();
-		}
-		if(items%1000==0) {
-			open();	
-		}
-	}
-
-	@Override
 	public boolean checkStatus() {
 		return true;
 	}

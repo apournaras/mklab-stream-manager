@@ -32,7 +32,7 @@ public interface Storage {
 	 * 			Stream update to store
 	 * @throws IOException
 	 */
-	public void update(Item update) throws IOException;
+	//public void update(Item update) throws IOException;
 	
 	/**
 	 * Delete a single stream update within store based on its id

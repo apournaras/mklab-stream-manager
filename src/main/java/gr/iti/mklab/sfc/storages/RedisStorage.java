@@ -97,11 +97,6 @@ public class RedisStorage implements Storage {
 	}
 	
 	@Override
-	public void update(Item item) throws IOException {
-		// Not supported.
-	}
-	
-	@Override
 	public boolean delete(String id) throws IOException {
 		// Not supported.
 		return false;

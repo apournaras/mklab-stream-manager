@@ -42,11 +42,6 @@ public class StdoutStorage implements Storage {
 	public boolean checkStatus() {
 		return true;
 	}
-
-	@Override
-	public void update(Item update) throws IOException {
-		System.out.println(update.toString());
-	}
 	
 	@Override
 	public String getStorageName(){

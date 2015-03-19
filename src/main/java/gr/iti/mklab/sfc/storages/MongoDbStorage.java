@@ -42,7 +42,7 @@ public class MongoDbStorage implements Storage {
 	private BasicDAO<StreamUser, String> streamUserDAO = null;
 	private BasicDAO<WebPage, String> webPageDAO = null;
 	
-	private Integer items = 0, mediaItems = 0, wPages = 0, users = 0;
+	private Integer items = 0, wPages = 0, users = 0;
 	private Integer itemInsertions = 0, mediaItemInsertions = 0, wPageInsertions = 0, userInsertions = 0;
 	
 	private HashMap<String, Integer> webpagesSharesMap;
@@ -78,7 +78,6 @@ public class MongoDbStorage implements Storage {
 	public boolean open() {
 		
 		logger.info("Open MongoDB storage <host: " + host + ">");
-		
 		DAOFactory daoFactory = new DAOFactory();
 		if(database != null) {
 			try {
@@ -90,11 +89,9 @@ public class MongoDbStorage implements Storage {
 			} catch (Exception e) {
 				logger.error("MongoDB Storage failed to open!");
 				logger.error(e);
-				e.printStackTrace();
 				return false;
 			}
 		}
-		
 		return true;
 	}
 
@@ -151,68 +148,10 @@ public class MongoDbStorage implements Storage {
 				}
 				
 				// Handle Media Items
-				if(mediaItemDAO != null && item.getMediaItems() != null) {
-					for(MediaItem mediaItem : item.getMediaItems()) {
-						mediaItems++;
-						String mediaItemId = mediaItem.getId();
-					
-						boolean mediaExists = false;
-						synchronized(mediaItemsSharesMap) {
-							mediaExists = mediaItemsSharesMap.containsKey(mediaItemId) || mediaItemDAO.exists(mediaItemDAO.createQuery().filter("id", mediaItemId));
-						}
-					
-						if(!mediaExists) {	
-							// MediaItem does not exist. Save it.
-							mediaItemInsertions++;
-							mediaItemDAO.save(mediaItem);
-							synchronized(mediaItemsSharesMap) {
-								mediaItemsSharesMap.put(mediaItemId, 0);
-							}
-						}
-						else {
-							//Update media item
-							synchronized(mediaItemsSharesMap) {
-								Integer shares = mediaItemsSharesMap.get(mediaItemId);
-								if(shares == null) {
-									shares = 0;
-								}
-								mediaItemsSharesMap.put(mediaItemId, ++shares);
-							}
-						}
-					}
-				}
+				storeMediaItems(item.getMediaItems());
 				
 				// Handle Web Pages
-				List<WebPage> webPages = item.getWebPages();
-				if(webPages != null && webPageDAO != null) {
-					for(WebPage webPage : webPages) {
-						wPages++;
-						String webPageURL = webPage.getUrl();
-						
-						boolean wpExists = false;
-						synchronized(webpagesSharesMap) {
-							wpExists = webpagesSharesMap.containsKey(webPageURL) || webPageDAO.exists(webPageDAO.createQuery().filter("url", webPageURL));
-						}
-						
-						if(!wpExists) {
-							// Web page does not exist. Save it.
-							wPageInsertions++;
-							webPageDAO.save(webPage);
-							synchronized(webpagesSharesMap) {
-								webpagesSharesMap.put(webPageURL, 1);
-							}
-						}
-						else {
-							synchronized(webpagesSharesMap) {
-								Integer shares = webpagesSharesMap.get(webPageURL);
-								if(shares == null) {
-									shares = 0;
-								}
-								webpagesSharesMap.put(webPageURL, ++shares);
-							}
-						}
-					}
-				}
+				storeWebPages(item.getWebPages());
 			}
 			
 			// Handle Stream Users
@@ -223,8 +162,8 @@ public class MongoDbStorage implements Storage {
 				
 				users++;
 				
-				String userId = user.getId();
-				boolean userExists = false;
+				//String userId = user.getId();
+				//boolean userExists = false;
 				//synchronized(usersMap) {
 				//	userExists = usersMap.containsKey(userId);
 				//}
@@ -255,11 +194,71 @@ public class MongoDbStorage implements Storage {
 		}
 	
 	}
+	
+	private void storeMediaItems(List<MediaItem> mediaItems) {
+		if(mediaItemDAO != null && mediaItems != null) {
+			for(MediaItem mediaItem : mediaItems) {
 
-	@Override
-	public void update(Item update) throws IOException {
-		// update item
-		store(update);
+				String mediaItemId = mediaItem.getId();
+			
+				boolean mediaExists = false;
+				synchronized(mediaItemsSharesMap) {
+					mediaExists = mediaItemsSharesMap.containsKey(mediaItemId) || mediaItemDAO.exists(mediaItemDAO.createQuery().filter("id", mediaItemId));
+				}
+			
+				if(!mediaExists) {	
+					// MediaItem does not exist. Save it.
+					mediaItemInsertions++;
+					mediaItemDAO.save(mediaItem);
+					synchronized(mediaItemsSharesMap) {
+						mediaItemsSharesMap.put(mediaItemId, 0);
+					}
+				}
+				else {
+					//Update media item
+					synchronized(mediaItemsSharesMap) {
+						Integer shares = mediaItemsSharesMap.get(mediaItemId);
+						if(shares == null) {
+							shares = 0;
+						}
+						mediaItemsSharesMap.put(mediaItemId, ++shares);
+					}
+				}
+			}
+		}
+	}
+	
+	
+	private void storeWebPages(List<WebPage> webPages ) {
+		if(webPages != null && webPageDAO != null) {
+			for(WebPage webPage : webPages) {
+				wPages++;
+				String webPageURL = webPage.getUrl();
+				
+				boolean wpExists = false;
+				synchronized(webpagesSharesMap) {
+					wpExists = webpagesSharesMap.containsKey(webPageURL) || webPageDAO.exists(webPageDAO.createQuery().filter("url", webPageURL));
+				}
+				
+				if(!wpExists) {
+					// Web page does not exist. Save it.
+					wPageInsertions++;
+					webPageDAO.save(webPage);
+					synchronized(webpagesSharesMap) {
+						webpagesSharesMap.put(webPageURL, 1);
+					}
+				}
+				else {
+					synchronized(webpagesSharesMap) {
+						Integer shares = webpagesSharesMap.get(webPageURL);
+						if(shares == null) {
+							shares = 0;
+						}
+						webpagesSharesMap.put(webPageURL, ++shares);
+					}
+				}
+			}
+		}
 	}
 	
 	@Override

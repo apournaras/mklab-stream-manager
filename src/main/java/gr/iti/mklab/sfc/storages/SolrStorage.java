@@ -120,12 +120,6 @@ public class SolrStorage implements Storage {
 		
 	}
 	
-
-	@Override
-	public void update(Item update) throws IOException {
-		store(update);
-	}
-	
 	@Override
 	public boolean delete(String itemId) throws IOException {
 		logger.info("Delete item with id " + itemId + " from Solr.");

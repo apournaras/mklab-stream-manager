@@ -98,15 +98,8 @@ public class Neo4jStorage implements Storage {
 			}
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public void update(Item update) throws IOException {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
@@ -117,13 +110,12 @@ public class Neo4jStorage implements Storage {
 
 	@Override
 	public boolean checkStatus() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 
 	@Override
 	public void close() {
-//		resource.delete();
+		//resource.delete();
 	}
 
 	@Override

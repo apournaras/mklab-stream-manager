@@ -1,5 +1,7 @@
 package gr.iti.mklab.sfc.streams.impl;
 
+import java.util.Date;
+
 import org.apache.log4j.Logger;
 import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.query.Query;
@@ -75,14 +77,25 @@ public class FacebookStream extends Stream {
 		
 		DAOFactory factory = new DAOFactory();
 		BasicDAO<Feed, String> dao = factory.getDAO("160.40.50.207", "test", Feed.class);
-		Query<Feed> q = dao.createQuery();
+		Query<Feed> q = dao.createQuery().filter("source", "Facebook");
 		Feed feed = dao.findOne(q);
 		
 		System.out.println(feed.toString());
-		Response response = retriever.retrieve(feed, 2);
-		
+		Response response = retriever.retrieve(feed, 1);
+		System.out.println(response.getNumberOfItems());
 		for(Item item : response.getItems()) {
-			System.out.println(item.toString());
+			if(item.getReference() == null) {
+				System.out.println("=================================================");
+				System.out.println(item.getTitle());
+				System.out.println(item.getPublicationTime());
+				System.out.println("Shares: " + item.getShares());
+				System.out.println("Likes: " + item.getLikes());
+			}
+			else {
+				System.out.println("\t *" + item.getTitle().replaceAll("\n", " ") + " (" + item.getLikes() + " )");
+				System.out.println("\t  " + new Date(item.getPublicationTime()) + " " + item.getStreamUser().getName());
+			}
+			
 		}
 	}
 }
