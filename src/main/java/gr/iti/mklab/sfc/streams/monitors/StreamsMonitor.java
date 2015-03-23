@@ -1,5 +1,6 @@
 package gr.iti.mklab.sfc.streams.monitors;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -158,6 +159,7 @@ public class StreamsMonitor implements Runnable {
 				if(!feeds.isEmpty()) {
 					Future<Integer> response = responses.get(streamId);
 					if(response == null || response.isDone()) {
+						logger.info("Submit new task in " + streamId);
 						Future<Integer> futureResponse = executor.submit(task);
 						responses.put(streamId, futureResponse);
 					}

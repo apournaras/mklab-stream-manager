@@ -123,6 +123,7 @@ public class StreamFetchTask implements  Callable<Integer> {
 				
 				int remainingRequests = (maxRequests - requests.get()) / numOfFeeds;
 				if(remainingRequests < 1) {
+					logger.info("Remaining Requests: " + remainingRequests + " for " + stream.getName());
 					return totalItems;
 				}
 				
