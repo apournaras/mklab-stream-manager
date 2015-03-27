@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.query.QueryResults;
 
@@ -19,6 +20,8 @@ import gr.iti.mklab.framework.common.domain.feeds.Feed;
  * @email  manosetro@iti.gr
  */
 public class FeedsCreator {
+	
+	public final Logger logger = Logger.getLogger(FeedsCreator.class);
 	
 	protected static final String SINCE = "since";
 	
@@ -57,14 +60,19 @@ public class FeedsCreator {
 	}
 
 	public Set<Feed> createFeeds() {
-		QueryResults<Feed> result = feedsDao.find();
-		List<Feed> feeds = result.asList();
+		HashSet<Feed> feedsSet = new HashSet<Feed>();
 		
-		return new HashSet<Feed>(feeds);
-	}
-	
-	public static void main(String...args) {
-		
+		try {
+			QueryResults<Feed> result = feedsDao.find();
+			List<Feed> feeds = result.asList();
+			
+			feedsSet.addAll(feeds);
+		}
+		catch(Exception e) {
+			logger.error(e);
+		}
+
+		return feedsSet;
 	}
 	
 }
