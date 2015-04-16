@@ -7,8 +7,8 @@ import org.apache.log4j.Logger;
 
 public class LengthItemFilter extends ItemFilter {
 
-	private int minTextLenth = 15;
-
+	private Integer minTextLenth = 15;
+	
 	public LengthItemFilter(Configuration configuration) {
 		super(configuration);
 		String lenStr =configuration.getParameter("length", "15");

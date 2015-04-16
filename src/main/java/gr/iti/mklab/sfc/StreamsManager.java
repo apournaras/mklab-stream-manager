@@ -83,13 +83,6 @@ public class StreamsManager implements Runnable {
 		logger.info("StreamsManager is open now.");
 		
 		try {
-			//If there are Streams to monitor start the StreamsMonitor
-			if(streams != null && !streams.isEmpty()) {
-				monitor = new StreamsMonitor(streams.size());
-			}
-			else {
-				throw new StreamException("There are no streams to open.");
-			}
 			
 			//Start stream handler 
 			storageHandler = new StorageHandler(config);
@@ -113,16 +106,23 @@ public class StreamsManager implements Runnable {
 			}
 			
 			//Start the Streams
-			for (String streamId : streams.keySet()) {
-				logger.info("Start Stream : " + streamId);
-				Configuration sconfig = config.getStreamConfig(streamId);
-				Stream stream = streams.get(streamId);
-				stream.setHandler(storageHandler);
-				stream.open(sconfig);
-				
-				monitor.addStream(stream);
+			//If there are Streams to monitor start the StreamsMonitor
+			if(streams != null && !streams.isEmpty()) {
+				monitor = new StreamsMonitor(streams.size());
+				for (String streamId : streams.keySet()) {
+					logger.info("Start Stream : " + streamId);
+					Configuration sconfig = config.getStreamConfig(streamId);
+					Stream stream = streams.get(streamId);
+					stream.setHandler(storageHandler);
+					stream.open(sconfig);
+					
+					monitor.addStream(stream);
+				}
+				monitor.start();
 			}
-			monitor.start();
+			else {
+				logger.error("There are no streams to open.");
+			}
 			
 		}
 		catch(Exception e) {
@@ -253,6 +253,7 @@ public class StreamsManager implements Runnable {
 			try {
 				// Check for new feeds every 5 seconds
 				Thread.sleep(5000);
+				
 			} catch (InterruptedException e) {
 				logger.error(e.getMessage());
 			}
@@ -284,7 +285,6 @@ public class StreamsManager implements Runnable {
 			
 			Thread thread = new Thread(manager);
 			thread.start();
-			
 			
 		} catch (ParserConfigurationException e) {
 			logger.error(e.getMessage());

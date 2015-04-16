@@ -1,12 +1,15 @@
 package gr.iti.mklab.sfc.management;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.sfc.filters.ItemFilter;
+import gr.iti.mklab.sfc.processors.Processor;
 import gr.iti.mklab.sfc.storages.Storage;
 
 /**
@@ -15,9 +18,6 @@ import gr.iti.mklab.sfc.storages.Storage;
  * 
  * @author manosetro
  * @email  manosetro@iti.gr
- * 
- * @author ailiakop
- * @email  ailiakop@iti.gr
  *
  */
 public class Consumer extends Thread {
@@ -31,9 +31,15 @@ public class Consumer extends Thread {
 	
 	private BlockingQueue<Item> queue;
 	
-	public Consumer(BlockingQueue<Item> queue, List<Storage> storages) {
+	private Collection<ItemFilter> filters;
+	private Collection<Processor> processors;
+	
+	public Consumer(BlockingQueue<Item> queue, List<Storage> storages, Collection<ItemFilter> filters, Collection<Processor> processors) {
 		this.storages = storages;
 		this.queue = queue;
+		this.filters = filters;
+		this.processors = processors;
+		
 		this.setName("Consumer_" + (id++));
 	}
 	
@@ -75,6 +81,16 @@ public class Consumer extends Thread {
 	 */
 	private void process(Item item) throws IOException {
 		if (storages != null) {
+			for(ItemFilter filter : filters) {
+				if(!filter.accept(item)) {
+					return;
+				}
+			}
+			
+			for(Processor processor : processors) {
+				processor.process(item);	
+			}
+			
 			for(Storage storage : storages) {
 				storage.store(item);
 			}

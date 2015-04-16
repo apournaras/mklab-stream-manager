@@ -2,6 +2,7 @@ package gr.iti.mklab.sfc.subscribers.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -117,12 +118,7 @@ public class TwitterSubscriber extends Subscriber {
 				}
 				else if(AccountFeed.class.isInstance(feed)) {
 					AccountFeed accountFeed = (AccountFeed) feed;	
-					if(accountFeed.getId() == null) {
-						users.add(accountFeed.getUsername());
-					}
-					else {
-						userids.add(Long.parseLong(accountFeed.getId()));
-					}
+					users.add(accountFeed.getUsername());
 				}
 				else if(LocationFeed.class.isInstance(feed)) {
 					double[] location = new double[2];
@@ -427,7 +423,6 @@ public class TwitterSubscriber extends Subscriber {
 					}
 
 					Item item = new TwitterItem(status);
-					
 					if(handler != null) {
 						handler.handle(item);
 					}
@@ -452,4 +447,26 @@ public class TwitterSubscriber extends Subscriber {
 		
 	}
 	
+	public static void main(String...args) throws Exception {
+		
+		Configuration config = new Configuration();
+		
+		config.setParameter(KEY, "UVWoIsZoP16ndCkEI2gOUNCWV");
+		config.setParameter(SECRET, "OckCuM5AynOXH0NsxpqQHNfBTfWPVp5BA20S8Xd8AtMzNy4OO3");
+		config.setParameter(ACCESS_TOKEN, "2547837110-IcVqpQiE764M6FPoYZ9oxwK6QhJGwwaTjX0syZm");
+		config.setParameter(ACCESS_TOKEN_SECRET, "wxQuDS6JODxBsZeIv8pHD4jYcVY3Ypsva6vbT7qjejpGA");
+	
+		Date since = new Date(System.currentTimeMillis() - 24*3600000);
+		KeywordsFeed feed = new KeywordsFeed("1", "left AND wing", since.getTime(), "Twitter");
+		
+		Set<Feed> feeds = new HashSet<Feed>();
+		feeds.add(feed);
+		
+		TwitterSubscriber sub = new TwitterSubscriber();
+		sub.open(config);
+		
+		sub.subscribe(feeds);
+		
+	}
+
 }

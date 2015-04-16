@@ -13,6 +13,8 @@ import org.apache.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.sfc.filters.ItemFilter;
+import gr.iti.mklab.sfc.processors.Processor;
 import gr.iti.mklab.sfc.storages.Storage;
 import gr.iti.mklab.sfc.streams.StreamException;
 import gr.iti.mklab.sfc.streams.StreamsManagerConfiguration;
@@ -37,6 +39,9 @@ public class StorageHandler {
 	
 	private List<Storage> storages = new ArrayList<Storage>();
 	
+	private List<ItemFilter> filters = new ArrayList<ItemFilter>();
+	private List<Processor> processors = new ArrayList<Processor>();
+	
 	private Map<String, Boolean> workingStatus = new HashMap<String, Boolean>();
 	
 	enum StorageHandlerState {
@@ -49,7 +54,14 @@ public class StorageHandler {
 		try {	
 			state = StorageHandlerState.OPEN;
 			
+			createFilters(config);
+			logger.info(filters.size() + " filters initialized!");
+			
+			createProcessors(config);
+			logger.info(processors.size() + " processors initialized!");
+			
 			initializeStorageHandler(config);	
+			
 		} catch (StreamException e) {
 			logger.error("Error during storage handler initialization: " + e.getMessage());
 		}
@@ -69,7 +81,7 @@ public class StorageHandler {
 	 */
 	public void start() {
 		for(int i=0; i<numberOfConsumers; i++) {
-			Consumer consumer = new Consumer(queue, storages);
+			Consumer consumer = new Consumer(queue, storages, filters, processors);
 			consumers.add(consumer);
 		}
 		
@@ -127,6 +139,41 @@ public class StorageHandler {
 				}
 			} catch (Exception e) {
 				throw new StreamException("Error during storage initialization", e);
+			}
+		}
+	}
+	
+	private void createFilters(StreamsManagerConfiguration config) throws StreamException {
+		for (String filterId : config.getFilterIds()) {
+			try {
+				Configuration fconfig = config.getFilterConfig(filterId);
+				String className = fconfig.getParameter(Configuration.CLASS_PATH);
+				Constructor<?> constructor = Class.forName(className).getConstructor(Configuration.class);
+				ItemFilter filterInstance = (ItemFilter) constructor.newInstance(fconfig);
+			
+				filters.add(filterInstance);
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+				logger.error("Error during filter " + filterId + "initialization", e);
+			}
+		}
+	}
+	
+	private void createProcessors(StreamsManagerConfiguration config) throws StreamException {
+		for (String processorId : config.getProcessorsIds()) {
+			try {
+					
+				Configuration pconfig = config.getProcessorConfig(processorId);
+				String className = pconfig.getParameter(Configuration.CLASS_PATH);
+				Constructor<?> constructor = Class.forName(className).getConstructor(Configuration.class);
+				Processor processorInstance = (Processor) constructor.newInstance(pconfig);
+			
+				processors.add(processorInstance);
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+				logger.error("Error during processor " + processorId + " initialization", e);
 			}
 		}
 	}

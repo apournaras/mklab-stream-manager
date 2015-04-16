@@ -1,6 +1,5 @@
 package gr.iti.mklab.sfc.streams.monitors;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
