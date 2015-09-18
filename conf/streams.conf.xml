@@ -2,7 +2,7 @@
 <Configuration>
 	<Inputs>
     	<Input id="feeds">
-       		<Parameter name="host"><![CDATA[160.40.50.207]]></Parameter>
+       		<Parameter name="host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
          	<Parameter name="database"><![CDATA[test]]></Parameter>
       	</Input>
    	</Inputs>
@@ -11,14 +11,14 @@
     	<!-- Mongodb storage configuration  -->
       	<Storage id="Mongodb">
         	<Parameter name="Classpath"><![CDATA[gr.iti.mklab.sfc.storages.MongoDbStorage]]></Parameter>
-         	<Parameter name="mongodb.host"><![CDATA[160.40.50.207]]></Parameter>
+         	<Parameter name="mongodb.host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
          	<Parameter name="mongodb.database"><![CDATA[test]]></Parameter>
       	</Storage>
       	
       	<!-- Redis storage configuaration 
        	<Storage id="Redis">
        		<Parameter name="Classpath"><![CDATA[gr.iti.mklab.sfc.storages.RedisStorage]]></Parameter>
-       		<Parameter name="redis.host"><![CDATA[160.40.50.207]]></Parameter>
+       		<Parameter name="redis.host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
         	<Parameter name="redis.webpages.channel"><![CDATA[PressRelationsWebPages]]></Parameter>
          	<Parameter name="redis.media.channel"><![CDATA[PressRelationsMediaItems]]></Parameter>
     	</Storage> 
@@ -30,7 +30,7 @@
      	</Storage> 
       	-->
             
-      	<!-- Solr storage configuaration 
+      	<!-- Solr storage configuaration
       	<Storage id="Solr">
           	<Parameter name="Classpath"><![CDATA[gr.iti.mklab.sfc.storages.SolrStorage]]></Parameter>
           	<Parameter name="solr.hostname"><![CDATA[http://localhost:8983/]]></Parameter>
@@ -40,35 +40,26 @@
         	<Parameter name="solr.webpages.collection"><![CDATA[WebPages]]></Parameter>
        		<Parameter name="solr.onlyOriginal"><![CDATA[true]]></Parameter>
    		</Storage>
-     	-->
+ 		-->
   	</Storages>
    
  	<Filters>
-    	<!-- Filter that discards Items with short text 
+    	<!-- Filter that discards Items with short text -->
     	<Filter id="LengthFilter">
-       		<Parameter name="Classpath"><![CDATA[gr.iti.mklab.sfc.streams.filters.LengthItemFilter]]></Parameter>
-         	<Parameter name="length"><![CDATA[15]]></Parameter>
+       		<Parameter name="Classpath"><![CDATA[gr.iti.mklab.sfc.filters.LengthItemFilter]]></Parameter>
+         	<Parameter name="length"><![CDATA[10]]></Parameter>
       	</Filter>
-      	-->
    	</Filters>
    	
    	<Processors>
-   		<!--  
-    	<Processor id="GeoProcessor">
+    	<Processor id="NamedEntitiesDetector">
          	<Parameter name="Classpath">
-           		<![CDATA[gr.iti.mklab.sfc.streams.processors.GeoProcessor]]>
+           		<![CDATA[gr.iti.mklab.sfc.processors.NamedEntitiesDetector]]>
           	</Parameter>
-          	<Parameter name="gnObjectsFile">
-           		<![CDATA[/home/manosetro/Desktop/geoprocessor/cities1000_mod.txt]]>
-          	</Parameter>
-         	<Parameter name="gnCountryInfoFile">
-             	<![CDATA[/home/manosetro/Desktop/geoprocessor/countryInfo.txt]]>
-         	</Parameter>
-         	<Parameter name="gnAdminNames">
-            	<![CDATA[/home/manosetro/Desktop/geoprocessor/admin1CodesASCII_mod.txt]]>
-         	</Parameter>     
+          	<Parameter name="serializedClassifier">
+           		<![CDATA[english.all.3class.distsim.crf.ser.gz]]>
+          	</Parameter>   
      	</Processor>
-     	-->
      	<!--  
      	<Processor id="LanguageDetector">
         	<Parameter name="Classpath">
@@ -87,13 +78,14 @@
 			<Parameter name="Classpath">
 				<![CDATA[gr.iti.mklab.sfc.subscribers.impl.TwitterSubscriber]]>
 			</Parameter>
-            <Parameter name="Key"><![CDATA[UVWoIsZoP16ndCkEI2gOUNCWV]]></Parameter>
-	        <Parameter name="Secret"><![CDATA[OckCuM5AynOXH0NsxpqQHNfBTfWPVp5BA20S8Xd8AtMzNy4OO3]]></Parameter>
-        	<Parameter name="AccessToken"><![CDATA[2547837110-IcVqpQiE764M6FPoYZ9oxwK6QhJGwwaTjX0syZm]]></Parameter>
-        	<Parameter name="AccessTokenSecret"><![CDATA[wxQuDS6JODxBsZeIv8pHD4jYcVY3Ypsva6vbT7qjejpGA]]></Parameter>
+            <Parameter name="Key"><![CDATA[]]></Parameter>
+	        <Parameter name="Secret"><![CDATA[]]></Parameter>
+        	<Parameter name="AccessToken"><![CDATA[]]></Parameter>
+        	<Parameter name="AccessTokenSecret"><![CDATA[]]></Parameter>
 	      	<Parameter name="AccessLevel"><![CDATA[public]]></Parameter>
 		</Subscriber>
 		-->
+
 	</Subscribers>
    	
 	<Streams>
@@ -102,20 +94,20 @@
        		<Parameter name="Classpath">
            		<![CDATA[gr.iti.mklab.sfc.streams.impl.TwitterStream]]>
 			</Parameter>
-         	<Parameter name="Key"><![CDATA[gP54AYABpp0Bp95N4DuEMQ]]></Parameter>
-         	<Parameter name="Secret"><![CDATA[S5otYAVwCqp6o8uDd5kjHiM9k3dicSfcNXjHnGPX4A]]></Parameter>
-         	<Parameter name="AccessToken"><![CDATA[204974667-KFelb0g7mdYybIqixNE623rwqAYfP2f5V4ZFNxfN]]></Parameter>
-         	<Parameter name="AccessTokenSecret"><![CDATA[ry9z4PpgRMiWb2AKjDCpvJBukxItUtZTctO4YEvzzY]]></Parameter>
-         	<Parameter name="maxRequests"><![CDATA[180]]></Parameter>	<!-- Max number of requests per time window -->
-         	<Parameter name="timeWindow"><![CDATA[15]]></Parameter>		<!-- Time window in minutes -->		
+         	<Parameter name="Key"><![CDATA[]]></Parameter>
+         	<Parameter name="Secret"><![CDATA[]]></Parameter>
+         	<Parameter name="AccessToken"><![CDATA[]]></Parameter>
+         	<Parameter name="AccessTokenSecret"><![CDATA[]]></Parameter>
+         	<Parameter name="maxRequests"><![CDATA[180]]></Parameter>
+         	<Parameter name="timeWindow"><![CDATA[15]]></Parameter>				
   		</Stream>
-      
+      	
 		<!--  Facebook Stream Handler 
   		<Stream id="Facebook">
       		<Parameter name="Classpath">
       			<![CDATA[gr.iti.mklab.sfc.streams.impl.FacebookStream]]>
       		</Parameter>
-          	<Parameter name="AccessToken"><![CDATA[260504214011769|964663756aa84795ad1b37c2c3d86bf9]]></Parameter>
+          	<Parameter name="AccessToken"><![CDATA[]]></Parameter>
            	<Parameter name="maxRequests"><![CDATA[100]]></Parameter>
          	<Parameter name="timeWindow"><![CDATA[10]]></Parameter>		
         </Stream>        
@@ -181,6 +173,15 @@
           	<Parameter name="AccessToken"><![CDATA[]]></Parameter>
             <Parameter name="maxRequests"><![CDATA[150]]></Parameter>
         	<Parameter name="timeWindow"><![CDATA[15]]></Parameter>	        
+  		</Stream> 
+      	-->
+      	
+      	<!-- RSS Stream Handler 
+      	<Stream id="RSS">
+          	<Parameter name="Classpath">
+            	<![CDATA[gr.iti.mklab.sfc.streams.impl.RssStream]]>
+            </Parameter>
+        	<Parameter name="timeWindow"><![CDATA[30]]></Parameter>	        
   		</Stream> 
       	-->
       	
