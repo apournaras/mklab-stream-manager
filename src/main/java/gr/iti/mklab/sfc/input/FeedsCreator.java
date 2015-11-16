@@ -27,18 +27,24 @@ public class FeedsCreator {
 	
 	protected static final String HOST = "host";
 	protected static final String DB = "database";
+	protected static final String USERNAME = "username";
+	protected static final String PWD = "password";
 	
 	private String host = null;
 	private String db = null;
+	private String username = null;
+	private String password = null;
 	
 	private BasicDAO<Feed, String> feedsDao;
 	
 	public FeedsCreator(Configuration config) throws Exception {
 		this.host = config.getParameter(HOST);
 		this.db = config.getParameter(DB);
+		this.username = config.getParameter(USERNAME);
+		this.password = config.getParameter(PWD);
 		
 		DAOFactory daoFactory = new DAOFactory();
-		feedsDao = daoFactory.getDAO(host, db, Feed.class);
+		feedsDao = daoFactory.getDAO(host, db, Feed.class, username, password);
 	}
 	
 	public Map<String, Set<Feed>> createFeedsPerSource() {
@@ -60,8 +66,7 @@ public class FeedsCreator {
 	}
 
 	public Set<Feed> createFeeds() {
-		HashSet<Feed> feedsSet = new HashSet<Feed>();
-		
+		Set<Feed> feedsSet = new HashSet<Feed>();
 		try {
 			QueryResults<Feed> result = feedsDao.find();
 			List<Feed> feeds = result.asList();

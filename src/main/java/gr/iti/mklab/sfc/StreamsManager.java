@@ -192,7 +192,7 @@ public class StreamsManager implements Runnable {
 				Subscriber subscriber = (Subscriber) Class.forName(sconfig.getParameter(Configuration.CLASS_PATH)).newInstance();
 				subscribers.put(subscriberId, subscriber);
 			}
-		}
+		} 
 		catch(Exception e) {
 			e.printStackTrace();
 			throw new StreamException("Error during Subscribers initialization", e);
@@ -253,7 +253,6 @@ public class StreamsManager implements Runnable {
 			try {
 				// Check for new feeds every 5 seconds
 				Thread.sleep(5000);
-				
 			} catch (InterruptedException e) {
 				logger.error(e.getMessage());
 			}
@@ -277,7 +276,6 @@ public class StreamsManager implements Runnable {
 		try {
 			StreamsManagerConfiguration config = StreamsManagerConfiguration.readFromFile(streamConfigFile);		
 	        
-			
 			manager = new StreamsManager(config);
 			manager.open();
 			

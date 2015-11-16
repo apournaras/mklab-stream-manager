@@ -30,6 +30,9 @@ public class MongoDbStorage implements Storage {
 	private static String HOST = "mongodb.host";
 	private static String DB = "mongodb.database";
 	
+	private static String USERNAME = "mongodb.username";
+	private static String PWD = "mongodb.password";
+	
 	private Logger logger = Logger.getLogger(MongoDbStorage.class);
 	
 	private String storageName = "Mongodb";
@@ -50,10 +53,16 @@ public class MongoDbStorage implements Storage {
 	private HashMap<String, Item> itemsMap;
 	private HashMap<String, StreamUser> usersMap;
 	
+	private String username;
+	private String password;
+	
 	public MongoDbStorage(Configuration config) {	
 		this.host = config.getParameter(MongoDbStorage.HOST);
 		this.database = config.getParameter(MongoDbStorage.DB);
 	
+		this.username = config.getParameter(MongoDbStorage.USERNAME);
+		this.password = config.getParameter(MongoDbStorage.PWD);
+		
 		this.itemsMap = new HashMap<String, Item>();
 		this.usersMap = new HashMap<String, StreamUser>();
 		this.webpagesSharesMap = new HashMap<String, Integer>();
@@ -81,10 +90,10 @@ public class MongoDbStorage implements Storage {
 		DAOFactory daoFactory = new DAOFactory();
 		if(database != null) {
 			try {
-				itemDAO = daoFactory.getDAO(host, database, Item.class);
-				mediaItemDAO = daoFactory.getDAO(host, database, MediaItem.class);
-				streamUserDAO = daoFactory.getDAO(host, database, StreamUser.class);
-				webPageDAO = daoFactory.getDAO(host, database, WebPage.class);
+				itemDAO = daoFactory.getDAO(host, database, Item.class, username, password);
+				mediaItemDAO = daoFactory.getDAO(host, database, MediaItem.class, username, password);
+				streamUserDAO = daoFactory.getDAO(host, database, StreamUser.class, username, password);
+				webPageDAO = daoFactory.getDAO(host, database, WebPage.class, username, password);
 				
 			} catch (Exception e) {
 				logger.error("MongoDB Storage failed to open!");
