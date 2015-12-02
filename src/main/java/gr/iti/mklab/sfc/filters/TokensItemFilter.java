@@ -8,7 +8,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -22,7 +22,7 @@ public class TokensItemFilter  extends ItemFilter {
 		String lenStr =configuration.getParameter("maxTokens", "6");
 		this.maxTokens  = Integer.parseInt(lenStr);
 		
-		Logger.getLogger(TokensItemFilter.class).info("Initialized. Max Number of Tokemns: " + maxTokens);
+		LogManager.getLogger(TokensItemFilter.class).info("Initialized. Max Number of Tokemns: " + maxTokens);
 	}
 
 	@Override

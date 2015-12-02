@@ -1,6 +1,8 @@
 package gr.iti.mklab.sfc.streams.monitors;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 /**
  * @author manosetro
@@ -14,7 +16,7 @@ public class RateLimitsMonitor {
 	private int maxRequests;
 	private long minInterval;
 	
-	private Logger logger = Logger.getLogger(RateLimitsMonitor.class);
+	private Logger logger = LogManager.getLogger(RateLimitsMonitor.class);
 	
 	public RateLimitsMonitor(int maxRequests, long minInterval) {
 		this.maxRequests = maxRequests;

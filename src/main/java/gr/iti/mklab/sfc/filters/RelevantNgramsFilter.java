@@ -18,7 +18,7 @@ public class RelevantNgramsFilter  extends ItemFilter {
 	public RelevantNgramsFilter(Configuration configuration) {
 		super(configuration);
 		
-		String filename = configuration.getParameter("RelevantTermsFilename", "6");
+		String filename = configuration.getParameter("RelevantTermsFilename");
 		try {
 			Iterable<String> lines = IOUtils.readLines(new FileInputStream(filename));
 			for(String line : lines) {

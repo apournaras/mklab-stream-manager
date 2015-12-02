@@ -9,7 +9,8 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
@@ -27,9 +28,9 @@ import gr.iti.mklab.sfc.streams.StreamsManagerConfiguration;
  * @email  manosetro@iti.gr
  *
  */
-public class StorageHandler {
+public class StorageHandler implements Runnable {
 	
-	public final Logger logger = Logger.getLogger(StorageHandler.class);
+	public final Logger logger = LogManager.getLogger(StorageHandler.class);
 	
 	// Internal queue used as a buffer of incoming items 
 	private BlockingQueue<Item> queue = new LinkedBlockingDeque<Item>();
@@ -49,6 +50,8 @@ public class StorageHandler {
 	}
 	
 	private StorageHandlerState state = StorageHandlerState.CLOSE;
+
+	private Thread statusThread;
 	
 	public StorageHandler(StreamsManagerConfiguration config) {
 		try {	
@@ -62,13 +65,11 @@ public class StorageHandler {
 			
 			initializeStorageHandler(config);	
 			
+			statusThread = new Thread(this);	
+			
 		} catch (StreamException e) {
 			logger.error("Error during storage handler initialization: " + e.getMessage());
 		}
-		
-		//this.statusThread = new StorageStatusThread(this);	
-		//this.statusThread.start();
-		
 	}
 	
 	public StorageHandlerState getState() {
@@ -80,7 +81,7 @@ public class StorageHandler {
 	 * items to the database.
 	 */
 	public void start() {
-		for(int i=0; i<numberOfConsumers; i++) {
+		for(int i = 0; i < numberOfConsumers; i++) {
 			Consumer consumer = new Consumer(queue, storages, filters, processors);
 			consumers.add(consumer);
 		}
@@ -88,6 +89,9 @@ public class StorageHandler {
 		for(Consumer consumer : consumers) {
 			consumer.start();
 		}
+		logger.info(consumers.size() + " consumers initialized.");
+		
+		statusThread.start();
 	}
 
 	public void handle(Item item) {
@@ -126,19 +130,26 @@ public class StorageHandler {
 		for (String storageId : config.getStorageIds()) {
 			Configuration storageConfig = config.getStorageConfig(storageId);
 			try {
+				logger.info("Initialize " + storageId);
 				String storageClass = storageConfig.getParameter(Configuration.CLASS_PATH);
 				Constructor<?> constructor = Class.forName(storageClass).getConstructor(Configuration.class);
 				Storage storageInstance = (Storage) constructor.newInstance(storageConfig);
+				
 				storages.add(storageInstance);
 				
 				if(storageInstance.open()) {
+					logger.info("Storage " + storageId + " is working.");
 					workingStatus.put(storageId, true);
 				}
 				else {
+					logger.error("Storage " + storageId + " is not working.");
 					workingStatus.put(storageId, false);	
 				}
+				
 			} catch (Exception e) {
-				throw new StreamException("Error during storage initialization", e);
+				StreamException ex = new StreamException("Error during storage initialization", e);
+				logger.error(ex);
+				throw ex;
 			}
 		}
 	}
@@ -146,6 +157,7 @@ public class StorageHandler {
 	private void createFilters(StreamsManagerConfiguration config) throws StreamException {
 		for (String filterId : config.getFilterIds()) {
 			try {
+				logger.info("Initialize filter " + filterId);
 				Configuration fconfig = config.getFilterConfig(filterId);
 				String className = fconfig.getParameter(Configuration.CLASS_PATH);
 				Constructor<?> constructor = Class.forName(className).getConstructor(Configuration.class);
@@ -154,7 +166,6 @@ public class StorageHandler {
 				filters.add(filterInstance);
 			}
 			catch(Exception e) {
-				e.printStackTrace();
 				logger.error("Error during filter " + filterId + "initialization", e);
 			}
 		}
@@ -185,10 +196,41 @@ public class StorageHandler {
 		for(Consumer consumer : consumers) {
 			consumer.die();
 		}
+		
 		for(Storage storage : storages) {
 			storage.close();
 		}
 		
 		state = StorageHandlerState.CLOSE;
+		try {
+			statusThread.interrupt();
+		}
+		catch(Exception e) {
+			logger.error(e.getMessage());
+		}
+	}
+
+	@Override
+	public void run() {
+		while(state.equals(StorageHandlerState.OPEN)) {
+			for(Storage storage : storages) {
+				try {
+					boolean status = storage.checkStatus();
+					workingStatus.put(storage.getStorageName(), status);
+					logger.info(storage.getStorageName() + " working status: " + status);
+				}
+				catch(Exception e) {
+					logger.error("Exception during checking of " + storage.getStorageName(), e);
+				}
+			}
+			try {
+				Thread.sleep(300000);
+			} catch (InterruptedException e) {
+				logger.info("Thread interrupted.");
+			}
+			
+		}
+		
+		
 	}
 }

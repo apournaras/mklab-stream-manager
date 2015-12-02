@@ -6,7 +6,9 @@ import gr.iti.mklab.framework.common.domain.config.Configuration;
 import java.io.IOException;
 
 import org.apache.commons.lang3.SerializationUtils;
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -15,7 +17,7 @@ import com.rabbitmq.client.MessageProperties;
 
 public class RabbitMQStorage implements Storage {
 
-	private Logger  logger = Logger.getLogger(RabbitMQStorage.class);
+	private Logger logger = LogManager.getLogger(RabbitMQStorage.class);
 	
 	private static String HOSTNAME = "rabbitmq.hostname";
 	private static String ITEMS_QUEUE = "rabbitmq.items.queue";

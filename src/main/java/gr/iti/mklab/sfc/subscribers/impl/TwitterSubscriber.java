@@ -11,7 +11,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import twitter4j.FilterQuery;
 import twitter4j.ResponseList;
@@ -46,7 +47,7 @@ import gr.iti.mklab.sfc.subscribers.Subscriber;
  */
 public class TwitterSubscriber extends Subscriber {
 	
-	private Logger  logger = Logger.getLogger(TwitterSubscriber.class);
+	private Logger  logger = LogManager.getLogger(TwitterSubscriber.class);
 	
 	private BlockingQueue<Status> queue = new LinkedBlockingQueue<Status>();
 	
@@ -262,8 +263,8 @@ public class TwitterSubscriber extends Subscriber {
 						deletion++;
 						String id = "Twitter#" + statusDeletionNotice.getStatusId();
 						
-						if(handler != null) {
-							handler.delete(id);
+						if(storageHandler != null) {
+							storageHandler.delete(id);
 						}
 					}
 					catch(Exception e) {
@@ -423,8 +424,8 @@ public class TwitterSubscriber extends Subscriber {
 					}
 
 					Item item = new TwitterItem(status);
-					if(handler != null) {
-						handler.handle(item);
+					if(storageHandler != null) {
+						storageHandler.handle(item);
 					}
 				} catch (Exception e) {
 					logger.error("Error during stream consumption.", e);

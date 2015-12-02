@@ -3,7 +3,7 @@ package gr.iti.mklab.sfc.filters;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class LengthItemFilter extends ItemFilter {
 
@@ -14,7 +14,7 @@ public class LengthItemFilter extends ItemFilter {
 		String lenStr =configuration.getParameter("length", "15");
 		this.minTextLenth  = Integer.parseInt(lenStr);
 		
-		Logger.getLogger(LengthItemFilter.class).info("Initialized. Min Text Lenth: " + minTextLenth);
+		LogManager.getLogger(LengthItemFilter.class).info("Initialized. Min Text Lenth: " + minTextLenth);
 	}
 	
 	@Override

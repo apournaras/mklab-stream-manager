@@ -2,7 +2,8 @@ package gr.iti.mklab.sfc.streams.impl;
 
 import java.util.Date;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.query.Query;
 
@@ -30,7 +31,7 @@ public class FacebookStream extends Stream {
 	
 	public static Source SOURCE = Source.Facebook;
 
-	private Logger  logger = Logger.getLogger(FacebookStream.class);	
+	private Logger  logger = LogManager.getLogger(FacebookStream.class);	
 	
 	@Override
 	public synchronized void open(Configuration config) throws StreamException {

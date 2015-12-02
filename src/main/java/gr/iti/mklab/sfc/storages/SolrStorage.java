@@ -2,8 +2,10 @@ package gr.iti.mklab.sfc.storages;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import gr.iti.mklab.framework.client.search.solr.SolrItemHandler;
 import gr.iti.mklab.framework.client.search.solr.SolrMediaItemHandler;
@@ -25,7 +27,7 @@ import gr.iti.mklab.framework.common.domain.WebPage;
  */
 public class SolrStorage implements Storage {
 
-	private Logger  logger = Logger.getLogger(SolrStorage.class);
+	private Logger  logger = LogManager.getLogger(SolrStorage.class);
 	
 	private static final String HOSTNAME = "solr.hostname";
 	private static final String SERVICE = "solr.service";
@@ -46,9 +48,11 @@ public class SolrStorage implements Storage {
 	
 	private SolrItemHandler solrItemHandler = null; 
 	private SolrMediaItemHandler solrMediaHandler = null;
-	private SolrWebPageHandler solrWebpageHandler = null;
+	private SolrWebPageHandler solrWebPageHandler = null;
 	
 	private Boolean onlyOriginal = true;
+	
+	private AtomicLong indexedItems = new AtomicLong(0l);
 	
 	public SolrStorage(Configuration config) throws IOException {
 		this.hostname = config.getParameter(SolrStorage.HOSTNAME);
@@ -57,38 +61,34 @@ public class SolrStorage implements Storage {
 		this.mediaItemsCollection = config.getParameter(SolrStorage.MEDIAITEMS_COLLECTION);
 		this.webPagesCollection = config.getParameter(SolrStorage.WEBPAGES_COLLECTION);
 	
-		this.onlyOriginal = Boolean.valueOf(config.getParameter(SolrStorage.ONLY_ORIGINAL, "true"));
+		this.onlyOriginal = Boolean.valueOf(config.getParameter(SolrStorage.ONLY_ORIGINAL));
 	}
 	
 	@Override
-	public boolean open(){
-		
+	public boolean open() {
 		try {
-			
 			if(itemsCollection != null) {
-				solrItemHandler = SolrItemHandler.getInstance(hostname+"/"+service+"/"+itemsCollection);
+				solrItemHandler = SolrItemHandler.getInstance(hostname + "/" + service + "/" + itemsCollection);
 			}
 			
 			if(mediaItemsCollection != null) {	
-				solrMediaHandler = SolrMediaItemHandler.getInstance(hostname+"/"+service+"/"+mediaItemsCollection);
+				solrMediaHandler = SolrMediaItemHandler.getInstance(hostname + "/" + service+"/" + mediaItemsCollection);
 			}
 			
 			if(webPagesCollection != null) {	
-				solrWebpageHandler = SolrWebPageHandler.getInstance(hostname+"/"+service+"/"+webPagesCollection);
+				solrWebPageHandler = SolrWebPageHandler.getInstance(hostname + "/" + service + "/" + webPagesCollection);
 			}
 			
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error(e);
 			return false;
 		}
-		return true;
-		
+		return true;	
 	}
 
 	@Override
 	public void store(Item item) throws IOException {
-		
+
 		// Index only original Items and MediaItems come from original Items
 		if(!item.isOriginal() && onlyOriginal) {
 			return;
@@ -96,25 +96,26 @@ public class SolrStorage implements Storage {
 		
 		if(solrItemHandler != null) {
 			ItemBean itemBean = new ItemBean(item);
-			solrItemHandler.insert(itemBean);
+			boolean status = solrItemHandler.insert(itemBean);
+			if(status) {
+				indexedItems.incrementAndGet();
+			}
 		}
 		
 		if(solrMediaHandler != null) {
-			
 			for(MediaItem mediaItem : item.getMediaItems()) {
 				MediaItemBean mediaItemBean = new MediaItemBean(mediaItem);
 				solrMediaHandler.insert(mediaItemBean);
 			}
 		}
 		
-		if(solrWebpageHandler != null) {
+		if(solrWebPageHandler != null) {
 			List<WebPage> webPages = item.getWebPages();
 			if(webPages != null) {
 				for(WebPage webPage : webPages) {
 					WebPageBean webpageBean = new WebPageBean(webPage);
-					solrWebpageHandler.insert(webpageBean);
+					solrWebPageHandler.insert(webpageBean);
 				}
-				
 			}
 		}
 		
@@ -129,8 +130,11 @@ public class SolrStorage implements Storage {
 	
 	@Override
 	public boolean checkStatus() {
+		logger.info(indexedItems.get() + " indexed items.");
 		if(itemsCollection != null) {
 			try {
+				solrItemHandler.count("*:*");
+				solrItemHandler.commit();
 				return true;
 			} 
 			catch (Exception e) {
@@ -141,6 +145,8 @@ public class SolrStorage implements Storage {
 		
 		if(mediaItemsCollection != null) {
 			try {
+				solrMediaHandler.count("*:*");
+				solrMediaHandler.commit();
 				return true;
 			} 
 			catch (Exception e) {
@@ -149,13 +155,28 @@ public class SolrStorage implements Storage {
 			}
 		}
 
+		if(webPagesCollection != null) {
+			try {
+				solrWebPageHandler.count("*:*");
+				solrMediaHandler.commit();
+				return true;
+			} 
+			catch (Exception e) {
+				logger.error(e);
+				return false;
+			}
+		}
 		return false;
 	}
 	
 
 	@Override
 	public void close() {
-
+		try {
+			solrMediaHandler.close();
+		} catch (IOException e) {
+			logger.error(e);
+		}
 	}
 	
 	@Override

@@ -9,12 +9,13 @@ import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xml.sax.SAXException;
 
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
-import gr.iti.mklab.sfc.input.FeedsCreator;
+import gr.iti.mklab.sfc.input.CollectionsManager;
 import gr.iti.mklab.sfc.management.StorageHandler;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamException;
@@ -31,7 +32,7 @@ import gr.iti.mklab.sfc.streams.monitors.StreamsMonitor;
  */
 public class FeedsManager implements Runnable {
 	
-	public final Logger logger = Logger.getLogger(FeedsManager.class);
+	public final Logger logger = LogManager.getLogger(FeedsManager.class);
 	
 	enum ManagerState {
 		OPEN, CLOSE
@@ -46,7 +47,7 @@ public class FeedsManager implements Runnable {
 	
 	private ManagerState state = ManagerState.CLOSE;
 
-	private FeedsCreator feedsCreator;
+	private CollectionsManager feedsCreator;
 	private Set<Feed> feeds = new HashSet<Feed>();
 
 	public FeedsManager(StreamsManagerConfiguration config) throws StreamException {
@@ -91,7 +92,7 @@ public class FeedsManager implements Runnable {
 			storageHandler.start();	
 			logger.info("Storage Manager is ready to store.");
 			
-			feedsCreator = new FeedsCreator(config.getInputConfig());
+			feedsCreator = new CollectionsManager(config.getInputConfig());
 			
 			//Start the Streams
 			for (String streamId : streams.keySet()) {
@@ -227,7 +228,7 @@ public class FeedsManager implements Runnable {
 	
 	public static void main(String[] args) {
 		
-		Logger logger = Logger.getLogger(FeedsManager.class);
+		Logger logger = LogManager.getLogger(FeedsManager.class);
 		
 		File streamConfigFile;
 		if(args.length != 1 ) {

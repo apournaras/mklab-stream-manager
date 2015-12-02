@@ -2,7 +2,8 @@ package gr.iti.mklab.sfc.storages;
 
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -27,8 +28,9 @@ public class RedisStorage implements Storage {
 	private static String MEDIA_CHANNEL = "redis.media.channel";
 	private static String ITEMS_CHANNEL = "redis.items.channel";
 	
-	private Logger  logger = Logger.getLogger(RedisStorage.class);
+	private Logger  logger = LogManager.getLogger(RedisStorage.class);
 	
+	private JedisPool jedisPool;
 	private Jedis jedis;
 	private String host;
 	
@@ -51,8 +53,7 @@ public class RedisStorage implements Storage {
 	public boolean open() {
 		try {
 			JedisPoolConfig poolConfig = new JedisPoolConfig();
-			JedisPool jedisPool = new JedisPool(poolConfig, host, 6379, 0);
-		
+			this.jedisPool = new JedisPool(poolConfig, host, 6379, 0);
 			this.jedis = jedisPool.getResource();
 			return true;
 		}
@@ -106,6 +107,7 @@ public class RedisStorage implements Storage {
 	@Override
 	public void close() {
 		jedis.disconnect();
+		jedisPool.close();
 	}
 	
 	@Override
@@ -143,10 +145,7 @@ public class RedisStorage implements Storage {
 			}
 		}
 		try {
-			synchronized(jedis) {
-				JedisPoolConfig poolConfig = new JedisPoolConfig();
-        		JedisPool jedisPool = new JedisPool(poolConfig, host, 6379, 0);
-        	
+			synchronized(jedis) {        	
         		this.jedis = jedisPool.getResource();
         		jedis.info();
         		return jedis.isConnected();

@@ -1,6 +1,9 @@
 package gr.iti.mklab.sfc.streams;
 
-import org.apache.log4j.Logger;
+import java.util.Date;
+
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
@@ -37,11 +40,11 @@ public abstract class Stream {
 	
 	//protected BlockingQueue<Feed> feedsQueue;
 	protected Retriever retriever = null;
-	protected StorageHandler handler = null;
+	protected StorageHandler storageHandler = null;
 	
 	protected RateLimitsMonitor rateLimitsMonitor;
 	
-	private Logger  logger = Logger.getLogger(Stream.class);
+	private Logger  logger = LogManager.getLogger(Stream.class);
 	
 	/**
 	 * Opens a stream for updates delivery
@@ -72,7 +75,7 @@ public abstract class Stream {
 	 * @param handler
 	 */
 	public void setHandler(StorageHandler handler) {
-		this.handler = handler;
+		this.storageHandler = handler;
 	}
 	
 	/**
@@ -85,37 +88,39 @@ public abstract class Stream {
 		Response response = new Response(); 
 		if(retriever != null) {
 			if(feed == null) {
-				logger.error("Feeds is null in poll method.");
+				logger.error("Feed is null in poll method.");
 				return response;
 			}
 		
 			try {
 				response = retriever.retrieve(feed, requests);
-
-				if(handler != null) {
-					long sinceDate = 0l;
+				if(storageHandler != null) {
 					for(Item item : response.getItems()) {
-						if(sinceDate < item.getPublicationTime()) {
-							sinceDate = item.getPublicationTime();
-						}
-						handler.handle(item);
+						storageHandler.handle(item);
 					}
-					
-					// Set new since date 
-					feed.setSinceDate(sinceDate);
+				}
+				
+				if(response.getNumberOfItems() == 0) {
+					logger.info("No items retrieved for (" + feed.getId() + ").");
+					return response;
+				}
+				
+				logger.info(response.getRequests() + " requests used out of " + requests + " for (" + feed.getId() + ")");
+				logger.info(response.getNumberOfItems() + " retrieved items for (" + feed.getId() + ") since " + new Date(feed.getSinceDate())); 
+				
+				// Set new since date 
+				if(feed.getSinceDate() < response.getLastTimestamp()) {
+					feed.setSinceDate(response.getLastTimestamp());
+					logger.info("New since date for (" + feed.getId() + "):  " +  new Date(feed.getSinceDate())); 
 				}
 			}
 			catch(Exception e) {
-				logger.error("Exception for feed " + feed.getId() + " of type " + feed.getClass());
-				logger.error(e.getMessage());
+				logger.error("Exception for feed " + feed.getId() + " of type " + feed.getClass(), e);
 			}
-			
-			logger.info("Retrieved items for " + getName() + " are : " + response.getNumberOfItems());
 		}
 		else {
 			throw new StreamException("Retriever is null for " + getName());
 		}
-		
 		return response;
 	}
 	

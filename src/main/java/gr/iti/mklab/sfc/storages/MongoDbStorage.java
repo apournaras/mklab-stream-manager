@@ -4,7 +4,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.query.Query;
 
@@ -33,7 +34,7 @@ public class MongoDbStorage implements Storage {
 	private static String USERNAME = "mongodb.username";
 	private static String PWD = "mongodb.password";
 	
-	private Logger logger = Logger.getLogger(MongoDbStorage.class);
+	private Logger logger = LogManager.getLogger(MongoDbStorage.class);
 	
 	private String storageName = "Mongodb";
 	
@@ -76,9 +77,11 @@ public class MongoDbStorage implements Storage {
 
 	@Override
 	public boolean delete(String id) throws IOException {
-		WriteResult result = itemDAO.deleteById(id);
-		if(result.getN() > 0) {
-			return true;
+		if(itemDAO != null) {
+			WriteResult result = itemDAO.deleteById(id);
+			if(result.getN() > 0) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -94,10 +97,8 @@ public class MongoDbStorage implements Storage {
 				mediaItemDAO = daoFactory.getDAO(host, database, MediaItem.class, username, password);
 				streamUserDAO = daoFactory.getDAO(host, database, StreamUser.class, username, password);
 				webPageDAO = daoFactory.getDAO(host, database, WebPage.class, username, password);
-				
 			} catch (Exception e) {
-				logger.error("MongoDB Storage failed to open!");
-				logger.error(e);
+				logger.error("MongoDB Storage failed to open.", e);
 				return false;
 			}
 		}
@@ -195,11 +196,9 @@ public class MongoDbStorage implements Storage {
 					tempUser.incMentions(1L);
 				//}
 			}
-			
 		}
 		catch(MongoException e) {
-			e.printStackTrace();
-			logger.error("Storing item " + item.getId() + " failed.");
+			logger.error("Storing item " + item.getId() + " failed.", e);
 		}
 	
 	}
@@ -272,7 +271,16 @@ public class MongoDbStorage implements Storage {
 	
 	@Override
 	public boolean checkStatus() {
-		return true;
+		if(itemDAO != null) {
+			try {
+				itemDAO.count();
+			}
+			catch(Exception e) {
+				return false;
+			}
+			return true;
+		}
+		return false;
 	}
 	
 	@Override

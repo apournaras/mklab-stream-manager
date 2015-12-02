@@ -2,7 +2,8 @@ package gr.iti.mklab.sfc;
 
 import gr.iti.mklab.sfc.streams.StreamException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Class in case system is shutdown. 
@@ -14,7 +15,7 @@ import org.apache.log4j.Logger;
 public class Shutdown extends Thread {
 	
 	private StreamsManager _manager = null;
-	private Logger _logger = Logger.getLogger(Shutdown.class);
+	private Logger _logger = LogManager.getLogger(Shutdown.class);
 	
 	public Shutdown(StreamsManager manager) {
 		this._manager = manager;

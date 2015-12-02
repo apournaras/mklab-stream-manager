@@ -1,9 +1,9 @@
 package gr.iti.mklab.sfc.filters;
 
+import org.apache.logging.log4j.LogManager;
+
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
-
-import org.apache.log4j.Logger;
 
 /**
  * 
@@ -21,7 +21,7 @@ public class UrlItemFilter extends ItemFilter {
 		String lenStr =configuration.getParameter("maxUrls", "4");
 		this.maxUrls  = Integer.parseInt(lenStr);
 		
-		Logger.getLogger(UrlItemFilter.class).info("Initialized. Max Number of URLs: " + maxUrls);
+		LogManager.getLogger(UrlItemFilter.class).info("Initialized. Max Number of URLs: " + maxUrls);
 	}
 	
 	@Override

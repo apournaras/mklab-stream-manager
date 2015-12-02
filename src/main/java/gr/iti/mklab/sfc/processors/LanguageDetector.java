@@ -1,6 +1,6 @@
 package gr.iti.mklab.sfc.processors;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
@@ -14,8 +14,7 @@ public class LanguageDetector extends Processor {
 
 	public LanguageDetector(Configuration configuration) {
 		super(configuration);
-		String profileDirectory = configuration.getParameter("profileDirectory",
-				"profiles.sm");
+		String profileDirectory = configuration.getParameter("profileDirectory", "profiles.sm");
 		try {
 			DetectorFactory.loadProfile(profileDirectory);
 		} catch (LangDetectException e) {
@@ -27,7 +26,7 @@ public class LanguageDetector extends Processor {
 	public void process(Item item) {
 		String lang = item.getLanguage();
 		if(lang == null) {
-			// detect lang
+			// detect lang if not exist
 			String text = null;
 			String title = item.getTitle();
 			String description = item.getDescription();
@@ -50,7 +49,7 @@ public class LanguageDetector extends Processor {
 				item.setLanguage(lang);
 				
 			} catch (LangDetectException e) {
-				Logger.getLogger(LanguageDetector.class).info("No features in text: " + text);
+				LogManager.getLogger(LanguageDetector.class).info("No features in text: " + text);
 			}
 		}
 	}

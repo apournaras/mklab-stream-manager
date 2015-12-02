@@ -6,7 +6,7 @@ import gr.iti.mklab.framework.common.domain.config.Configuration;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 public class LanguageItemFilter extends ItemFilter {
@@ -23,7 +23,7 @@ public class LanguageItemFilter extends ItemFilter {
 				languages.add(lang.trim());
 			}
 		}
-		Logger.getLogger(LanguageItemFilter.class).info("Supported languages: " + langsStr);
+		LogManager.getLogger(LanguageItemFilter.class).info("Supported languages: " + langsStr);
 	}
 	
 	@Override

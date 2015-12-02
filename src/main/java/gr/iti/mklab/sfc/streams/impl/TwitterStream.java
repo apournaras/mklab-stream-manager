@@ -1,6 +1,7 @@
 package gr.iti.mklab.sfc.streams.impl;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
@@ -21,7 +22,7 @@ public class TwitterStream extends Stream {
 	
 	public static Source SOURCE = Source.Twitter;
 	
-	private Logger  logger = Logger.getLogger(TwitterStream.class);
+	private Logger  logger = LogManager.getLogger(TwitterStream.class);
 
 	@Override
 	public synchronized void open(Configuration config) throws StreamException {

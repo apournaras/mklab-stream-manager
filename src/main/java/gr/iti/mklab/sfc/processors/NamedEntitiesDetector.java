@@ -9,29 +9,34 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
 import edu.stanford.nlp.ie.AbstractSequenceClassifier;
 import edu.stanford.nlp.ie.crf.CRFClassifier;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.util.logging.Redwood;
+import edu.stanford.nlp.util.logging.StanfordRedwoodConfiguration;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.NamedEntity;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 
 public class NamedEntitiesDetector extends Processor {
 
-	private Logger logger = Logger.getLogger(NamedEntitiesDetector.class);
+	private Logger logger = LogManager.getLogger(NamedEntitiesDetector.class);
 			
 	private AbstractSequenceClassifier<CoreLabel> classifier;
 	
 	public NamedEntitiesDetector(Configuration configuration) {
 		super(configuration);
 		
+		StanfordRedwoodConfiguration.setup();
+		Redwood.hideAllChannels();
+
 		String serializedClassifier = configuration.getParameter("serializedClassifier");
 		classifier = CRFClassifier.getClassifierNoExceptions(serializedClassifier);
-		
 	}
 
 	@Override
@@ -44,7 +49,7 @@ public class NamedEntitiesDetector extends Processor {
 			try {
 				extractEntities(title, entities);
 			} catch (Exception e) {
-				logger.error(e);
+				//logger.error(e);
 			}
 		}
 		
@@ -56,7 +61,6 @@ public class NamedEntitiesDetector extends Processor {
 				logger.error(e);
 			}
 		}
-		
 		item.setEntities(new ArrayList<NamedEntity>(entities.values()));
 	}
 
@@ -64,6 +68,7 @@ public class NamedEntitiesDetector extends Processor {
 			throws Exception {
 
 		text = StringEscapeUtils.unescapeXml(text);
+		text = text.replaceAll("&\\s+", "&amp;");
 		String textXML = classifier.classifyWithInlineXML(text);
 		
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -83,7 +88,6 @@ public class NamedEntitiesDetector extends Processor {
 	
 	private void extractEntities(Map<String, NamedEntity> entities, Document doc, NamedEntity.Type type) {
 		NodeList nodeList = doc.getElementsByTagName(type.name());
-
         for (int k = 0; k < nodeList.getLength(); k++) {
             String name = nodeList.item(k).getTextContent().toLowerCase();
             if(name == null) {

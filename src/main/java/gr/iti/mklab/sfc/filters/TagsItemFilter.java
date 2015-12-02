@@ -3,7 +3,7 @@ package gr.iti.mklab.sfc.filters;
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * 
@@ -21,7 +21,7 @@ public class TagsItemFilter extends ItemFilter {
 		String lenStr =configuration.getParameter("maxTags", "4");
 		this.maxTags  = Integer.parseInt(lenStr);
 		
-		Logger.getLogger(TagsItemFilter.class).info("Initialized. Max Number of Tags: " + maxTags);
+		LogManager.getLogger(TagsItemFilter.class).info("Initialized. Max Number of Tags: " + maxTags);
 	}
 	
 	@Override

@@ -5,7 +5,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.sfc.filters.ItemFilter;
@@ -22,7 +23,7 @@ import gr.iti.mklab.sfc.storages.Storage;
  */
 public class Consumer extends Thread {
 	
-	private Logger _logger = Logger.getLogger(Consumer.class);
+	private Logger _logger = LogManager.getLogger(Consumer.class);
 	
 	private static int id = 0;
 	

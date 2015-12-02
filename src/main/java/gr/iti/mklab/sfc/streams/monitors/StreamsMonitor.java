@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.sfc.streams.Stream;
@@ -22,7 +22,7 @@ import gr.iti.mklab.sfc.streams.Stream;
  */
 public class StreamsMonitor implements Runnable {
 	
-	public final Logger logger = Logger.getLogger(StreamsMonitor.class);
+	public final Logger logger = LogManager.getLogger(StreamsMonitor.class);
 
 	private ExecutorService executor;
 	
@@ -59,10 +59,12 @@ public class StreamsMonitor implements Runnable {
 	public void addStream(Stream stream) {
 		
 		String streamId = stream.getName(); 
+		
+		logger.info("Add " + streamId + " stream to monitor");
 		this.streams.put(streamId, stream);
 		
 		try {
-			logger.info("Start " + streamId + " Fetch Task");
+			logger.info("Add fetch task for " + streamId);
 			StreamFetchTask streamTask = new StreamFetchTask(stream);
 			
 			streamsFetchTasks.put(streamId, streamTask);
@@ -82,8 +84,11 @@ public class StreamsMonitor implements Runnable {
 	 */
 	public void addFeed(String streamId, Feed feed) {
 		StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);
-		if(fetchTask != null) {
+		if(fetchTask != null) {	
 			fetchTask.addFeed(feed);
+		}
+		else {
+			logger.warn("Cannot add feed to " + streamId + ". There is no initialized fetch task.");
 		}
 	}
 	
@@ -134,7 +139,6 @@ public class StreamsMonitor implements Runnable {
 	public void stop() {
 		isFinished = true;
 		executor.shutdown();
-		
         while (!executor.isTerminated()) {
         	try {
 				Thread.sleep(1000);
@@ -148,32 +152,56 @@ public class StreamsMonitor implements Runnable {
 
 	@Override
 	public void run() {
-		Map<String, Future<Integer>> responses = new HashMap<String, Future<Integer>>();
+		for(String streamId : streamsFetchTasks.keySet()) {
+			StreamFetchTask task = streamsFetchTasks.get(streamId);
+			logger.info("Submit fetch task for " + streamId + " for execution.");
+			executor.execute(task);
+		}
+		
 		while(!isFinished) {
-			
 			for(String streamId : streamsFetchTasks.keySet()) {
 				StreamFetchTask task = streamsFetchTasks.get(streamId);
-				
-				List<Feed> feeds = task.getFeedsToPoll();
-				if(!feeds.isEmpty()) {
-					Future<Integer> response = responses.get(streamId);
-					if(response == null || response.isDone()) {
-						logger.info("Submit new task in " + streamId);
-						Future<Integer> futureResponse = executor.submit(task);
-						responses.put(streamId, futureResponse);
-					}
-					else {
-						logger.info(streamId + " is running");
-					}
+				if(task != null) {
+					logger.info("Fetch task for " + streamId + " has fetched " + task.getTotalRetrievedItems() + " items in total");
+					logger.info("Last execution time for " + streamId + ": " + task.getLastExecutionTime() + " for feed (" + task.getLastExecutionFeed() + ")");
 				}
 			}
 			
 			try {
-				Thread.sleep(2000);
+				Thread.sleep(300000);
 			} catch (InterruptedException e) {
+				logger.error(e);
 				return;
 			}
 		}
 	}
 	
+//	@Override
+//	public void run() {
+//		Map<String, Future<Integer>> responses = new HashMap<String, Future<Integer>>();
+//		while(!isFinished) {
+//			for(String streamId : streamsFetchTasks.keySet()) {
+//				StreamFetchTask task = streamsFetchTasks.get(streamId);
+//				List<Feed> feedsToPoll = task.getFeedsToPoll();
+//				if(feedsToPoll != null && !feedsToPoll.isEmpty()) {
+//					Future<Integer> response = responses.get(streamId);
+//					if(response == null || response.isDone()) {
+//						logger.info("Re-submit fetch task for " + streamId + " with " + feedsToPoll.size() + " feeds!");
+//						Future<Integer> futureResponse = executor.submit(task);
+//						responses.put(streamId, futureResponse);
+//					}
+//					else {
+//						logger.info("Fetching from " + streamId + " is still running");
+//					}
+//				}
+//			}
+//			
+//			try {
+//				Thread.sleep(2000);
+//			} catch (InterruptedException e) {
+//				logger.error(e);
+//				return;
+//			}
+//		}
+//	}
 }

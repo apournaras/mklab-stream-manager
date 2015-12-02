@@ -1,6 +1,7 @@
 package gr.iti.mklab.sfc.streams.impl;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import gr.iti.mklab.framework.Credentials;
 import gr.iti.mklab.framework.common.domain.Source;
@@ -21,7 +22,7 @@ public class YoutubeStream extends Stream {
 
 	public static Source SOURCE = Source.Youtube;
 	
-	private Logger logger = Logger.getLogger(YoutubeStream.class);
+	private Logger logger = LogManager.getLogger(YoutubeStream.class);
 	
 	private String clientId;
 	private String developerKey;

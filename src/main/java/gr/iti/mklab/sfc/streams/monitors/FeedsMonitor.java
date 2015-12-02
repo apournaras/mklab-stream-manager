@@ -8,7 +8,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.retrievers.Retriever;
@@ -24,7 +25,7 @@ import gr.iti.mklab.framework.retrievers.Retriever;
  */
 public class FeedsMonitor {
 	
-	private Logger _logger = Logger.getLogger(FeedsMonitor.class);
+	private Logger _logger = LogManager.getLogger(FeedsMonitor.class);
 	
 	private Map<String, FeedFetchTask> feedFetchTasks;
 	private ScheduledExecutorService scheduler;
