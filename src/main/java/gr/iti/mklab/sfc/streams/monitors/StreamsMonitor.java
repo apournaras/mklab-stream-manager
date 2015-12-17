@@ -159,6 +159,7 @@ public class StreamsMonitor implements Runnable {
 		}
 		
 		while(!isFinished) {
+			// print statistics every 30 seconds
 			for(String streamId : streamsFetchTasks.keySet()) {
 				StreamFetchTask task = streamsFetchTasks.get(streamId);
 				if(task != null) {
@@ -175,33 +176,4 @@ public class StreamsMonitor implements Runnable {
 			}
 		}
 	}
-	
-//	@Override
-//	public void run() {
-//		Map<String, Future<Integer>> responses = new HashMap<String, Future<Integer>>();
-//		while(!isFinished) {
-//			for(String streamId : streamsFetchTasks.keySet()) {
-//				StreamFetchTask task = streamsFetchTasks.get(streamId);
-//				List<Feed> feedsToPoll = task.getFeedsToPoll();
-//				if(feedsToPoll != null && !feedsToPoll.isEmpty()) {
-//					Future<Integer> response = responses.get(streamId);
-//					if(response == null || response.isDone()) {
-//						logger.info("Re-submit fetch task for " + streamId + " with " + feedsToPoll.size() + " feeds!");
-//						Future<Integer> futureResponse = executor.submit(task);
-//						responses.put(streamId, futureResponse);
-//					}
-//					else {
-//						logger.info("Fetching from " + streamId + " is still running");
-//					}
-//				}
-//			}
-//			
-//			try {
-//				Thread.sleep(2000);
-//			} catch (InterruptedException e) {
-//				logger.error(e);
-//				return;
-//			}
-//		}
-//	}
 }

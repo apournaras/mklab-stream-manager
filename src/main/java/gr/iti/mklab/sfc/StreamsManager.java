@@ -2,10 +2,14 @@ package gr.iti.mklab.sfc;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -14,6 +18,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 import org.mongodb.morphia.Morphia;
 import org.xml.sax.SAXException;
 
@@ -57,7 +62,7 @@ public class StreamsManager implements Runnable {
 	private StreamsManagerConfiguration config = null;
 	private StorageHandler storageHandler;
 	
-	private StreamsMonitor monitor;
+	private StreamsMonitor monitor = null;
 	
 	private ManagerState state = ManagerState.CLOSE;
 
@@ -65,7 +70,8 @@ public class StreamsManager implements Runnable {
 	
 	private CollectionsManager collectionsManager;
 	private Map<Feed, Integer> feeds = new HashMap<Feed, Integer>();
-
+	private Map<String, Set<String>> collectionsPerFeed = new HashMap<String, Set<String>>();
+	
 	private RedisSubscriber jedisPubSub;
 
 	public StreamsManager(StreamsManagerConfiguration config) throws StreamException {
@@ -94,6 +100,7 @@ public class StreamsManager implements Runnable {
 	public synchronized void open() throws StreamException {
 		
 		if (state == ManagerState.OPEN) {
+			logger.error("Stream manager is already open.");
 			return;
 		}
 		
@@ -236,7 +243,7 @@ public class StreamsManager implements Runnable {
 			try {
 				queue.put(Pair.of(collection, "collections:new"));
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				logger.error(e);
 			}
 		}
 		
@@ -247,44 +254,57 @@ public class StreamsManager implements Runnable {
 		logger.info("Start to monitor for updates on collections.");
 		while(state == ManagerState.OPEN) {
 			try {
-				// Check for new feeds every 1 seconds
-				Thread.sleep(1000);
 				
-				Pair<Collection, String> actionPair = queue.poll();
+				Pair<Collection, String> actionPair = queue.take();
 				if(actionPair == null) {
 					continue;
 				}
 				
 				Collection collection = actionPair.getKey();
 				String action = actionPair.getRight();
-				logger.info("Action: " + action + " - collection: " + collection.getId());
+				logger.info("Action: " + action + " - collection: " + collection.getId() + " from user " + collection.geOwnertId());
+				
+				if(monitor == null) {
+					logger.error("Monitor is null. Cannot monitor any feed.");
+				}
 				
 				switch (action) {
     				case "collections:new":
     					List<Feed> feedsToInsert = collection.getFeeds();
     					logger.info(feedsToInsert.size() + " feeds to insert");
     					for(Feed feed : feedsToInsert) {
-    						Integer count = feeds.get(feed);
-    						if(count != null) {
-    							feeds.put(feed, ++count);
-    							logger.info("Feed " + feed.getId() + " is already under monitoring. Priority: " + count);
-    						}
-    						else {
-    							feeds.put(feed, 1);
-    							// Add to monitors
-    							String streamId = feed.getSource();
-    							if(monitor != null) {
-    								Stream stream = monitor.getStream(streamId);
-    								if(stream != null) { 
-    									logger.info("Add " + feed.getId() + " to " + streamId);
-    									monitor.addFeed(streamId, feed);
-    								}
-    								else {
-    									logger.error("Stream " + streamId + " has not initialized.");
-    									logger.error("Feed (" + feed.getId() + ") of type " + feed.getSource() + " cannot be added.");
-    								}
-    							}
-    						}
+    						
+    						String feedId = feed.getId();
+							String streamId = feed.getSource();
+							Stream stream = monitor.getStream(streamId);
+							
+							if(stream == null) {
+								logger.error("Stream " + streamId + " has not initialized.");
+								logger.error("Feed (" + feedId + ") of type " + feed.getSource() + " cannot be added.");
+							}
+							else {
+								logger.info("Feed to insert: [" + feedId + "] in " + streamId + " monitor");
+								Integer count = feeds.get(feed);
+								if(count != null) {
+									feeds.put(feed, ++count);
+									logger.info("Feed (" + feedId + ") is already under monitoring. Increase priority: " + count);
+								}
+								else {
+									feeds.put(feed, 1);
+									// Add to monitors
+									if(stream != null) { 
+										logger.info("Add (" + feedId + ") to " + streamId);
+										monitor.addFeed(streamId, feed);
+									}
+								}
+								
+								Set<String> collectionsSet = collectionsPerFeed.get(feedId);
+	    						if(collectionsSet == null) {
+	    							collectionsSet = new HashSet<String>();
+	    							collectionsPerFeed.put(feedId, collectionsSet);
+	    						}
+	    						collectionsSet.add(collection.getId());
+							}	
     					}
     					break;
     				case "collections:stop":
@@ -292,28 +312,37 @@ public class StreamsManager implements Runnable {
     					List<Feed> feedsToDelete = collection.getFeeds();
     					logger.info(feedsToDelete.size() + " feeds to delete");
     					for(Feed feed : feedsToDelete) {
-    						Integer count = feeds.get(feed);
-    						if(count != null) {
-    							if(count > 1) {
-    								feeds.put(feed, --count);
-    							}
-    							else {
-    								feeds.remove(feed);
-    								// Remove from monitors
-    								String streamId = feed.getSource();
-    								if(monitor != null) {
-    									Stream stream = monitor.getStream(streamId);
-    									if(stream != null) { 
-    										logger.info("Remove " + feed.getId() + " from " + streamId);
-    										monitor.removeFeed(streamId, feed);
-    									}
-    									else {
-    										logger.error("Stream " + streamId + " has not initialized.");
-    										logger.error("Feed (" + feed.getId() + ") of type " + feed.getSource() + " cannot be removed!");
-    									}
-    								}
-    							}
-    						}
+    						String feedId = feed.getId();
+    						String streamId = feed.getSource();
+							Stream stream = monitor.getStream(streamId);
+							if(stream == null) {
+								logger.error("Stream " + streamId + " has not initialized.");
+								logger.error("Feed (" + feedId + ") of type " + feed.getSource() + " cannot be removed!");
+							}
+							else {
+								Integer count = feeds.get(feed);
+								if(count != null) {
+									if(count > 1) {
+										feeds.put(feed, --count);
+										logger.info("Feed (" + feedId + ") priority decreased to " + count);
+									}
+									else {
+										feeds.remove(feed);
+										// Remove from monitors
+										logger.info("Remove (" + feedId + ") from " + streamId);
+										monitor.removeFeed(streamId, feed);
+    		
+									}
+								}
+	    						Set<String> collectionsSet = collectionsPerFeed.get(feedId);
+	    						if(collectionsSet != null) {
+	    							collectionsSet.remove(collection.getId());
+	    							if(collectionsSet.isEmpty()) {
+	    								collectionsPerFeed.remove(feedId);
+	    							}
+	    						}
+							}
+   
     					}
     					break;
     				default:
@@ -349,19 +378,34 @@ public class StreamsManager implements Runnable {
 			Thread thread = new Thread(manager);
 			thread.start();
 			
-			
 		} catch (ParserConfigurationException e) {
-			logger.error(e.getMessage());
+			logger.error(e);
 		} catch (SAXException e) {
-			logger.error(e.getMessage());
+			logger.error(e);
 		} catch (IOException e) {
-			logger.error(e.getMessage());
+			logger.error(e);
 		} catch (StreamException e) {
-			logger.error(e.getMessage());
+			logger.error(e);
 		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error(e.getMessage());
+			logger.error(e);
 		}	
+		
+		logger.info("Stream manager initialized!");
+		while(manager.state == ManagerState.OPEN) {
+			ThreadContext.put("id", UUID.randomUUID().toString());
+			ThreadContext.put("date", new Date().toString());
+			for(Entry<String, Set<String>> entry : manager.collectionsPerFeed.entrySet()) {
+				logger.info("Feed [" + entry.getKey() + "] - Collections: " + entry.getValue());
+			}
+			ThreadContext.clearAll();
+			
+			try {
+				Thread.sleep(300000);
+			} catch (InterruptedException e) {
+				logger.error(e);
+			}
+		}
+		
 	}
 	
 	public class RedisSubscriber extends JedisPubSub implements Runnable {
@@ -421,6 +465,7 @@ public class StreamsManager implements Runnable {
 
 		@Override
 		public void run() {
+			logger.info("Subscribe to channel collections:*");
 			jedis.psubscribe(this, "collections:*");
 		}
 	}

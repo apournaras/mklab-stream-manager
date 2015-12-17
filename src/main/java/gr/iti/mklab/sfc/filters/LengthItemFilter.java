@@ -56,9 +56,7 @@ public class LengthItemFilter extends ItemFilter {
 			title = title.replaceAll("@", " ");
 			title = title.replaceAll("\\s+", " ");
 		}
-		catch(Exception e) {
-			
-		}
+		catch(Exception e) { }
 		
 		if(title.length() < minTextLenth) {
 			incrementDiscarded();

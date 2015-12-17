@@ -99,9 +99,12 @@ public abstract class Stream {
 						storageHandler.handle(item);
 					}
 				}
+				else {
+					logger.error("Error: cannot store item. StorageHandler instance in null!");
+				}
 				
 				if(response.getNumberOfItems() == 0) {
-					logger.info("No items retrieved for (" + feed.getId() + ").");
+					logger.info("No items retrieved for (" + feed.getId() + ") since " + new Date(feed.getSinceDate()));
 					return response;
 				}
 				
@@ -150,23 +153,6 @@ public abstract class Stream {
 			}
 		}
 		return true;
-	}
-	*/
-	
-	/*
-	@Override
-	public void run() {
-		while(true) {
-			try {
-				Feed feed = feedsQueue.take();
-				monitor.addFeed(feed);
-				monitor.startMonitor(feed);
-				
-			} catch (InterruptedException e) {
-				logger.error(e);
-				return;
-			}
-		}
 	}
 	*/
 	

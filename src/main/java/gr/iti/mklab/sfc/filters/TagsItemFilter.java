@@ -25,7 +25,7 @@ public class TagsItemFilter extends ItemFilter {
 	}
 	
 	@Override
-	public boolean accept(Item item) {
+	public synchronized boolean accept(Item item) {
 		if(item == null) {
 			incrementDiscarded();
 			return false;

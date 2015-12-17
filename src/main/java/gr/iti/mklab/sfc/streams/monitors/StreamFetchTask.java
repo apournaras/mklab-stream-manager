@@ -6,12 +6,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -33,7 +31,7 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 	
 	private Stream stream;
 	
-	private Map<String, Pair<Feed, Long>> feeds = Collections.synchronizedMap(new HashMap<String, Pair<Feed, Long>>());
+	private Map<String, FeedFetch> feeds = Collections.synchronizedMap(new HashMap<String, FeedFetch>());
 	private LinkedBlockingQueue<Feed> feedsQueue = new LinkedBlockingQueue<Feed>();
 	
 	private int maxRequests;
@@ -51,8 +49,7 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 		this.stream = stream;
 		
 		this.maxRequests = stream.getMaxRequests();
-		this.period = stream.getTimeWindow() * 60000;
-		
+		this.period = stream.getTimeWindow() * 60000;	
 	}
 	
 	/**
@@ -61,7 +58,8 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 	 * @param Feed feed
 	 */
 	public void addFeed(Feed feed) {
-		this.feeds.put(feed.getId(), Pair.of(feed, 0L));
+		FeedFetch feedFetch = new FeedFetch(feed);
+		this.feeds.put(feed.getId(), feedFetch);
 		this.feedsQueue.offer(feed);
 	}
 	
@@ -118,10 +116,10 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 		List<Feed> feedsToPoll = new ArrayList<Feed>();
 		long currentTime = System.currentTimeMillis();
 		// Check for new feeds
-		for(Pair<Feed, Long> feed : feeds.values()) {
+		for(FeedFetch feedFetch : feeds.values()) {
 			// each feed can run one time in each period
-			if((currentTime - feed.getValue()) > period) { 
-				feedsToPoll.add(feed.getKey());
+			if((currentTime - feedFetch.getLastExecution()) > period) { 
+				feedsToPoll.add(feedFetch.getFeed());
 			}
 		}
 		return feedsToPoll;
@@ -157,6 +155,8 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 				for(Feed feed : feedsToPoll) {
 					logger.info("Poll for " + feed);
 					
+					long executionTime = System.currentTimeMillis();
+					
 					Response response = stream.poll(feed, remainingRequests);
 					totalItems += response.getNumberOfItems();
 					
@@ -165,7 +165,16 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 					
 					// increment performed requests
 					requests.addAndGet(response.getRequests());
-					feeds.put(feed.getId(), Pair.of(feed, System.currentTimeMillis()));
+					
+					FeedFetch feedFetch = feeds.get(feed.getId());
+					if(feedFetch != null) {
+						feedFetch.setLastExecution(executionTime);
+						feedFetch.incFetchedItems(response.getNumberOfItems());
+					}
+					else {
+						logger.error("There is no fetch structure for feed (" + feed.getId() + ")");
+					}
+					
 				}
 				return totalItems;
 			}
@@ -179,6 +188,8 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 
 	@Override
 	public void run() {
+		int maxRequestsPerFeed = (int) (0.2 * maxRequests);
+		
 		while(true) {
 			try {
 				long currentTime = System.currentTimeMillis();
@@ -196,13 +207,14 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 				List<Feed> feedsToPoll = getFeedsToPoll();
 				if(!feedsToPoll.isEmpty()) {
 					if(feedsToPoll.contains(feed)) {
-						int requestsPerFeed = Math.min(20, (maxRequests - requests.get()) / feedsToPoll.size());
+						int requestsPerFeed = Math.min(maxRequestsPerFeed, (maxRequests - requests.get()) / feedsToPoll.size());
 						if(requestsPerFeed < 1) {
 							logger.info("No more remaining requests for " + stream.getName());
 							logger.info("Wait for " + (currentTime -  lastResetTime - period)/1000 + " seconds until reseting.");
 						}
 						else {
 							logger.info("Poll for [" + feed.getId() + "]. Requests: " + requestsPerFeed);
+							
 							Response response = stream.poll(feed, requestsPerFeed);
 							totalRetrievedItems += response.getNumberOfItems();
 						
@@ -211,7 +223,16 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 							
 							// increment performed requests
 							requests.addAndGet(response.getRequests());
-							feeds.put(feed.getId(), Pair.of(feed, lastExecutionTime));
+							
+							FeedFetch feedFetch = feeds.get(feed.getId());
+							if(feedFetch != null) {
+								feedFetch.setLastExecution(lastExecutionTime);
+								feedFetch.incFetchedItems(response.getNumberOfItems());
+							}
+							else {
+								logger.error("There is no fetch structure for feed (" + feed.getId() + ")");
+							}
+
 						}
 					}
 				}
@@ -222,6 +243,46 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 				logger.error("Exception in stream fetch task for " + stream.getName(), e);
 			}	
 		}
-		
 	}
+	
+	public class FeedFetch {
+		
+		private Feed feed;
+		private Long lastExecution = 0L;
+		
+		private Long fetchedItems = 0L;
+		
+		public FeedFetch(Feed feed) {
+			this.feed = feed;
+		}
+
+		public Long getLastExecution() {
+			return lastExecution;
+		}
+
+		public void setLastExecution(Long lastExecution) {
+			this.lastExecution = lastExecution;
+		}
+
+		public Feed getFeed() {
+			return feed;
+		}
+
+		public void setFeed(Feed feed) {
+			this.feed = feed;
+		}
+
+		public Long getFetchedItems() {
+			return fetchedItems;
+		}
+
+		public void setFetchedItems(Long fetchedItems) {
+			this.fetchedItems = fetchedItems;
+		}
+		
+		public void incFetchedItems(Integer fetchedItems) {
+			this.fetchedItems += fetchedItems;
+		}
+	}
+	
 }

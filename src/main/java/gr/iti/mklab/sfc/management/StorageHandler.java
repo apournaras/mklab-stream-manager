@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -39,11 +40,12 @@ public class StorageHandler implements Runnable {
 	private List<Consumer> consumers = new ArrayList<Consumer>(numberOfConsumers);
 	
 	private List<Storage> storages = new ArrayList<Storage>();
-	
 	private List<ItemFilter> filters = new ArrayList<ItemFilter>();
 	private List<Processor> processors = new ArrayList<Processor>();
 	
 	private Map<String, Boolean> workingStatus = new HashMap<String, Boolean>();
+	
+	private AtomicLong handled = new AtomicLong(0L);
 	
 	enum StorageHandlerState {
 		OPEN, CLOSE
@@ -96,6 +98,7 @@ public class StorageHandler implements Runnable {
 
 	public void handle(Item item) {
 		try {
+			handled.incrementAndGet();
 			queue.add(item);
 		}
 		catch(Exception e) {
@@ -213,6 +216,8 @@ public class StorageHandler implements Runnable {
 	@Override
 	public void run() {
 		while(state.equals(StorageHandlerState.OPEN)) {
+			logger.info(handled.get() + " items handled in total.");
+			logger.info(queue.size() + " items are queued for processing.");
 			for(Storage storage : storages) {
 				try {
 					boolean status = storage.checkStatus();
@@ -223,6 +228,15 @@ public class StorageHandler implements Runnable {
 					logger.error("Exception during checking of " + storage.getStorageName(), e);
 				}
 			}
+			
+			for(ItemFilter filter : filters) {
+				logger.info(filter.status());
+			}
+			
+			for(Consumer consumer : consumers) {
+				logger.info(consumer.status());
+			}
+			
 			try {
 				Thread.sleep(300000);
 			} catch (InterruptedException e) {

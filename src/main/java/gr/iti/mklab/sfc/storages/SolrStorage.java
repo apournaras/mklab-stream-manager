@@ -27,7 +27,7 @@ import gr.iti.mklab.framework.common.domain.WebPage;
  */
 public class SolrStorage implements Storage {
 
-	private Logger  logger = LogManager.getLogger(SolrStorage.class);
+	private Logger logger = LogManager.getLogger(SolrStorage.class);
 	
 	private static final String HOSTNAME = "solr.hostname";
 	private static final String SERVICE = "solr.service";
@@ -135,7 +135,6 @@ public class SolrStorage implements Storage {
 			try {
 				solrItemHandler.count("*:*");
 				solrItemHandler.commit();
-				return true;
 			} 
 			catch (Exception e) {
 				logger.error(e);
@@ -147,7 +146,6 @@ public class SolrStorage implements Storage {
 			try {
 				solrMediaHandler.count("*:*");
 				solrMediaHandler.commit();
-				return true;
 			} 
 			catch (Exception e) {
 				logger.error(e);
@@ -159,14 +157,13 @@ public class SolrStorage implements Storage {
 			try {
 				solrWebPageHandler.count("*:*");
 				solrMediaHandler.commit();
-				return true;
 			} 
 			catch (Exception e) {
 				logger.error(e);
 				return false;
 			}
 		}
-		return false;
+		return true;
 	}
 	
 

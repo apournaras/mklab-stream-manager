@@ -9,8 +9,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.jsoup.Jsoup;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
@@ -24,11 +23,9 @@ import gr.iti.mklab.framework.common.domain.NamedEntity;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 
 public class NamedEntitiesDetector extends Processor {
-
-	private Logger logger = LogManager.getLogger(NamedEntitiesDetector.class);
 			
 	private AbstractSequenceClassifier<CoreLabel> classifier;
-	
+
 	public NamedEntitiesDetector(Configuration configuration) {
 		super(configuration);
 		
@@ -43,32 +40,29 @@ public class NamedEntitiesDetector extends Processor {
 	public void process(Item item) {
 		
 		Map<String, NamedEntity> entities = new HashMap<String, NamedEntity>();
-		
 		String title = item.getTitle();
 		if(title != null) {
 			try {
 				extractEntities(title, entities);
-			} catch (Exception e) {
-				//logger.error(e);
-			}
+			} catch (Exception e) {}
 		}
 		
 		String description = item.getDescription();
 		if(description != null) {
 			try {
 				extractEntities(description, entities);
-			} catch (Exception e) {
-				logger.error(e);
-			}
+			} catch (Exception e) {}
 		}
 		item.setEntities(new ArrayList<NamedEntity>(entities.values()));
 	}
 
-	public String extractEntities(String text, Map<String, NamedEntity> entities) 
-			throws Exception {
+	public String extractEntities(String text, Map<String, NamedEntity> entities) throws Exception {
 
+		// clean before extraction
+		text = Jsoup.parse(text).text();
 		text = StringEscapeUtils.unescapeXml(text);
-		text = text.replaceAll("&\\s+", "&amp;");
+		text = text.replaceAll("&\\s+", "&amp; ");
+		
 		String textXML = classifier.classifyWithInlineXML(text);
 		
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -99,7 +93,6 @@ public class NamedEntitiesDetector extends Processor {
             name = name.trim();
             
             String key = type + "#" + name;
-            
             if (!entities.containsKey(key)) {
             	NamedEntity entity = new NamedEntity(name, type);
             	entities.put(key, entity);
@@ -117,8 +110,8 @@ public class NamedEntitiesDetector extends Processor {
 		NamedEntitiesDetector detector = new NamedEntitiesDetector(conf);
 		
 		Item item = new Item();
-		item.setTitle("David Cameron: pensioner benefits protected if Tories win election - video");
-		item.setDescription("A new Conservative government would make unemployed young people work for benefits, David Cameron says on Tuesday. In a speech in Hove, East Sussex, the prime minister says that under Tory plans 18 to 21-year-olds who have been out of work, education or training for six months would have to take on unpaid community work if they want to claim benefits. 'From day one they should make an effort', he says Continue reading...");
+		item.setTitle("David Cameron &amp; <a>Barack Obama</a>: pensioner benefits protected if Tories win election - video");
+		//item.setDescription("A new Conservative government would make unemployed young people work for benefits, David Cameron says on Tuesday. In a speech in Hove, East Sussex, the prime minister says that under Tory plans 18 to 21-year-olds who have been out of work, education or training for six months would have to take on unpaid community work if they want to claim benefits. 'From day one they should make an effort', he says Continue reading...");
 		
 		detector.process(item);
 		

@@ -19,7 +19,7 @@ public abstract class ItemFilter {
 	public abstract String name();
 	
 	public String status() {
-		return discarded + " items discarded, " + accepted + " items accepted.";
+		return name() + ": " + discarded + " items discarded, " + accepted + " items accepted.";
 	}
 	
 	public void incrementAccepted() {
