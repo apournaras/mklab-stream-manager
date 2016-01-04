@@ -15,8 +15,7 @@ import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
  * Class responsible for setting up the connection to Google API
  * for retrieving relevant YouTube content.
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 public class YoutubeStream extends Stream {
 

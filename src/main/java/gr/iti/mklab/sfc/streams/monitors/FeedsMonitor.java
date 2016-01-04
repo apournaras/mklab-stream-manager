@@ -15,8 +15,7 @@ import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.retrievers.Retriever;
 
 /**
- * @author manosetro
- * @email manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  * 
  * FeedsMonitor monitors feed fetchers. Currently supports only start and stop 
  * operations. In future, it will support re-scheduling based on adaptive request rates.

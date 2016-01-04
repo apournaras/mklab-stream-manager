@@ -11,8 +11,7 @@ import gr.iti.mklab.framework.common.domain.Item;
 
 /**
  * Class for storing items to a flat file
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  *
  */
 public class FlatFileStorage implements Storage {	

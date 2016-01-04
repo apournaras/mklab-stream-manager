@@ -11,8 +11,7 @@ import gr.iti.mklab.framework.retrievers.Retriever;
 /**
  * A feed task that supports a retrieval process for one input feed. 
  * 
- * @author Manos Schinas
- * @email manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  * 
  */
 public class FeedFetchTask implements Runnable {

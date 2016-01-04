@@ -15,8 +15,7 @@ import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
  * Class responsible for setting up the connection to Twitter API for retrieving relevant Twitter content. 
  * Handles both the connection to Twitter REST API and Twitter Subscriber. 
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 public class TwitterStream extends Stream {
 	

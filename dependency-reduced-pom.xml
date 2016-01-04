@@ -7,22 +7,17 @@
     <relativePath>../pom.xml/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>eu.socialsensor</groupId>
-  <artifactId>socialsensor-stream-manager</artifactId>
-  <name>socialsensor-stream-manager</name>
+  <groupId>gr.iti.mklab</groupId>
+  <artifactId>mklab-stream-manager</artifactId>
+  <name>mklab-stream-manager</name>
   <version>0.1-SNAPSHOT</version>
   <description>Monitors a set of social streams (e.g. Twitter status updates) and collects the incoming content.</description>
-  <url>https://github.com/socialsensor/socialsensor-stream-manager</url>
+  <url>https://github.com/MKLab-ITI/mklab-stream-manager</url>
   <developers>
     <developer>
       <id>manosetro</id>
       <name>Manos Schinas</name>
       <email>manosetro@iti.gr</email>
-    </developer>
-    <developer>
-      <id>matzika</id>
-      <name>Katerina Iliakopoulou</name>
-      <email>ailiakop@iti.gr</email>
     </developer>
   </developers>
   <licenses>
@@ -33,9 +28,9 @@
     </license>
   </licenses>
   <scm>
-    <connection>scm:git:git@github.com:socialsensor/socialsensor-stream-manager.git</connection>
-    <developerConnection>scm:git:git@github.com:socialsensor/socialsensor-stream-manager.git</developerConnection>
-    <url>git@github.com:socialsensor/socialsensor-stream-manager.git</url>
+    <connection>scm:git:git@github.com:MKLab-ITI/mklab-stream-manager.git</connection>
+    <developerConnection>scm:git:git@github.com:MKLab-ITI/mklab-stream-manager.git</developerConnection>
+    <url>git@github.com:MKLab-ITI/mklab-stream-manager.git</url>
   </scm>
   <build>
     <plugins>
@@ -43,8 +38,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>2.5.1</version>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>1.7</source>
+          <target>1.7</target>
         </configuration>
       </plugin>
       <plugin>
@@ -74,6 +69,7 @@
         <version>1.7.1</version>
         <executions>
           <execution>
+            <id>StreamCollector</id>
             <phase>package</phase>
             <goals>
               <goal>shade</goal>
@@ -103,6 +99,12 @@
       </plugin>
     </plugins>
   </build>
+  <repositories>
+    <repository>
+      <id>mvn-neo4j</id>
+      <url>http://m2.neo4j.org/content/groups/everything</url>
+    </repository>
+  </repositories>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>

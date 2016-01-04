@@ -5,8 +5,8 @@ import org.apache.logging.log4j.Logger;
 
 
 /**
- * @author manosetro
- * @email manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
+ * 
  * This class implements a simple rate limits policy
  */
 public class RateLimitsMonitor {

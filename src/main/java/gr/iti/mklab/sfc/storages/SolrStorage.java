@@ -21,8 +21,7 @@ import gr.iti.mklab.framework.common.domain.WebPage;
 /**
  * Class for indexing items to solr
  * 
- * @author Manos Schinas
- * @email  manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  *
  */
 public class SolrStorage implements Storage {

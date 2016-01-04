@@ -15,7 +15,7 @@ import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
  * Class responsible for setting up the connection to Tumblr API
  * for retrieving relevant Tumblr content.
  * @author ailiakop
- * @email  ailiakop@iti.gr
+
  */
 public class TumblrStream extends Stream {
 	

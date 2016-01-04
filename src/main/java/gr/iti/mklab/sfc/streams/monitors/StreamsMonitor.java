@@ -17,8 +17,7 @@ import gr.iti.mklab.sfc.streams.Stream;
  * Thread-safe class for monitoring the streams that correspond to each social network
  * Currently 7 social networks are supported (Twitter, Youtube, Flickr, Instagram, Tumblr, Facebook, GooglePlus)
  * 
- * @author Manos Schinas
- * @email  manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  */
 public class StreamsMonitor implements Runnable {
 	
@@ -41,21 +40,12 @@ public class StreamsMonitor implements Runnable {
 		return streamsFetchTasks.size();
 	}
 	
-	/**
-	 * Adds the streams to the monitor
-	 * @param streams
-	 */
 	public void addStreams(List<Stream> streams) {
 		for(Stream stream : streams) {
 			addStream(stream);
 		}
 	}
 
-	/**
-	 * Add one stream to the monitor mapped to its id
-	 * @param streamId
-	 * @param stream
-	 */
 	public void addStream(Stream stream) {
 		
 		String streamId = stream.getName(); 
@@ -78,10 +68,6 @@ public class StreamsMonitor implements Runnable {
 		return streams.get(streamId);
 	}
 	
-	/**
-	 * Adds a feed to the monitor
-	 * @param stream
-	 */
 	public void addFeed(String streamId, Feed feed) {
 		StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);
 		if(fetchTask != null) {	
@@ -92,10 +78,6 @@ public class StreamsMonitor implements Runnable {
 		}
 	}
 	
-	/**
-	 * Adds a feed to the monitor
-	 * @param stream
-	 */
 	public void removeFeed(String streamId, Feed feed) {
 		StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);
 		if(fetchTask != null) {
@@ -103,10 +85,6 @@ public class StreamsMonitor implements Runnable {
 		}
 	}
 	
-	/**
-	 * Adds a feed to the monitor
-	 * @param stream
-	 */
 	public void addFeeds(String streamId, List<Feed> feeds) {
 		StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);
 		if(fetchTask != null) {
@@ -114,21 +92,13 @@ public class StreamsMonitor implements Runnable {
 		}
 	}
 	
-	/**
-	 * Adds a feed to the monitor
-	 * @param stream
-	 */
 	public void addFeeds(List<Feed> feeds) {
 		for(StreamFetchTask fetchTask : streamsFetchTasks.values()) {
 			fetchTask.addFeeds(feeds);
 		}
 	}
 	
-	/**
-	 * Starts the retrieval process for all streams. Each stream is served
-	 * by a different thread->StreamFetchTask
-	 * @param 
-	 */
+
 	public void start() {
 		executor.submit(this);
 	}

@@ -19,8 +19,7 @@ import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
  * It is responsible for the configuration of the connection to the selected API
  * and the retrieval/storing of relevant content.
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  *
  */
 public abstract class Stream {
@@ -46,20 +45,9 @@ public abstract class Stream {
 	
 	private Logger  logger = LogManager.getLogger(Stream.class);
 	
-	/**
-	 * Opens a stream for updates delivery
-	 * @param config
-	 *      Stream configuration parameters
-	 * @throws StreamException
-	 *      In any case of error during stream open
-	 */
+
 	public abstract void open(Configuration config) throws StreamException;
 	
-	/**
-	 * Closes a stream 
-	 * @throws StreamException
-	 *      In any case of error during stream close
-	 */
 	public void close() throws StreamException {
 		if(retriever != null) {
 			logger.info("Stop retriever");
@@ -69,21 +57,10 @@ public abstract class Stream {
 		logger.info("Close Stream  : " + this.getClass().getName());
 	}
 		
-	/**
-	 * Sets the handler that is responsible for the handling 
-	 * of the retrieved items
-	 * @param handler
-	 */
 	public void setHandler(StorageHandler handler) {
 		this.storageHandler = handler;
 	}
 	
-	/**
-	 * Searches with the wrapper of the stream for a particular
-	 * feed (feed can be keywordsFeeds, userFeeds, locationFeeds, listFeeds or URLFeeds)
-	 * @param feeds
-	 * @throws StreamException
-	 */
 	public synchronized Response poll(Feed feed, int requests) throws StreamException {
 		Response response = new Response(); 
 		if(retriever != null) {
@@ -126,35 +103,6 @@ public abstract class Stream {
 		}
 		return response;
 	}
-	
-	/**
-	 * Adds a feed to the stream for future searching
-	 * @param feed
-	 * @return
-	 *
-	public boolean addFeed(Feed feed) {
-		if(feedsQueue == null) {
-			return false;
-		}
-		
-		return feedsQueue.offer(feed);
-	}
-	*/
-	
-	/**
-	 * Adds a set of feeds to the stream for future searching
-	 * @param feeds
-	 * @return
-	 
-	public boolean addFeeds(List<Feed> feeds) {
-		for(Feed feed : feeds) {
-			if(!addFeed(feed)) {
-				return false;
-			}
-		}
-		return true;
-	}
-	*/
 	
 	public abstract String getName();
 

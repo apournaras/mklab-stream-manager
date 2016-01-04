@@ -24,8 +24,7 @@ import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
  * Class responsible for setting up the connection to Facebook API
  * for retrieving relevant Facebook content.
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 public class FacebookStream extends Stream {
 	

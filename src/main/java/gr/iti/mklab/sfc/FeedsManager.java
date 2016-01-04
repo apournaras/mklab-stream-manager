@@ -26,8 +26,7 @@ import gr.iti.mklab.sfc.streams.monitors.StreamsMonitor;
  * Class for retrieving content according to  keywords - user - location feeds from social networks.
  * Currently 7 social networks are supported (Twitter,Youtube,Facebook,Flickr,Instagram,Tumblr,GooglePlus)
  * 
- * @author Manos Schinas
- * @email  manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  * 
  */
 public class FeedsManager implements Runnable {
@@ -67,7 +66,7 @@ public class FeedsManager implements Runnable {
 	 * Opens Manager by starting the auxiliary modules and setting up
 	 * the database for reading/storing
 	 * 
-	 * @throws StreamException
+	 * @throws StreamException Stream Exception
 	 */
 	public synchronized void open() throws StreamException {
 		
@@ -116,7 +115,7 @@ public class FeedsManager implements Runnable {
 	/**
 	 * Closes Manager and its auxiliary modules
 	 * 
-	 * @throws StreamException
+	 * @throws StreamException Stream Exception
 	 */
 	public synchronized void close() throws StreamException {
 		
@@ -145,7 +144,8 @@ public class FeedsManager implements Runnable {
 	/**
 	 * Initializes the streams apis that are going to be searched for 
 	 * relevant content
-	 * @throws StreamException
+	 * 
+	 * @throws StreamException Stream Exception
 	 */
 	private void initStreams() throws StreamException {
 		streams = new HashMap<String, Stream>();

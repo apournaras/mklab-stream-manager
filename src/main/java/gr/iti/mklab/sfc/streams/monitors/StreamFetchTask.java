@@ -22,8 +22,8 @@ import gr.iti.mklab.sfc.streams.Stream;
  * Class for handling a Stream Task that is responsible for retrieving
  * content for the stream it is assigned to.
  * 
- * @author Manos Schinas
- * @email  manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
+ * 
  */
 public class StreamFetchTask implements  Callable<Integer>, Runnable {
 	
@@ -52,43 +52,23 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 		this.period = stream.getTimeWindow() * 60000;	
 	}
 	
-	/**
-	 * Adds the input feeds to search for relevant content in the stream
-	 * 
-	 * @param Feed feed
-	 */
 	public void addFeed(Feed feed) {
 		FeedFetch feedFetch = new FeedFetch(feed);
 		this.feeds.put(feed.getId(), feedFetch);
 		this.feedsQueue.offer(feed);
 	}
 	
-	/**
-	 * Adds the input feeds to search for relevant content in the stream
-	 * 
-	 * @param List<Feed> feeds
-	 */
 	public void addFeeds(List<Feed> feeds) {
 		for(Feed feed : feeds) {
 			addFeed(feed);
 		}
 	}
 	
-	/**
-	 * Remove input feed from task
-	 * 
-	 * @param Feed feed
-	 */
 	public void removeFeed(Feed feed) {
 		this.feeds.remove(feed.getId());
 		this.feedsQueue.remove(feed);
 	}
 
-	/**
-	 * Remove input feed from task
-	 * 
-	 * @param Feed feed
-	 */
 	public void removeFeeds(List<Feed> feeds) {
 		for(Feed feed : feeds) {
 			removeFeed(feed);
@@ -125,7 +105,7 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 		return feedsToPoll;
 	}
 	
-	/**
+	/*
 	 * Retrieves content using the feeds assigned to the task
 	 * making rest calls to stream's API. 
 	 */

@@ -22,11 +22,10 @@ import gr.iti.mklab.sfc.streams.StreamException;
 import gr.iti.mklab.sfc.streams.StreamsManagerConfiguration;
 
 /**
- * @brief  Thread-safe class for managing the storage of items to databases 
+ * Thread-safe class for managing the storage of items to databases 
  * The storage may be accomplished using multiple consumer-threads.
  * 
- * @author Manos Schinas 
- * @email  manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  *
  */
 public class StorageHandler implements Runnable {
@@ -125,9 +124,6 @@ public class StorageHandler implements Runnable {
 	
 	/**
 	 * Initializes the databases that are going to be used in the service
-	 * @param config
-	 * @return
-	 * @throws StreamException
 	 */
 	private void initializeStorageHandler(StreamsManagerConfiguration config) throws StreamException {
 		for (String storageId : config.getStorageIds()) {

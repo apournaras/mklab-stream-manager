@@ -42,8 +42,7 @@ import gr.iti.mklab.sfc.subscribers.Subscriber;
  * Class for retrieving content according to  keywords - user - location feeds from social networks.
  * Currently 7 social networks are supported (Twitter,Youtube,Facebook,Flickr,Instagram,Tumblr,GooglePlus)
  * 
- * @author Manos Schinas
- * @email  manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  * 
  */
 public class StreamsManager implements Runnable {
@@ -95,7 +94,7 @@ public class StreamsManager implements Runnable {
 	 * Opens Manager by starting the auxiliary modules and setting up
 	 * the database for reading/storing
 	 * 
-	 * @throws StreamException
+	 * @throws StreamException Stream Exception
 	 */
 	public synchronized void open() throws StreamException {
 		
@@ -162,7 +161,7 @@ public class StreamsManager implements Runnable {
 	/**
 	 * Closes Manager and its auxiliary modules
 	 * 
-	 * @throws StreamException
+	 * @throws StreamException Stream Exception
 	 */
 	public synchronized void close() throws StreamException {
 		
@@ -193,7 +192,8 @@ public class StreamsManager implements Runnable {
 	/**
 	 * Initializes the streams apis that are going to be searched for 
 	 * relevant content
-	 * @throws StreamException
+	 * 
+	 * @throws StreamException Stream Exception
 	 */
 	private void initStreams() throws StreamException {
 		streams = new HashMap<String, Stream>();
@@ -212,7 +212,8 @@ public class StreamsManager implements Runnable {
 	/**
 	 * Initializes the streams apis, that implement subscriber channels, that are going to be searched for 
 	 * relevant content
-	 * @throws StreamException
+	 * 
+	 * @throws StreamException Stream Exception
 	 */
 	private void initSubscribers() throws StreamException {
 		subscribers = new HashMap<String, Subscriber>();

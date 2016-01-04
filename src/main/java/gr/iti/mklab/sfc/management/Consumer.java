@@ -18,8 +18,7 @@ import gr.iti.mklab.sfc.storages.Storage;
  * Class for storing items to databases
  * 
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  *
  */
 public class Consumer extends Thread {
@@ -84,11 +83,6 @@ public class Consumer extends Thread {
 		}
 	}
 	
-	/**
-	 * Stores an item to all available databases
-	 * @param item
-	 * @throws IOException
-	 */
 	private void process(Item item) throws IOException {
 		if (storages != null) {
 			for(ItemFilter filter : filters) {

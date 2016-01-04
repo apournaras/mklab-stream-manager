@@ -15,8 +15,7 @@ import gr.iti.mklab.sfc.streams.monitors.RateLimitsMonitor;
  * Class responsible for setting up the connection to Instagram API
  * for retrieving relevant Instagram content.
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 
 public class InstagramStream extends Stream {

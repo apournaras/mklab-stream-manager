@@ -18,10 +18,9 @@ import gr.iti.mklab.framework.common.domain.collections.Collection;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 /**
- * @brief The class responsible for the creation of input feeds from mongodb storage
+ * The class responsible for the creation of input feeds from mongodb storage
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  */
 public class CollectionsManager {
 	

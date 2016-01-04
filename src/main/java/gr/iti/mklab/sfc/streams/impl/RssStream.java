@@ -8,9 +8,7 @@ import gr.iti.mklab.sfc.streams.Stream;
 /**
  * Class responsible for setting up the connection for retrieving RSS feeds.
  * 
- * @author Manos Schinas
- * 
- * @email  manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  */
 public class RssStream extends Stream {
 	

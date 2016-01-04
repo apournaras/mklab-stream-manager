@@ -22,8 +22,7 @@ import gr.iti.mklab.framework.common.domain.WebPage;
 /**
  * Class for storing items in mongo db
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  *
  */
 public class MongoDbStorage implements Storage {

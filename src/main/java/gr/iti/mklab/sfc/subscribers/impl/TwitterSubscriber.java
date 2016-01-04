@@ -41,8 +41,7 @@ import gr.iti.mklab.sfc.subscribers.Subscriber;
  * Twitter content can be based on keywords,twitter users or locations or be 
  * a random sampling (1%) of currently posted statuses. 
  * 
- * @author Manos Schinas
- * @email  manosetro@iti.gr
+ * @author Manos Schinas - manosetro@iti.gr
  *
  */
 public class TwitterSubscriber extends Subscriber {

@@ -16,8 +16,7 @@ import gr.iti.mklab.framework.common.domain.WebPage;
 /**
  * Class for storing items to redis store
  * 
- * @author manosetro
- * @email  manosetro@iti.gr
+ * @author manosetro - manosetro@iti.gr
  *
  */
 public class RedisStorage implements Storage {
