@@ -49,13 +49,13 @@
         <dependency>
             <groupId>gr.iti.mklab</groupId>
             <artifactId>mklab-framework-common</artifactId>
-            <version>0.2</version>
+            <version>0.3-SNAPSHOT</version>
         </dependency>
         
         <dependency>
   			<groupId>gr.iti.mklab</groupId>
   			<artifactId>mklab-socialmedia-abstractions</artifactId>
-  			<version>0.2</version>
+  			<version>0.3-SNAPSHOT</version>
   			<exclusions>
   				<exclusion>
   					<artifactId>log4j</artifactId>
@@ -63,11 +63,11 @@
   				</exclusion>
   			</exclusions>
         </dependency>
-		
+        
         <dependency>
             <groupId>gr.iti.mklab</groupId>
             <artifactId>mklab-framework-client</artifactId>
-            <version>0.2</version>
+            <version>0.3-SNAPSHOT</version>
         </dependency>
         
        	<dependency>
@@ -239,7 +239,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!--  
+			
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -252,6 +252,8 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                        	<shadedArtifactAttached>true</shadedArtifactAttached>
+							<shadedClassifierName>with-dependencies</shadedClassifierName>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -265,7 +267,7 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class>eu.socialsensor.sfc.streams.StreamsManager</Main-Class>
+                                        <Main-Class>gr.iti.mklab.sfc.StreamsManager</Main-Class>
                                         <Build-Number>123</Build-Number>
                                     </manifestEntries>
                                 </transformer>
@@ -274,7 +276,7 @@
                     </execution>
             	</executions>
             </plugin>
-      		-->
+      
         </plugins>
     </build>
 </project>

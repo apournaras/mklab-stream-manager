@@ -45,6 +45,8 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 	private long lastExecutionTime = 0l;
 	private String lastExecutionFeed = null;
 	
+	private boolean running = true;
+	
 	public StreamFetchTask(Stream stream) throws Exception {
 		this.stream = stream;
 		
@@ -170,7 +172,7 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 		// each feed must consume no more that the 20% of available requests, even if its the only active feed
 		int maxRequestsPerFeed = (int) (0.2 * maxRequests);
 		
-		while(true) {
+		while(running) {
 			try {
 				long currentTime = System.currentTimeMillis();
 				if((currentTime -  lastResetTime) > period) {
@@ -198,13 +200,12 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 								Thread.sleep(waitingTime);
 							}
 							catch(InterruptedException e) {
-								logger.error("Exception while waiting for resetting in stream fetch task for " + stream.getName(), e);
+								logger.error("Exception while waiting for reseting in stream fetch task for " + stream.getName(), e);
 							}
 						}
 						else {
 							// calculate number of requests per feed. (At least one request)
-							int requestsPerFeed = Math.min(maxRequestsPerFeed, 
-									Math.max(availableRequests / feedsToPoll.size(), 1));
+							int requestsPerFeed = Math.min(maxRequestsPerFeed, Math.max(availableRequests / feedsToPoll.size(), 1));
 							logger.info("Poll for [" + feed.getId() + "]. Requests: " + requestsPerFeed);
 							
 							Response response = stream.poll(feed, requestsPerFeed);
