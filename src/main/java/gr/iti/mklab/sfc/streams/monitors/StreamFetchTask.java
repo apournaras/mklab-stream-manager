@@ -51,7 +51,7 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 		this.stream = stream;
 		
 		this.maxRequests = stream.getMaxRequests();
-		this.period = stream.getTimeWindow() * 60000;	
+		this.period = stream.getTimeWindow() * 60000l;	
 	}
 	
 	public void addFeed(Feed feed) {
@@ -192,15 +192,17 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 						
 						int availableRequests = maxRequests - requests.get();
 						if(availableRequests <= 1) {
-							long waitingTime = (currentTime -  lastResetTime - period);
 							logger.info("No more remaining requests for " + stream.getName());
-							logger.info("Wait for " + (waitingTime/1000) + " seconds until resetting.");
+							long waitingTime = (period - (currentTime -  lastResetTime));
 							
-							try {
-								Thread.sleep(waitingTime);
-							}
-							catch(InterruptedException e) {
-								logger.error("Exception while waiting for reseting in stream fetch task for " + stream.getName(), e);
+							if(waitingTime > 0) {	
+								logger.info("Wait for " + (waitingTime / 1000) + " seconds until resetting.");
+								try {
+									Thread.sleep(waitingTime);
+								}
+								catch(InterruptedException e) {
+									logger.error("Exception while waiting for reseting in stream fetch task for " + stream.getName(), e);
+								}
 							}
 						}
 						else {
@@ -225,7 +227,6 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 							else {
 								logger.error("There is no fetch structure for feed (" + feed.getId() + ")");
 							}
-
 						}
 					}
 				}
