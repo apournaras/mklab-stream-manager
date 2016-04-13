@@ -168,11 +168,30 @@ public class SolrStorage implements Storage {
 
 	@Override
 	public void close() {
-		try {
-			solrMediaHandler.close();
-		} catch (IOException e) {
-			logger.error(e);
+		if(solrItemHandler != null) {
+			try {
+				solrItemHandler.close();
+			} catch (IOException e) {
+				logger.error(e);
+			}
 		}
+		
+		if(solrMediaHandler != null) {
+			try {
+				solrMediaHandler.close();
+			} catch (IOException e) {
+				logger.error(e);
+			}
+		}
+		
+		if(solrWebPageHandler != null) {
+			try {
+				solrWebPageHandler.close();
+			} catch (IOException e) {
+				logger.error(e);
+			}
+		}
+		
 	}
 	
 	@Override

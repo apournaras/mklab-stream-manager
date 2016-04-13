@@ -122,6 +122,7 @@ public class StreamsMonitor implements Runnable {
 
 	@Override
 	public void run() {
+		
 		for(String streamId : streamsFetchTasks.keySet()) {
 			StreamFetchTask task = streamsFetchTasks.get(streamId);
 			logger.info("Submit fetch task for " + streamId + " for execution.");
@@ -129,17 +130,16 @@ public class StreamsMonitor implements Runnable {
 		}
 		
 		while(!isFinished) {
-			// print statistics every 30 seconds
+			// print statistics every 10 minutes
 			for(String streamId : streamsFetchTasks.keySet()) {
 				StreamFetchTask task = streamsFetchTasks.get(streamId);
 				if(task != null) {
-					logger.info("Fetch task for " + streamId + " has fetched " + task.getTotalRetrievedItems() + " items in total");
-					logger.info("Last execution time for " + streamId + ": " + task.getLastExecutionTime() + " for feed (" + task.getLastExecutionFeed() + ")");
+					logger.info("Fetch task for " + streamId + " has fetched " + task.getTotalRetrievedItems() + " items. Last execution time: " + task.getLastExecutionTime() + " for feed [" + task.getLastExecutionFeed() + "]");
 				}
 			}
 			
 			try {
-				Thread.sleep(300000);
+				Thread.sleep(600000);
 			} catch (InterruptedException e) {
 				logger.error(e);
 				return;

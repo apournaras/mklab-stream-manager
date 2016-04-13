@@ -42,7 +42,7 @@ public class StorageHandler implements Runnable {
 	private List<ItemFilter> filters = new ArrayList<ItemFilter>();
 	private List<Processor> processors = new ArrayList<Processor>();
 	
-	private Map<String, Boolean> workingStatus = new HashMap<String, Boolean>();
+	private Map<String, Boolean> workingStatuses = new HashMap<String, Boolean>();
 	
 	private AtomicLong handled = new AtomicLong(0L);
 	
@@ -78,8 +78,7 @@ public class StorageHandler implements Runnable {
 	}
 	
 	/**
-	 * Starts the consumer threads responsible for storing
-	 * items to the database.
+	 * Starts the consumer threads responsible for storing items to the database.
 	 */
 	public void start() {
 		for(int i = 0; i < numberOfConsumers; i++) {
@@ -138,11 +137,11 @@ public class StorageHandler implements Runnable {
 				
 				if(storageInstance.open()) {
 					logger.info("Storage " + storageId + " is working.");
-					workingStatus.put(storageId, true);
+					workingStatuses.put(storageId, true);
 				}
 				else {
 					logger.error("Storage " + storageId + " is not working.");
-					workingStatus.put(storageId, false);	
+					workingStatuses.put(storageId, false);	
 				}
 				
 			} catch (Exception e) {
@@ -211,14 +210,24 @@ public class StorageHandler implements Runnable {
 
 	@Override
 	public void run() {
+		
 		while(state.equals(StorageHandlerState.OPEN)) {
 			logger.info(handled.get() + " items handled in total.");
 			logger.info(queue.size() + " items are queued for processing.");
 			for(Storage storage : storages) {
 				try {
-					boolean status = storage.checkStatus();
-					workingStatus.put(storage.getStorageName(), status);
-					logger.info(storage.getStorageName() + " working status: " + status);
+					boolean workingStatus = storage.checkStatus();
+					
+					workingStatuses.put(storage.getStorageName(), workingStatus);
+					logger.info(storage.getStorageName() + " working status: " + workingStatus);
+					
+					if(!workingStatus) {
+						storage.close();
+						
+						boolean status = storage.open();
+						workingStatuses.put(storage.getStorageName(), status);
+						logger.info(storage.getStorageName() + " working status: " + status);
+					}
 				}
 				catch(Exception e) {
 					logger.error("Exception during checking of " + storage.getStorageName(), e);

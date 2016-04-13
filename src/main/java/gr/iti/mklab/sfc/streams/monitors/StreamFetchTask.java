@@ -103,6 +103,7 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 				feedsToPoll.add(feedFetch.getFeed());
 			}
 		}
+		
 		return feedsToPoll;
 	}
 	
@@ -151,6 +152,8 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 					if(feedFetch != null) {
 						feedFetch.setLastExecution(executionTime);
 						feedFetch.incFetchedItems(response.getNumberOfItems());
+						
+						feed.setUntilDate(executionTime);
 					}
 					else {
 						logger.error("There is no fetch structure for feed (" + feed.getId() + ")");
@@ -169,7 +172,7 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 
 	@Override
 	public void run() {
-		// each feed must consume no more that the 20% of available requests, even if its the only active feed
+		// each feed must consume no more that the 20% of the available requests, even if its the only active feed
 		int maxRequestsPerFeed = (int) (0.2 * maxRequests);
 		
 		while(running) {
@@ -194,9 +197,8 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 						if(availableRequests <= 1) {
 							logger.info("No more remaining requests for " + stream.getName());
 							long waitingTime = (period - (currentTime -  lastResetTime));
-							
 							if(waitingTime > 0) {	
-								logger.info("Wait for " + (waitingTime / 1000) + " seconds until resetting.");
+								logger.info(feedsToPoll + " feeds are ready for polling but must wait for " + (waitingTime / 1000) + " seconds until reset.");
 								try {
 									Thread.sleep(waitingTime);
 								}

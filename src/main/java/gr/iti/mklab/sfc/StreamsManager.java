@@ -2,6 +2,7 @@ package gr.iti.mklab.sfc;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -69,7 +70,8 @@ public class StreamsManager implements Runnable {
 	
 	private CollectionsManager collectionsManager;
 	private Map<Feed, Integer> feeds = new HashMap<Feed, Integer>();
-	private Map<String, Set<String>> collectionsPerFeed = new HashMap<String, Set<String>>();
+	private Map<Feed, Set<String>> collectionsPerFeed = new HashMap<Feed, Set<String>>();
+	private Map<String, Long> collectionsStatus = new HashMap<String, Long>();
 	
 	private RedisSubscriber jedisPubSub;
 
@@ -190,8 +192,7 @@ public class StreamsManager implements Runnable {
 	}
 	
 	/**
-	 * Initializes the streams apis that are going to be searched for 
-	 * relevant content
+	 * Initializes the streams apis that are going to be searched for relevant content
 	 * 
 	 * @throws StreamException Stream Exception
 	 */
@@ -201,6 +202,7 @@ public class StreamsManager implements Runnable {
 			for (String streamId : config.getStreamIds()) {
 				Configuration sconfig = config.getStreamConfig(streamId);
 				Stream stream = (Stream)Class.forName(sconfig.getParameter(Configuration.CLASS_PATH)).newInstance();
+				logger.info("Init " + streamId + ". Max Requests: " +stream.getMaxRequests() + " per " + stream.getTimeWindow());
 				streams.put(streamId, stream);
 			}
 		}catch(Exception e) {
@@ -210,8 +212,7 @@ public class StreamsManager implements Runnable {
 	}
 	
 	/**
-	 * Initializes the streams apis, that implement subscriber channels, that are going to be searched for 
-	 * relevant content
+	 * Initializes the streams apis, that implement subscriber channels, that are going to be searched for relevant content
 	 * 
 	 * @throws StreamException Stream Exception
 	 */
@@ -258,6 +259,7 @@ public class StreamsManager implements Runnable {
 				
 				Pair<Collection, String> actionPair = queue.take();
 				if(actionPair == null) {
+					logger.error("Received action pair is null.");
 					continue;
 				}
 				
@@ -280,21 +282,20 @@ public class StreamsManager implements Runnable {
 							Stream stream = monitor.getStream(streamId);
 							
 							if(stream == null) {
-								logger.error("Stream " + streamId + " has not initialized.");
-								logger.error("Feed (" + feedId + ") of type " + feed.getSource() + " cannot be added.");
+								logger.error("Stream " + streamId + " has not initialized. Feed " + feed + " cannot be added.");
 							}
 							else {
-								logger.info("Feed to insert: [" + feedId + "] in " + streamId + " monitor");
+								logger.info("Insert: " + feed + " in " + streamId + " monitor");
 								Integer count = feeds.get(feed);
 								if(count != null) {
 									feeds.put(feed, ++count);
-									logger.info("Feed (" + feedId + ") is already under monitoring. Increase priority: " + count);
+									logger.info("Feed " + feed + " is already under monitoring. Increase priority: " + count);
 								}
 								else {
 									feeds.put(feed, 1);
 									// Add to monitors
 									if(stream != null) { 
-										logger.info("Add (" + feedId + ") to " + streamId);
+										logger.info("Add " + feed + " to " + streamId);
 										monitor.addFeed(streamId, feed);
 									}
 								}
@@ -302,7 +303,7 @@ public class StreamsManager implements Runnable {
 								Set<String> collectionsSet = collectionsPerFeed.get(feedId);
 	    						if(collectionsSet == null) {
 	    							collectionsSet = new HashSet<String>();
-	    							collectionsPerFeed.put(feedId, collectionsSet);
+	    							collectionsPerFeed.put(feed, collectionsSet);
 	    						}
 	    						collectionsSet.add(collection.getId());
 							}	
@@ -311,30 +312,31 @@ public class StreamsManager implements Runnable {
     				case "collections:stop":
     				case "collections:delete":
     					List<Feed> feedsToDelete = collection.getFeeds();
-    					logger.info(feedsToDelete.size() + " feeds to delete");
+    					logger.info(feedsToDelete.size() + " feeds to stop/delete");
     					for(Feed feed : feedsToDelete) {
     						String feedId = feed.getId();
     						String streamId = feed.getSource();
 							Stream stream = monitor.getStream(streamId);
 							if(stream == null) {
-								logger.error("Stream " + streamId + " has not initialized.");
-								logger.error("Feed (" + feedId + ") of type " + feed.getSource() + " cannot be removed!");
+								logger.error("Stream " + streamId + " has not initialized. Feed " + feed + " cannot be removed!");
 							}
 							else {
 								Integer count = feeds.get(feed);
 								if(count != null) {
 									if(count > 1) {
 										feeds.put(feed, --count);
-										logger.info("Feed (" + feedId + ") priority decreased to " + count);
+										logger.info("Feed " + feed + " priority decreased to " + count);
 									}
 									else {
 										feeds.remove(feed);
+										
 										// Remove from monitors
-										logger.info("Remove (" + feedId + ") from " + streamId);
+										logger.info("Remove " + feed + " from " + streamId);
 										monitor.removeFeed(streamId, feed);
     		
 									}
 								}
+								
 	    						Set<String> collectionsSet = collectionsPerFeed.get(feedId);
 	    						if(collectionsSet != null) {
 	    							collectionsSet.remove(collection.getId());
@@ -347,7 +349,7 @@ public class StreamsManager implements Runnable {
     					}
     					break;
     				default:
-    					logger.error("Unrecognized action");
+    					logger.error("Unrecognized action: " + action);
 				}
 			} catch (InterruptedException e) {
 				logger.error("Exception: " + e.getMessage());
@@ -395,10 +397,49 @@ public class StreamsManager implements Runnable {
 		while(manager.state == ManagerState.OPEN) {
 			ThreadContext.put("id", UUID.randomUUID().toString());
 			ThreadContext.put("date", new Date().toString());
-			for(Entry<String, Set<String>> entry : manager.collectionsPerFeed.entrySet()) {
-				logger.info("Feed [" + entry.getKey() + "] - Collections: " + entry.getValue());
+			List<String> fIds = new ArrayList<String>();
+			for(Entry<Feed, Set<String>> entry : manager.collectionsPerFeed.entrySet()) {
+				Feed feed = entry.getKey();
+				fIds.add(feed.getId());
+				
+				long until = feed.getUntilDate();
+				Set<String> collections = entry.getValue();
+				for(String cId : collections) {
+					Long lastRunningTime = manager.collectionsStatus.get(cId);
+					if(lastRunningTime == null || lastRunningTime < until) {
+						manager.collectionsStatus.put(cId, until);
+					}
+				}
+				
+				logger.info("Feed [" + feed.getId() + "] - Collections: " + collections);
+				
 			}
+			
+			logger.info("Active Feeds: " + fIds);
+			logger.info("Redis status: " + manager.jedis.ping());
 			ThreadContext.clearAll();
+			
+			Map<String, Long> collections = manager.collectionsStatus;
+			for(Entry<String, Long> entry : collections.entrySet()) {
+				manager.jedis.set(entry.getKey(), entry.getValue().toString());
+			}
+			
+			Map<String, Collection> storedCollections = manager.collectionsManager.getActiveCollections();
+			
+			Set<String> cIds = new HashSet<String>(storedCollections.keySet());
+			cIds.removeAll(collections.keySet());
+			
+			logger.info(cIds.size() + " collections are missing: " + cIds);
+			for(String cId : cIds) {
+				Collection collection = storedCollections.get(cId);
+				
+				try {
+					manager.queue.put(Pair.of(collection, "collections:new"));
+				} catch (InterruptedException e) {
+					logger.error(e);
+				}
+				
+			}
 			
 			try {
 				Thread.sleep(300000);
@@ -429,8 +470,7 @@ public class StreamsManager implements Runnable {
 	    @Override
 	    public void onPMessage(String pattern, String channel, String message) {	
 	    	try {
-	    		logger.info("Message received: " + message);
-	    		logger.info("Pattern: " + pattern + ", Channel: " + channel);
+	    		logger.info("Pattern: " + pattern + ", Channel: " + channel + " Message: " + message);
 	    		
 	    		DBObject obj = (DBObject) JSON.parse(message);	    	
 	    		Collection collection = morphia.fromDBObject(Collection.class, obj);

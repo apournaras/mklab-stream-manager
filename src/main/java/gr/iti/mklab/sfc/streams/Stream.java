@@ -64,6 +64,7 @@ public abstract class Stream {
 	public synchronized Response poll(Feed feed, int requests) throws StreamException {
 		Response response = new Response(); 
 		if(retriever != null) {
+			
 			if(feed == null) {
 				logger.error("Feed is null in poll method.");
 				return response;
@@ -85,8 +86,7 @@ public abstract class Stream {
 					return response;
 				}
 				
-				logger.info(response.getRequests() + " requests used out of " + requests + " for (" + feed.getId() + ")");
-				logger.info(response.getNumberOfItems() + " retrieved items for (" + feed.getId() + ") since " + new Date(feed.getSinceDate())); 
+				logger.info("Feed: " + feed.getId() + " used " + response.getRequests() + " requests out of " + requests + ". " + response.getNumberOfItems() + " retrieved items since " + new Date(feed.getSinceDate())); 
 				
 				// Set new since date 
 				if(feed.getSinceDate() < response.getLastTimestamp()) {
@@ -101,6 +101,7 @@ public abstract class Stream {
 		else {
 			throw new StreamException("Retriever is null for " + getName());
 		}
+		
 		return response;
 	}
 	
