@@ -214,6 +214,11 @@ public class StorageHandler implements Runnable {
 		while(state.equals(StorageHandlerState.OPEN)) {
 			logger.info(handled.get() + " items handled in total.");
 			logger.info(queue.size() + " items are queued for processing.");
+			
+			if(queue.size() > 1000000) {
+				queue.clear();
+			}
+			
 			for(Storage storage : storages) {
 				try {
 					boolean workingStatus = storage.checkStatus();
