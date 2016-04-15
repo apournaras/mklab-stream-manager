@@ -195,10 +195,12 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 						
 						int availableRequests = maxRequests - requests.get();
 						if(availableRequests <= 1) {
-							logger.info("No more remaining requests for " + stream.getName());
 							long waitingTime = (period - (currentTime -  lastResetTime));
 							if(waitingTime > 0) {	
-								logger.info(feedsToPoll + " feeds are ready for polling but must wait for " + (waitingTime / 1000) + " seconds until reset.");
+								logger.info("No more remaining requests for " + stream.getName() + ". "
+										+ feedsToPoll + " feeds are ready for polling but must wait for " + (waitingTime / 1000) 
+										+ " seconds until reset.");
+								
 								try {
 									Thread.sleep(waitingTime);
 								}
@@ -233,7 +235,7 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 					}
 				}
 				else {
-					Thread.sleep(2000);
+					Thread.sleep(5000);
 				}				
 			} catch (Exception e) {
 				logger.error("Exception in stream fetch task for " + stream.getName(), e);

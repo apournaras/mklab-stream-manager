@@ -83,6 +83,9 @@ public class StreamsMonitor implements Runnable {
 		if(fetchTask != null) {
 			fetchTask.removeFeed(feed);
 		}
+		else {
+			logger.warn("Cannot remove feed from " + streamId + ". There is no initialized fetch task.");
+		}
 	}
 	
 	public void addFeeds(String streamId, List<Feed> feeds) {

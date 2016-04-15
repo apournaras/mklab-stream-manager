@@ -231,6 +231,12 @@ public class StreamsManager implements Runnable {
 		}
 	}
 
+	public String redisStatus() {
+		String status = jedis.ping();
+		
+		return status;
+	}
+	
 	@Override
 	public void run() {
 
@@ -285,21 +291,19 @@ public class StreamsManager implements Runnable {
 								logger.error("Stream " + streamId + " has not initialized. Feed " + feed + " cannot be added.");
 							}
 							else {
-								logger.info("Insert: " + feed + " in " + streamId + " monitor");
 								Integer count = feeds.get(feed);
 								if(count != null) {
 									feeds.put(feed, ++count);
 									logger.info("Feed " + feed + " is already under monitoring. Increase priority: " + count);
 								}
 								else {
-									feeds.put(feed, 1);
 									// Add to monitors
-									if(stream != null) { 
-										logger.info("Add " + feed + " to " + streamId);
-										monitor.addFeed(streamId, feed);
-									}
+									logger.info("Add " + feed + " to " + streamId);
+									feeds.put(feed, 1);
+									monitor.addFeed(streamId, feed);
 								}
 								
+								// keep track of feeds - collections 
 								Set<String> collectionsSet = collectionsPerFeed.get(feedId);
 	    						if(collectionsSet == null) {
 	    							collectionsSet = new HashSet<String>();
@@ -309,6 +313,7 @@ public class StreamsManager implements Runnable {
 							}	
     					}
     					break;
+    					
     				case "collections:stop":
     				case "collections:delete":
     					List<Feed> feedsToDelete = collection.getFeeds();
@@ -328,15 +333,17 @@ public class StreamsManager implements Runnable {
 										logger.info("Feed " + feed + " priority decreased to " + count);
 									}
 									else {
-										feeds.remove(feed);
-										
 										// Remove from monitors
 										logger.info("Remove " + feed + " from " + streamId);
+										feeds.remove(feed);
 										monitor.removeFeed(streamId, feed);
-    		
 									}
 								}
+								else {
+									logger.info("Feed " + feed + " does not exist. Cannot remove it");
+								}
 								
+								// keep track of feeds - collections 
 	    						Set<String> collectionsSet = collectionsPerFeed.get(feedId);
 	    						if(collectionsSet != null) {
 	    							collectionsSet.remove(collection.getId());
@@ -348,6 +355,7 @@ public class StreamsManager implements Runnable {
    
     					}
     					break;
+    					
     				default:
     					logger.error("Unrecognized action: " + action);
 				}
@@ -410,36 +418,33 @@ public class StreamsManager implements Runnable {
 						manager.collectionsStatus.put(cId, until);
 					}
 				}
-				
-				logger.info("Feed [" + feed.getId() + "] - Collections: " + collections);
-				
+				logger.info("Feed [" + feed.getId() + "] is under supervision - Collections: " + collections);
 			}
 			
-			logger.info("Active Feeds: " + fIds);
-			logger.info("Redis status: " + manager.jedis.ping());
-			ThreadContext.clearAll();
+			logger.info("Active Feeds: " + fIds + ". Timestamp: " + new Date());
+			logger.info("Redis status: " + manager.redisStatus());
 			
-			Map<String, Long> collections = manager.collectionsStatus;
-			for(Entry<String, Long> entry : collections.entrySet()) {
+			Map<String, Long> activeCollections = manager.collectionsStatus;
+			for(Entry<String, Long> entry : activeCollections.entrySet()) {
 				manager.jedis.set(entry.getKey(), entry.getValue().toString());
 			}
 			
-			Map<String, Collection> storedCollections = manager.collectionsManager.getActiveCollections();
+			Map<String, Collection> storedRunningCollections = manager.collectionsManager.getActiveCollections();
 			
-			Set<String> cIds = new HashSet<String>(storedCollections.keySet());
-			cIds.removeAll(collections.keySet());
+			Set<String> cIds = new HashSet<String>(storedRunningCollections.keySet());
+			cIds.removeAll(activeCollections.keySet());
 			
-			logger.info(cIds.size() + " collections are missing: " + cIds);
+			logger.error("Monitoring check: " + cIds.size() + " collections are missing (" + cIds + ")");
 			for(String cId : cIds) {
-				Collection collection = storedCollections.get(cId);
-				
 				try {
+					Collection collection = storedRunningCollections.get(cId);
 					manager.queue.put(Pair.of(collection, "collections:new"));
 				} catch (InterruptedException e) {
 					logger.error(e);
 				}
 				
 			}
+			ThreadContext.clearAll();
 			
 			try {
 				Thread.sleep(300000);
@@ -464,13 +469,13 @@ public class StreamsManager implements Runnable {
 		
 	    @Override
 	    public void onMessage(String channel, String message) {
-	    	
+	    	logger.info("Channel: " + channel + ", Message: " + message);
 	    }
 
 	    @Override
 	    public void onPMessage(String pattern, String channel, String message) {	
 	    	try {
-	    		logger.info("Pattern: " + pattern + ", Channel: " + channel + " Message: " + message);
+	    		logger.info("Pattern: " + pattern + ", Channel: " + channel + ", Message: " + message);
 	    		
 	    		DBObject obj = (DBObject) JSON.parse(message);	    	
 	    		Collection collection = morphia.fromDBObject(Collection.class, obj);
@@ -508,6 +513,8 @@ public class StreamsManager implements Runnable {
 		public void run() {
 			logger.info("Subscribe to channel collections:*");
 			jedis.psubscribe(this, "collections:*");
+			
+			logger.info("Subscriber shutdown");
 		}
 	}
 	
