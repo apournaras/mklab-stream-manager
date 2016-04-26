@@ -39,6 +39,7 @@ public class StorageHandler implements Runnable {
 	private List<Consumer> consumers = new ArrayList<Consumer>(numberOfConsumers);
 	
 	private List<Storage> storages = new ArrayList<Storage>();
+	
 	private List<ItemFilter> filters = new ArrayList<ItemFilter>();
 	private List<Processor> processors = new ArrayList<Processor>();
 	
@@ -110,6 +111,11 @@ public class StorageHandler implements Runnable {
 		}
 	}
 	
+	public void handle(List<Item> items) {
+		for (Item item : items) {
+			handle(item);
+		}
+	}
 	
 	public void delete(String id) {
 		for(Storage storage : storages) {
@@ -211,6 +217,7 @@ public class StorageHandler implements Runnable {
 	@Override
 	public void run() {
 		
+		// runs just for sanity checks and logging
 		while(state.equals(StorageHandlerState.OPEN)) {
 			logger.info(handled.get() + " items handled in total.");
 			logger.info(queue.size() + " items are queued for processing.");

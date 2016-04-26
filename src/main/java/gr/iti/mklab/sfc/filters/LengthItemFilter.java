@@ -19,6 +19,7 @@ public class LengthItemFilter extends ItemFilter {
 	
 	@Override
 	public boolean accept(Item item) {
+		
 		if(item == null) {
 			incrementDiscarded();
 			return false;
@@ -55,8 +56,11 @@ public class LengthItemFilter extends ItemFilter {
 			title = title.replaceAll("#", " ");
 			title = title.replaceAll("@", " ");
 			title = title.replaceAll("\\s+", " ");
+			
 		}
-		catch(Exception e) { }
+		catch(Exception e) { 
+			
+		}
 		
 		if(title.length() < minTextLenth) {
 			incrementDiscarded();

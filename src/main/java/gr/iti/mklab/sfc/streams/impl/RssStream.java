@@ -20,7 +20,7 @@ public class RssStream extends Stream {
 		this.maxRequests = Integer.MAX_VALUE;
 		this.timeWindow = Integer.parseInt(config.getParameter(TIME_WINDOW));
 		
-		retriever = new RssRetriever();
+		retriever = new RssRetriever(null);
 	}
 
 	@Override

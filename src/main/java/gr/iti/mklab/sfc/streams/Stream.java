@@ -45,13 +45,11 @@ public abstract class Stream {
 	
 	private Logger  logger = LogManager.getLogger(Stream.class);
 	
-
 	public abstract void open(Configuration config) throws StreamException;
 	
 	public void close() throws StreamException {
 		if(retriever != null) {
 			logger.info("Stop retriever");
-			retriever.stop();
 		}
 		
 		logger.info("Close Stream  : " + this.getClass().getName());
@@ -103,6 +101,11 @@ public abstract class Stream {
 		}
 		
 		return response;
+	}
+	
+	public synchronized Item poll(String id) throws StreamException {
+		Item item = retriever.getItem(id);
+		return item;
 	}
 	
 	public abstract String getName();

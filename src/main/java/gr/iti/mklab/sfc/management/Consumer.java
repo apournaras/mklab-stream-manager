@@ -64,6 +64,7 @@ public class Consumer extends Thread {
 					lastAction = 1;
 					lastAccess = System.currentTimeMillis();
 					itemsConsumed++;
+					
 					process(item);
 				}
 			} catch(IOException e) {
@@ -73,7 +74,7 @@ public class Consumer extends Thread {
 			}
 		}
 		
-		//empty queue before exit
+		//empty queue before exit 
 		while ((item = queue.poll()) != null) {
 			try {
 				process(item);

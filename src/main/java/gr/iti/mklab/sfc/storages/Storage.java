@@ -14,7 +14,7 @@ public interface Storage {
 	public boolean open();
 	
 	public void store(Item update) throws IOException;
-
+	
 	public boolean delete(String id) throws IOException;
 	
 	public boolean checkStatus();

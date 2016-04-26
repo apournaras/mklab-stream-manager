@@ -4,8 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -13,9 +17,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.ItemState;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.retrievers.Response;
 import gr.iti.mklab.sfc.streams.Stream;
+import gr.iti.mklab.sfc.streams.StreamException;
 
 
 /**
@@ -29,15 +36,19 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 	
 	private final Logger logger = LogManager.getLogger(StreamFetchTask.class);
 	
+	private Random rand = new Random();
+	
 	private Stream stream;
 	
 	private Map<String, FeedFetch> feeds = Collections.synchronizedMap(new HashMap<String, FeedFetch>());
 	private LinkedBlockingQueue<Feed> feedsQueue = new LinkedBlockingQueue<Feed>();
 	
+	private Map<String, Long> itemsToMonitor = Collections.synchronizedMap(new HashMap<String, Long>());
+	
 	private int maxRequests;
 	private long period;
 	
-	private long totalRetrievedItems = 0;
+	private long totalRetrievedItems = 0L;
 
 	private AtomicInteger requests = new AtomicInteger(0);
 	private long lastResetTime = 0l;
@@ -63,6 +74,26 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 	public void addFeeds(List<Feed> feeds) {
 		for(Feed feed : feeds) {
 			addFeed(feed);
+		}
+	}
+	
+	public void addItem(String id) {
+		if(!itemsToMonitor.containsKey(id)) {
+			logger.info("Add item with id: " + id + " for extensive monitoring.");
+			
+			int p = rand.nextInt(4);
+			long t = System.currentTimeMillis() + p*period;
+			itemsToMonitor.put(id, t);
+		}
+		else {
+			logger.error("Item with id: " + id + " is already under monitoring.");
+		}
+	}
+	
+	public void removeItem(String id) {
+		Long value = itemsToMonitor.remove(id);
+		if(value == null) {
+			logger.error("Cannot remove item with id: " + id);
 		}
 	}
 	
@@ -236,11 +267,73 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 				}
 				else {
 					Thread.sleep(5000);
-				}				
+				}
+				
+				itemsMonitoring();
+				
 			} catch (Exception e) {
 				logger.error("Exception in stream fetch task for " + stream.getName(), e);
 			}	
 		}
+	}
+	
+	public List<ItemState> itemsMonitoring() {
+		
+		List<ItemState> itms = new ArrayList<ItemState>();
+		
+		Set<String> ids = new HashSet<String>();
+		long currentTime = System.currentTimeMillis();
+		for(Entry<String, Long> entry : itemsToMonitor.entrySet()) {
+			String id = entry.getKey();
+			Long lastTimestamp = entry.getValue();	
+			if(currentTime - lastTimestamp > period) {
+				// get items new state
+				ids.add(id);
+			}
+		}
+		
+		if(ids.isEmpty()) {
+			return itms;
+		}
+		
+		logger.info(ids.size() + " items to monitor. ");
+		for(String id : ids) {
+			if(requests.get() < maxRequests) {
+				Item item;
+				try {
+					requests.incrementAndGet();
+					
+					item = stream.poll(id);
+					if(item == null) {
+						continue;
+					}
+					
+					ItemState itemState = new ItemState(id);
+					itemState.setTimestamp(currentTime);
+					itemState.setLikes(item.getLikes());
+					itemState.setComments(item.getComments());
+					itemState.setShares(item.getShares());
+					
+					itms.add(itemState);
+					
+					int p = rand.nextInt(4);
+					long lastTimestamp = System.currentTimeMillis() + p * period;
+					
+					itemsToMonitor.put(id, lastTimestamp);
+					
+				} catch (StreamException e) {
+					
+				}
+				
+			}
+			else {
+				break;
+			}
+		}
+		
+		// TODO: save states
+		
+		return itms;
 	}
 	
 	public class FeedFetch {
