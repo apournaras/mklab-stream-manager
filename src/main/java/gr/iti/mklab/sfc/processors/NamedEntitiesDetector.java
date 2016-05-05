@@ -92,6 +92,15 @@ public class NamedEntitiesDetector extends Processor {
             name = name.replaceAll("\\s+", " ");
             name = name.trim();
             
+            if(name == null || name.length() < 2 | name.length() > 40) {
+            	continue;
+            }
+            
+            String[] neParts = name.split(" ");
+            if(neParts.length > 3) {
+            	continue;
+            }
+            
             String key = type + "#" + name;
             if (!entities.containsKey(key)) {
             	NamedEntity entity = new NamedEntity(name, type);
