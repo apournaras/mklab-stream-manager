@@ -10,6 +10,7 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.ItemState;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.WebPage;
 
@@ -94,6 +95,11 @@ public class RedisStorage implements Storage {
 				}
 			}
 		}
+	}
+	
+	@Override
+	public void store(ItemState itemState) {
+		System.out.println(itemState.toString());	
 	}
 	
 	@Override

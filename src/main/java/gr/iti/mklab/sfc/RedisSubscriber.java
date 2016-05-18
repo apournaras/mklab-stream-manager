@@ -15,19 +15,55 @@ import com.mongodb.util.JSON;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
+
 public class RedisSubscriber extends JedisPubSub implements Runnable {
 
 		private Logger logger = LogManager.getLogger(RedisSubscriber.class);
 		private Morphia morphia = new Morphia();
 		
-		private BlockingQueue<Pair<Collection, String>> queue;
+		private BlockingQueue<Pair<Collection, String>> collectionsQueue;
+		private BlockingQueue<Pair<Pair<String, String>, String>> itemsQueue;
 		
-		private Jedis jedis;
+		private String redisHost = null;
+		private Jedis jedis = null;
 		
-		public RedisSubscriber(BlockingQueue<Pair<Collection, String>> queue, Jedis jedis) {
-			this.jedis = jedis;
-			this.queue = queue;
+		public RedisSubscriber(BlockingQueue<Pair<Collection, String>> collectionsQueue, 
+				BlockingQueue<Pair<Pair<String, String>, String>> itemsQueue,
+				String redisHost) {
+			this.collectionsQueue = collectionsQueue;
+			this.itemsQueue = itemsQueue;
 			this.morphia.map(Collection.class);
+			this.redisHost = redisHost;
+			
+			connect();
+		}
+		
+		private boolean connect() {
+			try {
+				this.jedis = new Jedis(redisHost);
+				jedis.ping();
+				
+				return true;
+			}
+			catch(Exception e) {
+				jedis = null;
+				return false;
+			}
+		}
+		
+		private boolean isStatusOK() {
+			if(jedis == null) {
+				return false;
+			}
+			
+			try {
+				jedis.ping();
+			}
+			catch(Exception e) {
+				return false;
+			}
+			
+			return true;
 		}
 		
 	    @Override
@@ -40,11 +76,20 @@ public class RedisSubscriber extends JedisPubSub implements Runnable {
 	    	try {
 	    		logger.info("Pattern: " + pattern + ", Channel: " + channel + ", Message: " + message);
 	    		
-	    		DBObject obj = (DBObject) JSON.parse(message);	    	
-	    		Collection collection = morphia.fromDBObject(Collection.class, obj);
+	    		if(pattern.equals("collections:*")) {
+	    			DBObject obj = (DBObject) JSON.parse(message);	    	
+		    		Collection collection = morphia.fromDBObject(Collection.class, obj);
+		    		
+		    		Pair<Collection, String> actionPair = Pair.of(collection, channel);
+		    		collectionsQueue.put(actionPair);
+	    		}
+	    		else if(pattern.equals("items:*")) {
+	    			DBObject obj = (DBObject) JSON.parse(message);	 
+	    			Pair<String, String> pair = Pair.of(obj.get("id").toString(), obj.get("source").toString());
+	    			
+	    			itemsQueue.put(Pair.of(pair, channel));
+	    		}
 	    		
-	    		Pair<Collection, String> actionPair = Pair.of(collection, channel);
-				queue.put(actionPair);
 				
 	    	}
 	    	catch(Exception e) {
@@ -74,9 +119,33 @@ public class RedisSubscriber extends JedisPubSub implements Runnable {
 
 		@Override
 		public void run() {
-			logger.info("Subscribe to channel collections:*");
-			jedis.psubscribe(this, "collections:*");
-			
-			logger.info("Subscriber shutdown");
+			while(true) {
+				if(!isStatusOK()) {
+					boolean connected = connect();
+					if(!connected) {
+						try {
+							logger.info("Cannot connect to redis. Wait to recover.");
+							Thread.sleep(30000);
+						} catch (InterruptedException e) {
+							logger.error(e);
+						}
+					}
+				}
+				else {
+					try {
+						logger.info("Subscribe to channel collections:*"); 
+						
+						String[] patterns = {"collections:*", "items:*"};
+						jedis.psubscribe(this, patterns);
+				
+						logger.info("Subscriber shutdown");
+						return;
+					}
+					catch(Exception e) {
+						logger.error(e);
+					}
+				}
+			}
+
 		}
 	}

@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.ItemState;
 
 /**
  * Class for storing items to a flat file
@@ -55,6 +56,10 @@ public class FlatFileStorage implements Storage {
 	
 	}
 
+	@Override
+	public void store(ItemState itemState) {
+		System.out.println(itemState.toString());	
+	}
 	
 	@Override
 	public boolean delete(String id) throws IOException {

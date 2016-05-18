@@ -15,6 +15,7 @@ import gr.iti.mklab.framework.client.search.solr.beans.MediaItemBean;
 import gr.iti.mklab.framework.client.search.solr.beans.WebPageBean;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.ItemState;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.WebPage;
 
@@ -119,6 +120,12 @@ public class SolrStorage implements Storage {
 		}
 		
 	}
+	
+	@Override
+	public void store(ItemState itemState) {
+		
+	}
+	
 	
 	@Override
 	public boolean delete(String itemId) throws IOException {

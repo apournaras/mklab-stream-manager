@@ -15,6 +15,7 @@ import com.mongodb.WriteResult;
 import gr.iti.mklab.framework.client.mongo.DAOFactory;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.ItemState;
 import gr.iti.mklab.framework.common.domain.MediaItem;
 import gr.iti.mklab.framework.common.domain.StreamUser;
 import gr.iti.mklab.framework.common.domain.WebPage;
@@ -44,6 +45,7 @@ public class MongoDbStorage implements Storage {
 	private BasicDAO<MediaItem, String> mediaItemDAO = null;
 	private BasicDAO<StreamUser, String> streamUserDAO = null;
 	private BasicDAO<WebPage, String> webPageDAO = null;
+	private BasicDAO<ItemState, String> itemStateDAO = null;
 	
 	private Integer items = 0, wPages = 0, users = 0;
 	private Integer itemInsertions = 0, mediaItemInsertions = 0, wPageInsertions = 0, userInsertions = 0;
@@ -96,6 +98,8 @@ public class MongoDbStorage implements Storage {
 				mediaItemDAO = daoFactory.getDAO(host, database, MediaItem.class, username, password);
 				streamUserDAO = daoFactory.getDAO(host, database, StreamUser.class, username, password);
 				webPageDAO = daoFactory.getDAO(host, database, WebPage.class, username, password);
+				itemStateDAO = daoFactory.getDAO(host, database, ItemState.class, username, password);
+						
 			} catch (Exception e) {
 				logger.error("MongoDB Storage failed to open.", e);
 				return false;
@@ -200,6 +204,16 @@ public class MongoDbStorage implements Storage {
 			logger.error("Storing item " + item.getId() + " failed.", e);
 		}
 	
+	}
+	
+	@Override
+	public void store(ItemState itemState) {
+		try {
+			itemStateDAO.save(itemState);
+		}
+		catch(Exception e) {
+			logger.error(e);
+		}
 	}
 	
 	private void storeMediaItems(List<MediaItem> mediaItems) {

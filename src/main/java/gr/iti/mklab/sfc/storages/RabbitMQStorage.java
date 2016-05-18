@@ -1,12 +1,12 @@
 package gr.iti.mklab.sfc.storages;
 
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.ItemState;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 
 import java.io.IOException;
 
 import org.apache.commons.lang3.SerializationUtils;
-
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -71,6 +71,12 @@ public class RabbitMQStorage implements Storage {
 		                     messageBytes);
 	}
 
+	@Override
+	public void store(ItemState itemState) {
+		System.out.println(itemState.toString());	
+	}
+	
+	
 	@Override
 	public boolean delete(String id) throws IOException {
 		return false;

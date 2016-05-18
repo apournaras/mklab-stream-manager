@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.ItemState;
 import gr.iti.mklab.sfc.filters.ItemFilter;
 import gr.iti.mklab.sfc.processors.Processor;
 import gr.iti.mklab.sfc.storages.Storage;
@@ -117,6 +118,19 @@ public class StorageHandler implements Runnable {
 		}
 	}
 	
+	private void handle(ItemState itemState) {
+		for(Storage storage : storages) {
+			storage.store(itemState);
+		}
+		
+	}
+	
+	public void handleItemStates(List<ItemState> itemStates) {
+		for (ItemState item : itemStates) {
+			handle(item);
+		}
+	}
+
 	public void delete(String id) {
 		for(Storage storage : storages) {
 			try {

@@ -2,6 +2,7 @@ package gr.iti.mklab.sfc.storages;
 
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.ItemState;
 
 import java.io.IOException;
 
@@ -19,7 +20,10 @@ public class StdoutStorage implements Storage {
 		System.out.println(update.toString());	
 	}
 	
-	
+	@Override
+	public void store(ItemState itemState) {
+		System.out.println(itemState.toString());	
+	}
 
 	@Override
 	public boolean delete(String id) throws IOException {

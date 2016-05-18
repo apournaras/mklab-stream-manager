@@ -59,6 +59,10 @@ public abstract class Stream {
 		this.storageHandler = handler;
 	}
 	
+	public StorageHandler getHandler() {
+		return this.storageHandler;
+	}
+	
 	public synchronized Response poll(Feed feed, int requests) throws StreamException {
 		Response response = new Response(); 
 		if(retriever != null) {

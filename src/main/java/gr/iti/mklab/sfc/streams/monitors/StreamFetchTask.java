@@ -14,6 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -21,6 +22,7 @@ import gr.iti.mklab.framework.common.domain.Item;
 import gr.iti.mklab.framework.common.domain.ItemState;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
 import gr.iti.mklab.framework.retrievers.Response;
+import gr.iti.mklab.sfc.management.StorageHandler;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamException;
 
@@ -43,7 +45,7 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 	private Map<String, FeedFetch> feeds = Collections.synchronizedMap(new HashMap<String, FeedFetch>());
 	private LinkedBlockingQueue<Feed> feedsQueue = new LinkedBlockingQueue<Feed>();
 	
-	private Map<String, Long> itemsToMonitor = Collections.synchronizedMap(new HashMap<String, Long>());
+	private Map<String, Pair<Long, Integer>> itemsToMonitor = Collections.synchronizedMap(new HashMap<String, Pair<Long, Integer>>());
 	
 	private int maxRequests;
 	private long period;
@@ -82,18 +84,34 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 			logger.info("Add item with id: " + id + " for extensive monitoring.");
 			
 			int p = rand.nextInt(4);
-			long t = System.currentTimeMillis() + p*period;
-			itemsToMonitor.put(id, t);
+			long timeToBeChecked = System.currentTimeMillis() + (p+1)*period;
+			
+			Pair<Long, Integer> value = Pair.of(timeToBeChecked, 1);
+			itemsToMonitor.put(id, value);
 		}
 		else {
 			logger.error("Item with id: " + id + " is already under monitoring.");
+			
+			Pair<Long, Integer> value = itemsToMonitor.get(id);
+			value.setValue(value.getValue() + 1);
+			itemsToMonitor.put(id, value);
 		}
 	}
 	
 	public void removeItem(String id) {
-		Long value = itemsToMonitor.remove(id);
+		Pair<Long, Integer> value = itemsToMonitor.get(id);
 		if(value == null) {
 			logger.error("Cannot remove item with id: " + id);
+		}
+		else {
+			Integer count = value.getRight();
+			if(count > 1) {
+				Pair.of(--count, value.getRight());
+				itemsToMonitor.put(id, value);
+			}
+			else {
+				itemsToMonitor.remove(id);
+			}
 		}
 	}
 	
@@ -269,7 +287,10 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 					Thread.sleep(5000);
 				}
 				
-				itemsMonitoring();
+				List<ItemState> itemStates = itemsMonitoring();
+				StorageHandler handler = stream.getHandler();
+				
+				handler.handleItemStates(itemStates);
 				
 			} catch (Exception e) {
 				logger.error("Exception in stream fetch task for " + stream.getName(), e);
@@ -279,21 +300,22 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 	
 	public List<ItemState> itemsMonitoring() {
 		
-		List<ItemState> itms = new ArrayList<ItemState>();
+		List<ItemState> itemStates = new ArrayList<ItemState>();
 		
 		Set<String> ids = new HashSet<String>();
 		long currentTime = System.currentTimeMillis();
-		for(Entry<String, Long> entry : itemsToMonitor.entrySet()) {
+		for(Entry<String, Pair<Long, Integer>> entry : itemsToMonitor.entrySet()) {
 			String id = entry.getKey();
-			Long lastTimestamp = entry.getValue();	
-			if(currentTime - lastTimestamp > period) {
+			Pair<Long, Integer> value = entry.getValue();	
+			Long timeToBeChecked = value.getKey();
+			if(currentTime - timeToBeChecked > 0) {
 				// get items new state
 				ids.add(id);
 			}
 		}
 		
 		if(ids.isEmpty()) {
-			return itms;
+			return itemStates;
 		}
 		
 		logger.info(ids.size() + " items to monitor. ");
@@ -314,15 +336,17 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 					itemState.setComments(item.getComments());
 					itemState.setShares(item.getShares());
 					
-					itms.add(itemState);
+					itemStates.add(itemState);
 					
 					int p = rand.nextInt(4);
-					long lastTimestamp = System.currentTimeMillis() + p * period;
+					long timeToBeChecked = System.currentTimeMillis() + (p+1)*period;
 					
-					itemsToMonitor.put(id, lastTimestamp);
+					Pair<Long, Integer> value = itemsToMonitor.get(id);
+					
+					itemsToMonitor.put(id, Pair.of(timeToBeChecked, value.getRight()));
 					
 				} catch (StreamException e) {
-					
+					logger.error("Exception during polling of " + id, e);
 				}
 				
 			}
@@ -333,7 +357,7 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 		
 		// TODO: save states
 		
-		return itms;
+		return itemStates;
 	}
 	
 	public class FeedFetch {

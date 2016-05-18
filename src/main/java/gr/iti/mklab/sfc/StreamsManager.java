@@ -22,8 +22,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 import org.xml.sax.SAXException;
 
-
-import redis.clients.jedis.Jedis;
 import gr.iti.mklab.framework.common.domain.collections.Collection;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
@@ -32,6 +30,7 @@ import gr.iti.mklab.sfc.management.StorageHandler;
 import gr.iti.mklab.sfc.streams.Stream;
 import gr.iti.mklab.sfc.streams.StreamException;
 import gr.iti.mklab.sfc.streams.StreamsManagerConfiguration;
+import gr.iti.mklab.sfc.streams.monitors.ItemsMonitor;
 import gr.iti.mklab.sfc.streams.monitors.StreamsMonitor;
 import gr.iti.mklab.sfc.subscribers.Subscriber;
 
@@ -50,8 +49,8 @@ public class StreamsManager implements Runnable {
 		OPEN, CLOSE
 	}
 
-	private Jedis jedis = null;
-	
+	private String redisHost = null;
+
 	private Map<String, Stream> streams = null;
 	private Map<String, Subscriber> subscribers = null;
 	
@@ -62,15 +61,19 @@ public class StreamsManager implements Runnable {
 	
 	private ManagerState state = ManagerState.CLOSE;
 
-	private BlockingQueue<Pair<Collection, String>> queue = new LinkedBlockingQueue<Pair<Collection, String>>();
+	private BlockingQueue<Pair<Collection, String>> cQueue = new LinkedBlockingQueue<Pair<Collection, String>>();
+	private BlockingQueue<Pair<Pair<String, String>, String>> itemsQueue = new LinkedBlockingQueue<Pair<Pair<String, String>, String>>();
 	
 	private CollectionsManager collectionsManager;
+	
 	private Map<Feed, Integer> feeds = new HashMap<Feed, Integer>();
 	private Map<Feed, Set<String>> collectionsPerFeed = new HashMap<Feed, Set<String>>();
 	private Map<String, Long> collectionsStatus = new HashMap<String, Long>();
 	
 	private RedisSubscriber jedisPubSub;
 
+	private ItemsMonitor itemsMonitor = new ItemsMonitor(itemsQueue);
+	
 	public StreamsManager(StreamsManagerConfiguration config) throws StreamException {
 
 		if (config == null) {
@@ -105,8 +108,8 @@ public class StreamsManager implements Runnable {
 		logger.info("StreamsManager is open.");
 		try {
 			Configuration inputConfig = config.getInputConfig();
-			String redisHost = inputConfig.getParameter("redis.host", "127.0.0.1");
-			jedis = new Jedis(redisHost);
+			
+			redisHost = inputConfig.getParameter("redis.host", "127.0.0.1");
 			
 			//Start stream handler 
 			storageHandler = new StorageHandler(config);
@@ -174,6 +177,8 @@ public class StreamsManager implements Runnable {
 				stream.close();
 			}
 			
+			itemsMonitor.stop();
+			
 			if (storageHandler != null) {
 				storageHandler.stop();
 			}
@@ -226,12 +231,6 @@ public class StreamsManager implements Runnable {
 			throw new StreamException("Error during Subscribers initialization", e);
 		}
 	}
-
-	public String redisStatus() {
-		String status = jedis.ping();
-		
-		return status;
-	}
 	
 	@Override
 	public void run() {
@@ -245,13 +244,17 @@ public class StreamsManager implements Runnable {
 		logger.info(collections.size() + " active collections in db.");
 		for(Collection collection : collections.values()) {
 			try {
-				queue.put(Pair.of(collection, "collections:new"));
+				cQueue.put(Pair.of(collection, "collections:new"));
 			} catch (InterruptedException e) {
 				logger.error(e);
 			}
 		}
 		
-		jedisPubSub = new RedisSubscriber(queue, jedis);
+		itemsMonitor.addFetchTasks(monitor.getStreamFetchTasks());
+		Thread itemsMonitoringThread = new Thread(itemsMonitor);
+		itemsMonitoringThread.start();
+		
+		jedisPubSub = new RedisSubscriber(cQueue, itemsQueue, redisHost);
 		Thread redisThread = new Thread(jedisPubSub);
 		redisThread.start();
 		
@@ -259,7 +262,7 @@ public class StreamsManager implements Runnable {
 		while(state == ManagerState.OPEN) {
 			try {
 				
-				Pair<Collection, String> actionPair = queue.take();
+				Pair<Collection, String> actionPair = cQueue.take();
 				if(actionPair == null) {
 					logger.error("Received action pair is null.");
 					continue;
@@ -270,7 +273,7 @@ public class StreamsManager implements Runnable {
 				logger.info("Action: " + action + " - collection: " + collection.getId() + " from user " + collection.geOwnertId());
 				
 				if(monitor == null) {
-					logger.error("Monitor is null. Cannot monitor any feed.");
+					logger.error("Monitor has not been initialized. Cannot monitor any feed.");
 				}
 				
 				switch (action) {
@@ -416,25 +419,17 @@ public class StreamsManager implements Runnable {
 				}
 				logger.info("Feed [" + feed.getId() + "] is under supervision - Collections: " + collections);
 			}
-			
 			logger.info("Active Feeds: " + fIds + ". Timestamp: " + new Date());
-			logger.info("Redis status: " + manager.redisStatus());
 			
-			Map<String, Long> activeCollections = manager.collectionsStatus;
-			for(Entry<String, Long> entry : activeCollections.entrySet()) {
-				manager.jedis.set(entry.getKey(), entry.getValue().toString());
-			}
-			
-			Map<String, Collection> storedRunningCollections = manager.collectionsManager.getActiveCollections();
-			
+			Map<String, Collection> storedRunningCollections = manager.collectionsManager.getActiveCollections();			
 			Set<String> cIds = new HashSet<String>(storedRunningCollections.keySet());
-			cIds.removeAll(activeCollections.keySet());
+			cIds.removeAll(manager.collectionsStatus.keySet());
 			
-			logger.error("Monitoring check: " + cIds.size() + " collections are missing (" + cIds + ")");
+			logger.error("Monitoring check: " + cIds.size() + " collections are missing (" + cIds + "). Re-insert for monitoring.");
 			for(String cId : cIds) {
 				try {
 					Collection collection = storedRunningCollections.get(cId);
-					manager.queue.put(Pair.of(collection, "collections:new"));
+					manager.cQueue.put(Pair.of(collection, "collections:new"));
 				} catch (InterruptedException e) {
 					logger.error(e);
 				}

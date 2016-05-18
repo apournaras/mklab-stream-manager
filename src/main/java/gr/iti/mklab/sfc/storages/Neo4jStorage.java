@@ -11,6 +11,7 @@ import com.sun.jersey.api.client.WebResource;
 
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.ItemState;
 
 public class Neo4jStorage implements Storage {
 	
@@ -67,6 +68,11 @@ public class Neo4jStorage implements Storage {
 		return true;
 	}
 
+	@Override
+	public void store(ItemState itemState) {
+		System.out.println(itemState.toString());	
+	}
+	
 	@Override
 	public void store(Item item) throws IOException {
 		String userId = item.getUserId().split("#")[1];

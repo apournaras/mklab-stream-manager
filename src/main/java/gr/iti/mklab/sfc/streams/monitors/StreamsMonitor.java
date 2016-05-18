@@ -40,6 +40,10 @@ public class StreamsMonitor implements Runnable {
 		return streamsFetchTasks.size();
 	}
 	
+	public Map<String, StreamFetchTask> getStreamFetchTasks() {
+		return streamsFetchTasks;
+	}
+	
 	public void addStreams(List<Stream> streams) {
 		for(Stream stream : streams) {
 			addStream(stream);

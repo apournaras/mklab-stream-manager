@@ -12,6 +12,7 @@ import com.tinkerpop.blueprints.Vertex;
 
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.ItemState;
 
 public class TitanGraphDbStorage implements Storage {
 
@@ -96,6 +97,12 @@ public class TitanGraphDbStorage implements Storage {
 		titanGraph.commit();
 	}
 
+	@Override
+	public void store(ItemState itemState) {
+		System.out.println(itemState.toString());	
+	}
+	
+	
 	@Override
 	public boolean delete(String id) throws IOException {
 		// TODO Auto-generated method stub

@@ -1,6 +1,7 @@
 package gr.iti.mklab.sfc.storages;
 
 import gr.iti.mklab.framework.common.domain.Item;
+import gr.iti.mklab.framework.common.domain.ItemState;
 
 import java.io.IOException;
 
@@ -22,5 +23,7 @@ public interface Storage {
 	public void close();
 	
 	public String getStorageName();
+
+	public void store(ItemState itemState);
 	
 }

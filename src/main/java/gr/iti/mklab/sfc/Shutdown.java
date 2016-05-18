@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * Class in case system is shutdown. 
- * Responsible to close all services that are running at the time being
+ * Responsible to close all running services
  * 
  * @author Manos Schinas
  *

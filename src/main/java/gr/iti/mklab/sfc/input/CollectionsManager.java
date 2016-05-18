@@ -46,13 +46,39 @@ public class CollectionsManager {
 		this.username = config.getParameter(USERNAME);
 		this.password = config.getParameter(PWD);
 		
-		DAOFactory daoFactory = new DAOFactory();
-		
-		if(username != null && password != null) {
-			collectionsDao = daoFactory.getDAO(host, db, Collection.class, username, password);
+		connect();
+	}
+	
+	public void connect() {
+		try {
+			DAOFactory daoFactory = new DAOFactory();
+			
+			if(username != null && password != null) {
+				collectionsDao = daoFactory.getDAO(host, db, Collection.class, username, password);
+			}
+			else {
+				collectionsDao = daoFactory.getDAO(host, db, Collection.class);
+			}
+		}
+		catch(Exception e) {
+			logger.error(e);
+		}	
+	}
+	
+	public void checkStatus() {
+		if(collectionsDao == null) {
+			logger.error("Collections Dao has not been initialized. Try to reconnect.");
+			connect();
 		}
 		else {
-			collectionsDao = daoFactory.getDAO(host, db, Collection.class);
+			try {
+				long count = collectionsDao.count();
+				logger.info("Collections Dao is working properly: " + count + " saved collections.");
+			}
+			catch(Exception e) {
+				logger.error(e);
+				connect();
+			}
 		}
 	}
 	
@@ -115,5 +141,5 @@ public class CollectionsManager {
 
 		return feedsSet;
 	}
-	
+
 }
