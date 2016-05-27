@@ -17,6 +17,7 @@ import gr.iti.mklab.framework.client.mongo.DAOFactory;
 import gr.iti.mklab.framework.common.domain.collections.Collection;
 import gr.iti.mklab.framework.common.domain.config.Configuration;
 import gr.iti.mklab.framework.common.domain.feeds.Feed;
+
 /**
  * The class responsible for the creation of input feeds from mongodb storage
  * 
@@ -80,6 +81,14 @@ public class CollectionsManager {
 				connect();
 			}
 		}
+	}
+	
+	public Collection getCollection(String id) {
+		Query<Collection> query = collectionsDao.createQuery()
+				.filter("_id", id);
+
+		Collection collection = collectionsDao.findOne(query);
+		return collection;
 	}
 	
 	public Map<String, Collection> getCollections() {
