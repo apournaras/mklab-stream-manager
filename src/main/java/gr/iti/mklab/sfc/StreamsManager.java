@@ -310,7 +310,7 @@ public class StreamsManager implements Runnable {
 	    						collectionsSet.add(collection.getId());
 							}	
     					}
-    					break;
+    					continue;
     					
     				case "collections:stop":
     				case "collections:delete":
@@ -352,7 +352,7 @@ public class StreamsManager implements Runnable {
 							}
    
     					}
-    					break;
+    					continue;
     					
     				default:
     					logger.error("Unrecognized action: " + action);
@@ -361,6 +361,7 @@ public class StreamsManager implements Runnable {
 				logger.error("Exception: " + e.getMessage());
 			}
 		}
+		logger.info("Exit from stream manager's run loop.");
 	}
 	
 	public static void main(String[] args) {
