@@ -11,6 +11,7 @@ import gr.iti.mklab.framework.common.domain.collections.Collection;
 
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
+import com.restfb.util.StringUtils;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
@@ -27,6 +28,8 @@ public class RedisSubscriber extends JedisPubSub implements Runnable {
 		private String redisHost = null;
 		private Jedis jedis = null;
 		
+		private boolean stop = false;
+		
 		public RedisSubscriber(BlockingQueue<Pair<Collection, String>> collectionsQueue, 
 				BlockingQueue<Pair<Pair<String, String>, String>> itemsQueue,
 				String redisHost) {
@@ -40,7 +43,7 @@ public class RedisSubscriber extends JedisPubSub implements Runnable {
 		
 		private boolean connect() {
 			try {
-				this.jedis = new Jedis(redisHost);
+				this.jedis = new Jedis(redisHost, 6379, 0);
 				jedis.ping();
 				
 				return true;
@@ -121,7 +124,7 @@ public class RedisSubscriber extends JedisPubSub implements Runnable {
 
 		@Override
 		public void run() {
-			while(true) {
+			while(!stop) {
 				if(!isStatusOK()) {
 					boolean connected = connect();
 					if(!connected) {
@@ -135,19 +138,30 @@ public class RedisSubscriber extends JedisPubSub implements Runnable {
 				}
 				else {
 					try {
-						logger.info("Subscribe to channel collections:*"); 
-						
 						String[] patterns = {"collections:*", "items:*"};
+						
+						logger.info("Subscribe to channels: " + StringUtils.join(patterns)); 
 						jedis.psubscribe(this, patterns);
 				
-						logger.info("Subscriber shutdown");
-						return;
+						logger.info("Subscriber unsubscribe from channels: " + StringUtils.join(patterns));
 					}
 					catch(Exception e) {
 						logger.error(e);
 					}
 				}
 			}
-
+			logger.info("Subscriber shutdown");
+		}
+		
+		public void start() {
+			stop = false;
+			
+			Thread thread = new Thread(this);
+			thread.start();
+		}
+		
+		public void close() {
+			stop = true;
+			unsubscribe();
 		}
 	}

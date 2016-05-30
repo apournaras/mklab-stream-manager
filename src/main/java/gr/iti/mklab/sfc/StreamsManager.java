@@ -183,7 +183,7 @@ public class StreamsManager implements Runnable {
 				storageHandler.stop();
 			}
 			
-			jedisPubSub.unsubscribe();
+			jedisPubSub.close();
 			
 			state = ManagerState.CLOSE;
 		}
@@ -255,8 +255,7 @@ public class StreamsManager implements Runnable {
 		itemsMonitoringThread.start();
 		
 		jedisPubSub = new RedisSubscriber(cQueue, itemsQueue, redisHost);
-		Thread redisThread = new Thread(jedisPubSub);
-		redisThread.start();
+		jedisPubSub.start();
 		
 		logger.info("Start to monitor for updates on collections.");
 		while(state == ManagerState.OPEN) {
