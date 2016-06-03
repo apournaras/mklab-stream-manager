@@ -73,6 +73,8 @@ public class StreamsManager implements Runnable {
 	private RedisSubscriber jedisPubSub;
 
 	private ItemsMonitor itemsMonitor = new ItemsMonitor(itemsQueue);
+
+	private Thread thisThread = null;
 	
 	public StreamsManager(StreamsManagerConfiguration config) throws StreamException {
 
@@ -251,8 +253,7 @@ public class StreamsManager implements Runnable {
 		}
 		
 		itemsMonitor.addFetchTasks(monitor.getStreamFetchTasks());
-		Thread itemsMonitoringThread = new Thread(itemsMonitor);
-		itemsMonitoringThread.start();
+		itemsMonitor.start();
 		
 		jedisPubSub = new RedisSubscriber(cQueue, itemsQueue, redisHost);
 		jedisPubSub.start();
@@ -280,6 +281,8 @@ public class StreamsManager implements Runnable {
     					List<Feed> feedsToInsert = collection.getFeeds();
     					logger.info(feedsToInsert.size() + " feeds to insert");
     					for(Feed feed : feedsToInsert) {
+    						
+    						logger.info("Insert: " + feed);
     						
     						String feedId = feed.getId();
 							String streamId = feed.getSource();
@@ -358,10 +361,29 @@ public class StreamsManager implements Runnable {
     					logger.error("Unrecognized action: " + action);
 				}
 			} catch (InterruptedException e) {
-				logger.error("Exception: " + e.getMessage());
+				logger.error("InterruptedException => " + e.getMessage());
+			} catch (Exception e) {
+				logger.error("Exception => " + e.getMessage());
 			}
 		}
 		logger.info("Exit from stream manager's run loop.");
+	}
+	
+	public void start() {
+		thisThread = new Thread(this);
+		thisThread.start();
+	}
+	
+	public boolean isRunning() {
+		if(thisThread == null) {
+			return false;
+		}
+		
+		if(!thisThread.isAlive()) {
+			return false;
+		}
+		
+		return true;
 	}
 	
 	public static void main(String[] args) {
@@ -385,8 +407,7 @@ public class StreamsManager implements Runnable {
 			
 			Runtime.getRuntime().addShutdownHook(new Shutdown(manager));
 			
-			Thread thread = new Thread(manager);
-			thread.start();
+			manager.start();
 			
 		} catch (ParserConfigurationException e) {
 			logger.error(e);
@@ -400,8 +421,19 @@ public class StreamsManager implements Runnable {
 			logger.error(e);
 		}	
 		
+		if(manager == null) {
+			logger.error("");
+			System.exit(-1);
+		}
+		
 		logger.info("Stream manager initialized!");
 		while(manager.state == ManagerState.OPEN) {
+			
+			if(!manager.isRunning()) {
+				logger.error("Stream Manager main thread is not running. Restart it.");
+				manager.start();
+			}
+			
 			ThreadContext.put("id", UUID.randomUUID().toString());
 			ThreadContext.put("date", new Date().toString());
 			List<String> fIds = new ArrayList<String>();

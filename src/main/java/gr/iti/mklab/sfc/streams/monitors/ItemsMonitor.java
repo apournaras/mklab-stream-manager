@@ -63,6 +63,11 @@ public class ItemsMonitor implements Runnable {
 		}
 	}
 	
+	public void start() {
+		Thread thread = new Thread(this);
+		thread.start();
+	}
+	
 	public void stop() {
 		stop = true;
 		Thread.currentThread().interrupt();
