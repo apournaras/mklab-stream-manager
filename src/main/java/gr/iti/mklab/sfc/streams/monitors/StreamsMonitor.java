@@ -82,6 +82,16 @@ public class StreamsMonitor implements Runnable {
 		}
 	}
 	
+	public boolean feedExists(String streamId, Feed feed) {
+		StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);
+		if(fetchTask == null) {	
+			return false;
+		}
+		else {
+			return fetchTask.feedExists(feed);
+		}
+	}
+	
 	public void removeFeed(String streamId, Feed feed) {
 		StreamFetchTask fetchTask = streamsFetchTasks.get(streamId);
 		if(fetchTask != null) {

@@ -79,6 +79,10 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 		}
 	}
 	
+	public boolean feedExists(Feed feed) {
+		return feeds.containsKey(feed.getId());
+	}
+	
 	public void addItem(String id) {
 		if(!itemsToMonitor.containsKey(id)) {
 			logger.info("Add item with id: " + id + " for extensive monitoring.");
