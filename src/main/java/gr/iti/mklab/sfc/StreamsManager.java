@@ -12,6 +12,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.collections4.Predicate;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -148,6 +150,12 @@ public class StreamsManager implements Runnable {
 				logger.error("There are no streams to open.");
 			}
 			
+			itemsMonitor.addFetchTasks(monitor.getStreamFetchTasks());
+			itemsMonitor.start();
+			
+			
+			jedisPubSub = new RedisSubscriber(cQueue, itemsQueue, redisHost);
+			jedisPubSub.start();
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -240,17 +248,13 @@ public class StreamsManager implements Runnable {
 		logger.info(collections.size() + " active collections in db.");
 		for(Collection collection : collections.values()) {
 			try {
-				cQueue.put(Pair.of(collection, "collections:new"));
+				if(!collectionsUnderMonitoring.containsKey(collection.getId())) {
+					cQueue.put(Pair.of(collection, "collections:new"));
+				}
 			} catch (InterruptedException e) {
 				logger.error(e);
 			}
 		}
-		
-		itemsMonitor.addFetchTasks(monitor.getStreamFetchTasks());
-		itemsMonitor.start();
-		
-		jedisPubSub = new RedisSubscriber(cQueue, itemsQueue, redisHost);
-		jedisPubSub.start();
 		
 		logger.info("Start to monitor for updates on collections.");
 		while(state == ManagerState.OPEN) {
@@ -284,7 +288,7 @@ public class StreamsManager implements Runnable {
     					collectionsUnderMonitoring.put(cId, collection);
     					
     					feedsToInsert = collection.getFeeds();
-    					logger.info(feedsToInsert.size() + " feeds to insert");
+    					logger.info(feedsToInsert.size() + " feeds to insert from collection " + cId);
     					
     					insertFeeds(collection, feedsToInsert);
     					
@@ -301,15 +305,16 @@ public class StreamsManager implements Runnable {
     					}
     					
     					feedsToDelete = collection.getFeeds();
-    					logger.info(feedsToDelete.size() + " feeds to stop/delete");
+    					logger.info(feedsToDelete.size() + " feeds to stop/delete from collection " + cId);
     					
     					deleteFeeds(collection, feedsToDelete);
     					
     					continue;
+    					
     				case "collections:edit":
     					
     					if(!collectionsUnderMonitoring.containsKey(cId)) {
-    						logger.error("Collection " + cId + " is not under monitoring. Cannot update");	
+    						logger.error("Collection " + cId + " is not under monitoring. Cannot update.");	
     						cQueue.add(Pair.of(collection, "collections:new"));
     						
     						continue;
@@ -323,11 +328,13 @@ public class StreamsManager implements Runnable {
     					feedsToDelete = new ArrayList<Feed>(previousFeeds);
     					feedsToDelete.removeAll(newFeeds);
     					
+    					logger.info(feedsToDelete.size() + " feeds to stop/delete from collection " + cId);
     					deleteFeeds(collection, feedsToDelete);
     					
     					// insert new ones
     					feedsToInsert = new ArrayList<Feed>(newFeeds);
     					feedsToInsert.removeAll(previousFeeds);
+    					logger.info(feedsToInsert.size() + " feeds to insert from collection " + cId);
     					
     					insertFeeds(collection, feedsToInsert);
     					
@@ -345,6 +352,7 @@ public class StreamsManager implements Runnable {
 		logger.info("Exit from stream manager's run loop.");
 	}
 	
+	// Insert feeds associated with a collection under monitoring
 	private void insertFeeds(Collection collection, List<Feed> feedsToInsert) {
 		for(Feed feed : feedsToInsert) {
 			
@@ -356,26 +364,28 @@ public class StreamsManager implements Runnable {
 				logger.error("Stream " + streamId + " has not initialized. Feed " + feed + " cannot be added.");
 			}
 			else {
-				Set<String> feedCollections = feeds.get(feed);
-				if(feedCollections != null) {
-					feedCollections.add(collection.getId());
-					logger.info("Feed " + feed + " is already under monitoring. Increase priority: " + feedCollections.size());
+				Set<String> collections = feeds.get(feed);
+				if(collections != null) {
+					collections.add(collection.getId());
+					logger.info("Feed " + feed + " is already under monitoring. Increase priority: " + collections.size());
 					
 					if(!monitor.feedExists(streamId, feed)) {
+						logger.info("Feed " + feed + " is missing from monitor!");
 						monitor.addFeed(streamId, feed);
 					}
 				}
 				else {
 					// Add to monitors
 					logger.info("Add " + feed + " to " + streamId);
-					feedCollections = new HashSet<String>();
-					feeds.put(feed, feedCollections);
+					collections = new HashSet<String>();
+					feeds.put(feed, collections);
 					monitor.addFeed(streamId, feed);
 				}
 			}	
 		}
 	}
 	
+	// Delete feeds associated with a collection from monitoring
 	private void deleteFeeds(Collection collection, List<Feed> feedsToDelete) {
 		for(Feed feed : feedsToDelete) {
 			String streamId = feed.getSource();
@@ -405,7 +415,6 @@ public class StreamsManager implements Runnable {
 					}
 				}
 			}
-
 		}
 	}
 	
@@ -440,14 +449,14 @@ public class StreamsManager implements Runnable {
 		ThreadContext.put("id", UUID.randomUUID().toString());
 		ThreadContext.put("date", new Date().toString());
 		
-		Set<String> collectioIds = new HashSet<String>();
+		Set<String> collectionIds = new HashSet<String>();
 		List<String> fIds = new ArrayList<String>();
 		for(Entry<Feed, Set<String>> entry : feeds.entrySet()) {
 			
 			Feed feed = entry.getKey();
 			fIds.add(feed.getId());
 			Set<String> collections = entry.getValue();
-			collectioIds.addAll(collections);
+			collectionIds.addAll(collections);
 
 			long until = feed.getUntilDate();
 			
@@ -459,13 +468,27 @@ public class StreamsManager implements Runnable {
 			}
 			logger.info("Feed [" + feed.getId() + "] is under supervision - Collections: " + collections);
 		}
-		logger.info("Active Feeds: " + fIds + ". Timestamp: " + new Date());
+		logger.info(fIds.size() + " active feeds: " + fIds + ". Timestamp: " + new Date());
 		
-		if(collectioIds.size() != collectionsUnderMonitoring.size()) {
+		if(monitor.getAllFeeds().size() != fIds.size()) {
+			logger.error("Number of feeds under monitoring (" + monitor.getAllFeeds().size() + ") differs from feeds associated with collections ("
+					+ fIds.size() + ").");
+			
+			final List<String> missingFeeds = ListUtils.removeAll(fIds, monitor.getAllFeeds());
+			List<Feed> missingFeedsList = new ArrayList<Feed>(feeds.keySet());
+			missingFeedsList = ListUtils.predicatedList(missingFeedsList, new Predicate<Feed>() {
+				@Override
+				public boolean evaluate(Feed feed) {
+					return missingFeeds.contains(feed.getId());
+				}
+			});
+			
+			logger.error("Missing Feeds: " + missingFeedsList);
+		}
+		
+		if(collectionIds.size() != collectionsUnderMonitoring.size()) {
 			logger.error("Number of collections under monitoring (" + collectionsUnderMonitoring.size() + ") differs from collections associated with feeds ("
-					+ collectioIds.size() + ").");
-			
-			
+					+ collectionIds.size() + ").");
 		}
 		
 		// Check stored collection that are missing from monitoring
@@ -483,6 +506,20 @@ public class StreamsManager implements Runnable {
 			}
 			
 		}
+		
+		// remove stopped collections that are still running
+		cIds.clear();
+		cIds.addAll(collectionsUnderMonitoring.keySet());
+		cIds.removeAll(storedRunningCollections.keySet());
+		for(String cId : cIds) {
+			try {
+				Collection collection = collectionsUnderMonitoring.get(cId);
+				cQueue.put(Pair.of(collection, "collections:delete"));
+			} catch (InterruptedException e) {
+				logger.error(e);
+			}
+		}
+		
 		ThreadContext.clearAll();
 	}
 	

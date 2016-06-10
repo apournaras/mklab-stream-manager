@@ -1,8 +1,11 @@
 package gr.iti.mklab.sfc.streams.monitors;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -115,6 +118,15 @@ public class StreamsMonitor implements Runnable {
 		}
 	}
 	
+	public List<String> getAllFeeds() {
+		Set<String> fIds = new HashSet<String>();
+		
+		for(StreamFetchTask fetchTask : streamsFetchTasks.values()) {
+			fIds.addAll(fetchTask.getFeeds());
+		}
+		
+		return new ArrayList<String>(fIds);
+	}
 
 	public void start() {
 		executor.submit(this);

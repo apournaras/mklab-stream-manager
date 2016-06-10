@@ -160,6 +160,10 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 		return feedsToPoll;
 	}
 	
+	public Set<String> getFeeds() {
+		return feeds.keySet();
+	}
+	
 	/*
 	 * Retrieves content using the feeds assigned to the task
 	 * making rest calls to stream's API. 
@@ -358,8 +362,6 @@ public class StreamFetchTask implements  Callable<Integer>, Runnable {
 				break;
 			}
 		}
-		
-		// TODO: save states
 		
 		return itemStates;
 	}
