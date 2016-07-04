@@ -22,7 +22,7 @@ public class TokensItemFilter  extends ItemFilter {
 		String lenStr =configuration.getParameter("maxTokens", "6");
 		this.maxTokens  = Integer.parseInt(lenStr);
 		
-		LogManager.getLogger(TokensItemFilter.class).info("Initialized. Max Number of Tokemns: " + maxTokens);
+		LogManager.getLogger(TokensItemFilter.class).info("Initialized. Max Number of Tokens: " + maxTokens);
 	}
 
 	@Override
