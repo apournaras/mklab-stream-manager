@@ -49,7 +49,7 @@ public class TokensItemFilter  extends ItemFilter {
 			}
 			tokenizer.end();  
 			tokenizer.close();
-
+			
 			if(tokens.size() < maxTokens) {
 				incrementDiscarded();
 				return false;

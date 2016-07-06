@@ -2,8 +2,11 @@
 <Configuration>
 	<Inputs>
     	<Input id="feeds">
-       		<Parameter name="host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
-         	<Parameter name="database"><![CDATA[test]]></Parameter>
+       		<Parameter name="mongo.host"><![CDATA[127.0.0.1]]></Parameter>
+         	<Parameter name="mongo.database"><![CDATA[test]]></Parameter>
+        	<!--<Parameter name="mongo.username"><![CDATA[username]]></Parameter>-->
+  			<!--<Parameter name="mongo.password"><![CDATA[password]]></Parameter>-->
+         	<Parameter name="redis.host"><![CDATA[127.0.0.1]]></Parameter>
       	</Input>
    	</Inputs>
    	
@@ -11,16 +14,16 @@
     	<!-- Mongodb storage configuration  -->
       	<Storage id="Mongodb">
         	<Parameter name="Classpath"><![CDATA[gr.iti.mklab.sfc.storages.MongoDbStorage]]></Parameter>
-         	<Parameter name="mongodb.host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
+         	<Parameter name="mongodb.host"><![CDATA[127.0.0.1]]></Parameter>
          	<Parameter name="mongodb.database"><![CDATA[test]]></Parameter>
       	</Storage>
       	
       	<!-- Redis storage configuaration 
        	<Storage id="Redis">
        		<Parameter name="Classpath"><![CDATA[gr.iti.mklab.sfc.storages.RedisStorage]]></Parameter>
-       		<Parameter name="redis.host"><![CDATA[xxx.xxx.xxx.xxx]]></Parameter>
-        	<Parameter name="redis.webpages.channel"><![CDATA[PressRelationsWebPages]]></Parameter>
-         	<Parameter name="redis.media.channel"><![CDATA[PressRelationsMediaItems]]></Parameter>
+       		<Parameter name="redis.host"><![CDATA[127.0.0.1]]></Parameter>
+        	<Parameter name="redis.webpages.channel"><![CDATA[WebPages]]></Parameter>
+         	<Parameter name="redis.media.channel"><![CDATA[MediaItems]]></Parameter>
     	</Storage> 
    		-->
       	
@@ -66,7 +69,7 @@
         		<![CDATA[gr.iti.mklab.sfc.streams.processors.LanguageDetector]]>
        		</Parameter>
           	<Parameter name="profileDirectory">
-  				<![CDATA[/disk1_data/workspace/git/socialsensor-stream-manager/src/main/resources/profiles.sm]]>
+  				<![CDATA[profiles.sm]]>
      		</Parameter>
     	</Processor>
     	-->
@@ -89,7 +92,7 @@
 	</Subscribers>
    	
 	<Streams>
-   		<!-- Twitter Stream Handler -->
+   		<!-- Twitter Stream Handler
       	<Stream id="Twitter">
        		<Parameter name="Classpath">
            		<![CDATA[gr.iti.mklab.sfc.streams.impl.TwitterStream]]>
@@ -101,7 +104,7 @@
          	<Parameter name="maxRequests"><![CDATA[180]]></Parameter>
          	<Parameter name="timeWindow"><![CDATA[15]]></Parameter>				
   		</Stream>
-      	
+      	 -->
 		<!--  Facebook Stream Handler 
   		<Stream id="Facebook">
       		<Parameter name="Classpath">
@@ -176,14 +179,14 @@
   		</Stream> 
       	-->
       	
-      	<!-- RSS Stream Handler 
+      	<!-- RSS Stream Handler -->
       	<Stream id="RSS">
           	<Parameter name="Classpath">
             	<![CDATA[gr.iti.mklab.sfc.streams.impl.RssStream]]>
             </Parameter>
         	<Parameter name="timeWindow"><![CDATA[30]]></Parameter>	        
   		</Stream> 
-      	-->
+      
       	
 	</Streams>
 </Configuration>
