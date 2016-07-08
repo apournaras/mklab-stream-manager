@@ -82,7 +82,24 @@
 			<version>4.10.2</version>
 		</dependency>
 
-
+  		<dependency>
+    		<groupId>com.google.guava</groupId>
+        	<artifactId>guava</artifactId>
+        	<version>19.0</version>
+  		</dependency>
+  	
+  	  	<dependency>
+  			<groupId>edu.cmu.cs</groupId>
+  			<artifactId>ark-tweet-nlp</artifactId>
+  			<version>0.3.2</version>
+  			<exclusions>
+  				<exclusion>
+  					<artifactId>stanford-corenlp</artifactId>
+  					<groupId>edu.stanford.nlp</groupId>
+  				</exclusion>
+  			</exclusions>
+  		</dependency>
+  	
         <dependency>
         	<groupId>com.thinkaurelius.titan</groupId>
         	<artifactId>titan-hbase</artifactId>
