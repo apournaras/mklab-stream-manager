@@ -92,19 +92,19 @@
 	</Subscribers>
    	
 	<Streams>
-   		<!-- Twitter Stream Handler
+   		<!-- Twitter Stream Handler -->
       	<Stream id="Twitter">
        		<Parameter name="Classpath">
            		<![CDATA[gr.iti.mklab.sfc.streams.impl.TwitterStream]]>
 			</Parameter>
-         	<Parameter name="Key"><![CDATA[]]></Parameter>
-         	<Parameter name="Secret"><![CDATA[]]></Parameter>
-         	<Parameter name="AccessToken"><![CDATA[]]></Parameter>
-         	<Parameter name="AccessTokenSecret"><![CDATA[]]></Parameter>
+         	<Parameter name="Key"><![CDATA[{{twitter.key}}]]></Parameter>
+         	<Parameter name="Secret"><![CDATA[{{twitter.secret}}]]></Parameter>
+         	<Parameter name="AccessToken"><![CDATA[{{twitter.accesstoken}}]]></Parameter>
+         	<Parameter name="AccessTokenSecret"><![CDATA[{{twitter.accesstokensecret}}]]></Parameter>
          	<Parameter name="maxRequests"><![CDATA[180]]></Parameter>
          	<Parameter name="timeWindow"><![CDATA[15]]></Parameter>				
   		</Stream>
-      	 -->
+      	 
 		<!--  Facebook Stream Handler 
   		<Stream id="Facebook">
       		<Parameter name="Classpath">
